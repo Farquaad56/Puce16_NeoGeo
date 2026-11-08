@@ -1,10 +1,13 @@
 #![forbid(unsafe_code)]
 //! ng-bus: 68000 system bus with Neo Geo memory mapping.
 
+pub mod backup;
 pub mod device;
 pub mod io;
 pub mod latch;
 pub mod map68k;
+pub mod memcard;
+pub mod rtc;
 pub mod watchdog;
 
 pub use device::{CartPort, Device, NullDevice};
