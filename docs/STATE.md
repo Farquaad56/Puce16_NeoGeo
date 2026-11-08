@@ -1,7 +1,13 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P3 Bus, BIOS, cartouches. T306 terminée (2026-11-08). Prochaine : voir tasks/INDEX.md.
+P3 Bus, BIOS, cartouches. T307 terminée (2026-11-08). Prochaine : voir tasks/INDEX.md.
+
+### Fait — T307 ng-bus différences AES (console)
+- crates/ng-bus/src/aes.rs : 8 tests unitaires AES vs MVS.
+- Branches Model::Aes dans io.rs ($30/$32/$34/$38 lectures), map68k.rs ($D00000 open bus).
+- Pas de backup RAM, pas de watchdog, bit 15 REG_STATUS_B = 0, pas de DIP switches.
+- Gate OK.
 
 ### Fait — T306 ng-bus banque P ROM ($2FFFF0)
 - crates/ng-bus/src/pbank.rs : initial_pbank_base() et banksel() fidèles à MAME (write_banksel + init_cpu).
