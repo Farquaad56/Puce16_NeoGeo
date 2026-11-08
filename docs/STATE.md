@@ -1,7 +1,18 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P3 Bus, BIOS, cartouches. T307 terminée (2026-11-08). Prochaine : voir tasks/INDEX.md.
+P4 Vidéo LSPC (pixel perfect). T400 terminée (2026-11-08). Prochaine : voir tasks/INDEX.md.
+
+### Fait — T400 ng-lspc structure Lspc, VRAM, registres $3C0000, auto-animation
+- crates/ng-lspc/src/lib.rs : struct Lspc avec tous les champs spec (vram, anim_speed/disabled/counter/frame_counter, irq2_ctrl, display_counter, vpos).
+- crates/ng-lspc/src/vram.rs : Vram 16 Ko (0x8800 mots), set_offset/get_data/set_data/set_modulo fidèles à MAME neogeo_spr.cpp l.76-110. Index = adresse & 0x87FF pour zone rapide, adresse directe pour zone lente.
+- crates/ng-lspc/src/regs.rs : read_reg/write_reg avec règles exactes (octet bas seul non mappé, octet haut dupliqué, switch offset 0..7). get_video_control/set_video_control fidèles à neogeo_v.cpp l.176-225.
+- auto_animation_tick implémentée (appelée par T401 à vpos=256) : frame_counter reload à speed, counter++ sinon decrement.
+- 22 tests unitaires passent (VRAM offset/data/modulo, zone rapide bit 15 préservé, modulo -1 wrap, video control read/write, octets haut/bas seuls, timer high/low, auto-animation tick).
+- Gate OK.
+
+### Piège rencontré — T400
+- Le masque `& 0x87FF` ne s'applique qu'à la zone rapide (bit 15 set) ; les adresses lentes (0x0000-0x7FFF) passent directement comme index. Appliquer le masque à toutes les adresses écrase bits 13+ et corrompt les accès VRAM.
 
 ### Fait — T307 ng-bus différences AES (console)
 - crates/ng-bus/src/aes.rs : 8 tests unitaires AES vs MVS.
