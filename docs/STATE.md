@@ -1,7 +1,21 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P4 Vidéo LSPC (pixel perfect). T402 terminée (2026-11-08). Prochaine : voir tasks/INDEX.md.
+P4 Vidéo LSPC (pixel perfect). T403 terminée (2026-11-08). Prochaine : voir tasks/INDEX.md.
+
+### Fait — T403 ng-lspc couche fix (une ligne), banking Garou/KOF2000
+- crates/ng-lspc/src/fix.rs : enum FixBankType { Std, Garou, Kof2000 } et draw_fixed_line() port 1:1 de MAME neogeo_spr.cpp l.180-260.
+- Adressage VRAM : video_data = 0x7000 | (vpos >> 3), incrémenté de 0x20 par colonne (pas de +1).
+- Banking Garou : construction de garouoffsets[34] via boucle while y<32 avec détection vram[0x7500+k]==0x0200 && (vram[0x7580+k]&0xFF00)==0xFF00 ; code += 0x1000 * (garouoffsets[((y-2)&31)] ^ 3).
+- Banking KOF2000 : code += 0x1000 * (((vram[0x7500 + ((y-1)&31) + 32*(x/6)] >> ((5-(x%6))*2)) & 3) ^ 3).
+- gfx_offset = ((code << 5) | (vpos & 7)) & addr_mask ; pixels lus aux offsets [0x10, 0x18, 0x00, 0x08] de la tuile.
+- Pixels transparents (nibble == 0) ne modifient pas out.
+- 5 tests unitaires : adressage standard, pixel transparent inchangé, colonnes VRAM, banking Garou, non-banked sans décalage.
+- Gate OK.
+
+### Piège rencontré — T403
+- Les banques sont séparées par 64 Ko (code += 0x1000 * bank → gfx_offset = code << 5), pas par 64 Ko directement dans l'offset ROM. Un test qui place la banque 1 à offset 0x10000 échoue ; il faut utiliser 0x20000.
+- Clippy : `0x1000 * bank_offset` où bank_offset est u8 ne compile pas (pas de promotion automatique) ; cast explicite `(bank_offset as u16) * 0x1000` requis pour Garou, mais pas pour KOF2000 (vram entries sont u16).
 
 ### Fait — T402 ng-lspc palette 2 banques, conversion couleur (table DAC)
 - crates/ng-lspc/src/palette.rs : struct Palette avec ram (Box<[u16; 0x2000]>), pens (Box<[u32; 0x4000]>), bank, shadow. Méthodes new(), read16(off), write16(off, data) avec conversion DAC fidèle à MAME neogeo_v.cpp paletteram_w() (lignes 95-114).

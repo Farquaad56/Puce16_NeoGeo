@@ -182,7 +182,7 @@
   ],
   "file": "tasks/T403.md",
   "assignee": "rust-dev",
-  "status": "todo"
+  "status": "done"
  },
  {
   "id": "T404",
