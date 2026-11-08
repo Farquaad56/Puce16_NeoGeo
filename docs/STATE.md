@@ -1,7 +1,17 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P3 Bus, BIOS, cartouches. T302 terminée (2026-11-08). Prochaine : T303.
+P3 Bus, BIOS, cartouches. T303 terminée (2026-11-08). Prochaine : T304.
+
+### Fait — T303 ng-bus latch système, registres E/S, watchdog, commandes son
+- crates/ng-bus/src/latch.rs : SystemLatch 74HC259 (Q0-Q7), écriture par décodage d'adresse (bit A1-A3 = sortie, bit A4 = valeur)
+- crates/ng-bus/src/io.rs : struct Io implémentant Device — lectures $300000/$300080/$320000/$340000/$380000, écritures watchdog kick ($300001), commande son ($320000), ports $3800xx
+- crates/ng-bus/src/watchdog.rs : Watchdog avec timeout 3_244_030 mclk (~135ms)
+- 44 tests unitaires passent (latch, I/O reads/writes, watchdog)
+- Gate OK (fmt, clippy -D warnings, tests workspace)
+
+### Piège rencontré — T303
+- Les écritures E/S Neo Geo utilisent la parité d'adresse pour sélectionner le byte : adresses paires → byte bas du mot, impaires → byte haut. Les flags upper/lower de l'instruction CPU ne sont pas utilisés par le décodage matériel des registres I/O.
 
 ### Fait — T302 ng-bus carte mémoire 68000 (RAM, ROM, BIOS, zones)
 - crates/ng-bus/src/device.rs : trait Device + CartPort + NullDevice
