@@ -1,7 +1,19 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P4 Vidéo LSPC (pixel perfect). T403 terminée (2026-11-08). Prochaine : voir tasks/INDEX.md.
+P4 Vidéo LSPC (pixel perfect). T404 terminée (2026-11-08). Prochaine : voir tasks/INDEX.md.
+
+### Fait — T404 ng-lspc analyse des sprites d'une ligne (parse_sprites)
+- crates/ng-lspc/src/sprites.rs : sprite_on_scanline() et parse_sprites() portés de MAME neogeo_spr.cpp l.277-280 et l.462-509.
+- Constantes MAX_SPRITES_PER_SCREEN=381, MAX_SPRITES_PER_LINE=96.
+- sprite_on_scanline : rows==0 || rows>=0x20 || ((scanline-y)&0x1FF) < rows*0x10 (cycle-exact).
+- parse_sprites : sélection liste paire/impaire selon scanline&1, boucle 381 sprites, détection chaînage bit 6, remplissage liste active + terminateur zéro.
+- 9 tests unitaires passent (scanline basic/full/zero rows, parse basic/odd/chained/zero rows/max per line/not on scanline).
+- Gate OK.
+
+### Piège rencontré — T404
+- Clippy dead-code : constante LSPC_VRAM_SIZE utilisée uniquement dans les tests doit être déclarée dans le module tests, pas au niveau du crate.
+- Clippy identity_op : `| 0` est un opérateur identité inutile ; l'écrire explicitement pour rows=0 sans OR.
 
 ### Fait — T403 ng-lspc couche fix (une ligne), banking Garou/KOF2000
 - crates/ng-lspc/src/fix.rs : enum FixBankType { Std, Garou, Kof2000 } et draw_fixed_line() port 1:1 de MAME neogeo_spr.cpp l.180-260.

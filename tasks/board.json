@@ -185,15 +185,15 @@
   "status": "done"
  },
  {
-  "id": "T404",
-  "title": "T404 ng-lspc : analyse des sprites d'une ligne (parse_sprites)",
-  "phase": "P4 Vidéo LSPC (pixel perfect)",
-  "deps": [
-   "T403"
-  ],
-  "file": "tasks/T404.md",
-  "assignee": "rust-dev",
-  "status": "todo"
+   "id": "T404",
+   "title": "T404 ng-lspc : analyse des sprites d'une ligne (parse_sprites)",
+   "phase": "P4 Vidéo LSPC (pixel perfect)",
+   "deps": [
+    "T403"
+   ],
+   "file": "tasks/T404.md",
+   "assignee": "rust-dev",
+   "status": "done"
  },
  {
   "id": "T405a",
