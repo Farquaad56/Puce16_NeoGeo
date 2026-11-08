@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 //! ng-bus: 68000 system bus with Neo Geo memory mapping.
 
+pub mod aes;
 pub mod backup;
 pub mod device;
 pub mod io;

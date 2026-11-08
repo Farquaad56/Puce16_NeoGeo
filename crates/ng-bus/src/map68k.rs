@@ -4,9 +4,12 @@
 
 use crate::device::{CartPort, Device, NullDevice};
 use crate::pbank;
+use ng_cart::Model;
 
 /// The 68000 system bus with full memory mapping.
 pub struct Bus68k {
+    /// Machine model (MVS arcade or AES console).
+    pub model: Model,
     /// Work RAM: $100000-$10FFFF (mirrored to $110000-$1FFFFF)
     pub work_ram: Box<[u8; 0x10000]>,
     /// BIOS ROM: 128 KiB big-endian words ($C00000, mirrored)
@@ -38,6 +41,7 @@ impl Bus68k {
     pub fn new(bios: Vec<u8>, cart_p: Vec<u8>) -> Self {
         let pbank_base = pbank::initial_pbank_base(cart_p.len());
         Self {
+            model: Model::Mvs,
             work_ram: Box::new([0u8; 0x10000]),
             bios,
             cart_p,
@@ -119,8 +123,12 @@ impl Bus68k {
                 read_word_be(&self.bios, a & 0x1FFFF)
             }
             0xD => {
-                // Backup RAM
-                self.backup.read(a)
+                // Backup RAM (MVS only; AES has no backup RAM)
+                if self.model == Model::Aes {
+                    self.open_bus
+                } else {
+                    self.backup.read(a)
+                }
             }
             _ => self.open_bus,
         }
@@ -185,8 +193,8 @@ impl Bus68k {
             0xC => {
                 // BIOS ROM: writes ignored
             }
-            0xD => {
-                // Backup RAM write
+            0xD if self.model == Model::Mvs => {
+                // Backup RAM write (MVS only)
                 self.backup.write(a, data, upper, lower);
             }
             _ => {} // Unmapped: ignored

@@ -4,10 +4,13 @@
 //! Active-low convention for buttons (1 = released, 0 = pressed).
 
 use crate::device::Device;
+use ng_cart::Model;
 use ng_common::{PadState, SystemButtons};
 
 /// I/O register state.
 pub struct Io {
+    /// Machine model (MVS arcade or AES console).
+    pub model: Model,
     /// Player pad states.
     pub pad: [PadState; 2],
     /// System buttons (start, select, coins, service, test).
@@ -33,6 +36,7 @@ pub struct Io {
 impl Default for Io {
     fn default() -> Self {
         Io {
+            model: Model::Mvs,
             pad: [PadState::default(), PadState::default()],
             system: SystemButtons::default(),
             test_pressed: false,
@@ -56,48 +60,76 @@ impl Device for Io {
             0x30 => {
                 if addr & 0x80 == 0 {
                     // REG_P1CNT / REG_DIPSW at $300000
-                    ((self.pad[0].bits as u16) << 8) | (self.dipsw as u16)
+                    if self.model == Model::Aes {
+                        // AES: no DIP switches, lower byte always 0xFF
+                        ((self.pad[0].bits as u16) << 8) | 0xFF
+                    } else {
+                        // MVS: lower byte is DIP switch setting
+                        ((self.pad[0].bits as u16) << 8) | (self.dipsw as u16)
+                    }
                 } else {
                     // REG_SYSTYPE at $300080
-                    let test_bit = if self.test_pressed { 0 } else { 0x80 };
-                    0xFF00 | 0x40 | test_bit
+                    if self.model == Model::Aes {
+                        // AES: no TEST port, return open bus (0xFF00)
+                        0xFF00
+                    } else {
+                        let test_bit = if self.test_pressed { 0 } else { 0x80 };
+                        0xFF00 | 0x40 | test_bit
+                    }
                 }
             }
             0x32 => {
                 // REG_SOUND / REG_STATUS_A at $320000
-                let mut status_a: u16 = 0;
-                // Bits 0-4: coin1, coin2, service, coin3, coin4 (active-low)
-                if self.system.bits & (1 << 4) != 0 {
-                    status_a |= 1;
-                } // coin1 released
-                if self.system.bits & (1 << 5) != 0 {
-                    status_a |= 2;
-                } // coin2 released
-                if self.system.bits & (1 << 6) != 0 {
-                    status_a |= 4;
-                } // service released
-                  // Bits 3-4: coin3, coin4 - not in SystemButtons, always released
-                status_a |= 8 | 16;
-                // Bit 5: slot type (MVS = 0)
-                // Bit 6: RTC TP
-                if self.rtc_tp {
-                    status_a |= 64;
-                }
-                // Bit 7: RTC data out
-                if self.rtc_data_out {
-                    status_a |= 128;
-                }
+                if self.model == Model::Aes {
+                    // AES: no RTC, no coin bits - just sound reply in upper byte
+                    (self.sound_reply as u16) << 8
+                } else {
+                    let mut status_a: u16 = 0;
+                    // Bits 0-4: coin1, coin2, service, coin3, coin4 (active-low)
+                    if self.system.bits & (1 << 4) != 0 {
+                        status_a |= 1;
+                    } // coin1 released
+                    if self.system.bits & (1 << 5) != 0 {
+                        status_a |= 2;
+                    } // coin2 released
+                    if self.system.bits & (1 << 6) != 0 {
+                        status_a |= 4;
+                    } // service released
+                      // Bits 3-4: coin3, coin4 - not in SystemButtons, always released
+                    status_a |= 8 | 16;
+                    // Bit 5: slot type (MVS = 0)
+                    // Bit 6: RTC TP
+                    if self.rtc_tp {
+                        status_a |= 64;
+                    }
+                    // Bit 7: RTC data out
+                    if self.rtc_data_out {
+                        status_a |= 128;
+                    }
 
-                ((self.sound_reply as u16) << 8) | status_a
+                    ((self.sound_reply as u16) << 8) | status_a
+                }
             }
             0x34 => {
                 // REG_P2CNT at $340000
-                ((self.pad[1].bits as u16) << 8) | 0xFF
+                if self.model == Model::Aes {
+                    // AES: no DIP switches, lower byte always 0xFF
+                    ((self.pad[1].bits as u16) << 8) | 0xFF
+                } else {
+                    ((self.pad[1].bits as u16) << 8) | 0xFF
+                }
             }
             0x38 => {
                 // REG_STATUS_B at $380000
-                let sys_bits = (self.system.bits & 0x0F) as u16;
-                0x00FF | (sys_bits << 8) | 0x7000 | 0x8000
+                if self.model == Model::Aes {
+                    // AES: bit 15 = 0, start/select in bits 8-11
+                    let sys_bits = (self.system.bits & 0x0F) as u16;
+                    0x00FF | ((sys_bits & 0x03) << 8) | (((sys_bits >> 2) & 0x03) << 10) | 0x7000
+                } else {
+                    // MVS: bit 15 = 1
+                    let sys_bits = (self.system.bits & 0x0F) as u16;
+                    0x00FF | (sys_bits << 8) | 0x7000 | 0x8000
+                }
             }
             _ => {
                 // Unmapped I/O region - open bus
@@ -115,9 +147,12 @@ impl Device for Io {
             ((data >> 8) & 0xFF) as u8
         };
 
-        // Watchdog kick on any write to $300001 (mirror $FE0081)
+        // Watchdog kick on any write to $300001 (mirror $FE0081) - MVS only
         if addr & 0xFE0081 == 0x300001 {
-            self.watchdog_kick = true;
+            if self.model == Model::Mvs {
+                self.watchdog_kick = true;
+            }
+            // AES: no watchdog, ignore write
             return;
         }
 
