@@ -196,15 +196,15 @@
    "status": "done"
  },
  {
-  "id": "T405a",
-  "title": "T405a ng-lspc : dessin des sprites d'une ligne (zoom, flips, animation, décodage C ROM)",
-  "phase": "P4 Vidéo LSPC (pixel perfect)",
-  "deps": [
-   "T404"
-  ],
-  "file": "tasks/T405a.md",
-  "assignee": "rust-dev",
-  "status": "todo"
+   "id": "T405a",
+   "title": "T405a ng-lspc : dessin des sprites d'une ligne (zoom, flips, animation, décodage C ROM)",
+   "phase": "P4 Vidéo LSPC (pixel perfect)",
+   "deps": [
+    "T404"
+   ],
+   "file": "tasks/T405a.md",
+   "assignee": "rust-dev",
+   "status": "done"
  },
  {
   "id": "T406",

@@ -1,7 +1,21 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P4 Vidéo LSPC (pixel perfect). T404 terminée (2026-11-08). Prochaine : voir tasks/INDEX.md.
+P4 Vidéo LSPC (pixel perfect). T405a terminée (2026-11-08). Prochaine : voir tasks/INDEX.md.
+
+### Fait — T405a ng-lspc dessin des sprites d'une ligne (zoom, flips, animation, décodage C ROM)
+- crates/ng-lspc/src/draw.rs : sprite_gfx_mask(), draw_pixel() et draw_sprites_line() portés de MAME neogeo_spr.cpp l.277-461, l.542-562, l.631-654.
+- sprite_gfx_mask : calcul du masque d'adresse basé sur la taille de la région (puissance de 2).
+- draw_pixel : décodage des 4 plans de couleur depuis C ROM avec adressage bit-bangé.
+- draw_sprites_line : boucle complète de dessin sprites pour une ligne — sélection liste paire/impaire, chaînage bit 6, zoom X/Y via tables ZOOM_X/zoomy, flips X/Y, animation auto (bits 2/3 attr), enroulement écran (x > 0x1F0).
+- 5 tests unitaires : sprite_gfx_mask_basic, draw_pixel_basic, draw_pixel_plane3, zoom_full_width, zoom_single_pixel.
+- Gate OK.
+
+### Piège rencontré — T405a
+- Clippy too_many_arguments : draw_sprites_line a 8 paramètres (spec imposée) ; #[allow(clippy::too_many_arguments)] requis.
+- Clippy manual_range_contains : utiliser `(0x140..=0x1F0).contains(&x)` au lieu de comparaisons manuelles.
+- Clippy assign_op_pattern : `zoom_line %= ...` au lieu de `zoom_line = zoom_line % ...`.
+- Clippy needless_range_loop dans les tests : utiliser `enumerate().skip(1)` au lieu de `for i in 1..16 { arr[i] = ... }`.
 
 ### Fait — T404 ng-lspc analyse des sprites d'une ligne (parse_sprites)
 - crates/ng-lspc/src/sprites.rs : sprite_on_scanline() et parse_sprites() portés de MAME neogeo_spr.cpp l.277-280 et l.462-509.
