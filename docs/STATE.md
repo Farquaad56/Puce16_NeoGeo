@@ -1,7 +1,18 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P4 Vidéo LSPC (pixel perfect). T400 terminée (2026-11-08). Prochaine : voir tasks/INDEX.md.
+P4 Vidéo LSPC (pixel perfect). T401 terminée (2026-11-08). Prochaine : voir tasks/INDEX.md.
+
+### Fait — T401 ng-lspc temps vidéo, IRQ1/IRQ2/IRQ3, timer d'affichage, animation auto, début de ligne
+- crates/ng-lspc/src/timing.rs : constantes MCLK_PER_PIXEL=4, MCLK_PER_LINE=1536, LINES=264, VBSTART=240, VSSTART=256, VBLANK_IRQ_OFFSET=58, RELOAD_OFFSET=1146.
+- État ajouté à Lspc : time, irq3 (vrai au reset), raster, vblank, timer_deadline, t_vbl_irq, t_reload, t_anim, next_line avec initialisation fidèle MAME.
+- advance(to_mclk) traite les événements dans l'ordre chronologique ; s'arrête au premier début de ligne et retourne Some(vpos). Ordre à égalité : vblank_irq, reload, timer d'affichage, animation, début de ligne.
+- set_timer_low arme le timer relatif si bit 5 (0x20) set dans irq2_ctrl. acknowledge(d) efface IRQ3/raster/vblank selon bits 1/2/4.
+- 8 tests unitaires : IRQ3 au reset, vblank IRQ timing/périodicité, timer raster relatif, autoload repeat (bit 7), autoload vblank (bit 6), événements début de ligne (Some(0)→Some(1)→…→Some(263)→Some(0)), auto-animation à VSSTART.
+- Gate OK.
+
+### Piège rencontré — T401
+- Les tests IRQ doivent acknowledge(1) au début pour effacer l'IRQ3 du reset, sinon irq_level() retourne toujours 3 et masque les autres niveaux.
 
 ### Fait — T400 ng-lspc structure Lspc, VRAM, registres $3C0000, auto-animation
 - crates/ng-lspc/src/lib.rs : struct Lspc avec tous les champs spec (vram, anim_speed/disabled/counter/frame_counter, irq2_ctrl, display_counter, vpos).
