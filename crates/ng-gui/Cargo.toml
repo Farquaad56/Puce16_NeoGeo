@@ -1,0 +1,8 @@
+[package]
+name = "ng-gui"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+ng-common = { path = "../ng-common" }
+ng-core = { path = "../ng-core" }

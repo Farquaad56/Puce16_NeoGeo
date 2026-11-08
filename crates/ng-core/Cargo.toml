@@ -1,0 +1,13 @@
+[package]
+name = "ng-core"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+ng-common = { path = "../ng-common" }
+puce-m68k = { workspace = true }
+puce-z80 = { workspace = true }
+ng-lspc = { path = "../ng-lspc" }
+ng-ym2610 = { path = "../ng-ym2610" }
+ng-cart = { path = "../ng-cart" }
+ng-bus = { path = "../ng-bus" }

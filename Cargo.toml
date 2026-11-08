@@ -1,0 +1,31 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/ng-common",
+    "crates/ng-lspc",
+    "crates/ng-ym2610",
+    "crates/ng-cart",
+    "crates/ng-bus",
+    "crates/ng-core",
+    "crates/ng-testkit",
+    "crates/ng-gui",
+]
+
+[workspace.dependencies]
+# CPU : crates de l'utilisateur, épinglées par révision (voir ref/cpu-crates/README.md)
+puce-m68k = { git = "https://github.com/Farquaad56/CPU-Motorola_68K_Crates_Rust", package = "puce-m68k", rev = "823d9a5ed4f1e5bfd69dc5ee2dbcf6d6154f4bd9" }
+puce-z80  = { git = "https://github.com/Farquaad56/CPU-Zilog-Z80_Crates_Rust", package = "puce-z80", rev = "77cf591d28e69a690b2d3dc31edf3b0633e0eb83" }
+
+[workspace.package]
+edition = "2021"
+version = "0.1.0"
+license = "MIT"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+debug = 1
+
+[profile.dev]
+opt-level = 1

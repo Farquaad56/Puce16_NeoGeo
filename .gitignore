@@ -1,0 +1,29 @@
+target/
+roms/
+tests-data/m68000/
+tests-data/z80/
+tests-data/hwtests/
+tests-data/mame/
+saves/
+*.rom
+*.bin
+*.zip
+_to_delete/
+*.tgz
+neogeo.toml
+*.exe
+# oracles versionnés (générés par Claude, voir tools/README-golden.md)
+!tests-data/ym/*.bin
+!tests-data/scenes/**/*.bin
+!tests-data/scenes/**/*.raw
+# ROMs de test / commerciales : jamais commitées
+tests-data/hwtests/
+*.com
+*.tap
+*.neo
+*.sp1
+*.bios
+*.7z
+*.rar
+*.gz
+*.tgz

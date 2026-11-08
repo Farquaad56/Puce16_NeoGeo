@@ -1,0 +1,7 @@
+[package]
+name = "ng-lspc"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+ng-common = { path = "../ng-common" }

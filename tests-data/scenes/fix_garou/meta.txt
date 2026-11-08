@@ -1,0 +1,4 @@
+anim_counter 0
+anim_disabled 0
+fix_bank 1
+from_cart 1

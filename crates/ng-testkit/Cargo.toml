@@ -1,0 +1,8 @@
+[package]
+name = "ng-testkit"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+ng-common = { path = "../ng-common" }
+png = "0.18.1"

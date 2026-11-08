@@ -1,0 +1,11 @@
+cmc42_010000_kAD         8E96DA15
+cmc42_010000_k00         D0EC137E
+cmc50_010000_k31         6616411B
+cmc50_010000_k19         3B2F46D0
+sfix_010000_1000         B3CAC317
+m1_crypt_080000          9C573345
+m1_audio_090000          3BD6AFF6
+mslug3_p_900000          83F47274
+mslug5_p_800000          FC9736B4
+pcm2_decrypt8_010000     78E4F10E
+pcm2_swap2_1000000       E8845307

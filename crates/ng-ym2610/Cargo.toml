@@ -1,0 +1,7 @@
+[package]
+name = "ng-ym2610"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+ng-common = { path = "../ng-common" }
