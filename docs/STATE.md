@@ -1,7 +1,17 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P3 Bus, BIOS, cartouches. T303 terminée (2026-11-08). Prochaine : T304.
+P3 Bus, BIOS, cartouches. T304 terminée (2026-11-08). Prochaine : T305.
+
+### Fait — T304 ng-bus backup RAM, mémoire carte (stub), RTC uPD4990A
+- backup.rs : BackupRam 64 Kio (miroir $D00000-$DFFFFF), écriture seulement si déverrouillée (latch q6), save/load fichier brut.
+- memcard.rs : MemCardStub (carte absente : lecture 0xFFFF, écriture ignorée).
+- rtc.rs : port fidèle de upd1990a.cpp (mode série Neo Geo, commande = registre 4 bits shift_reg[6]). Temps interne en unités (1 mclk = 64 unités, 1 s = 1 536 000 000 unités) : timers horloge / TP / DATA OUT / test indépendants, délai nul = exécution immédiate à la fin de la commande, règle 63/64 s à la libération de Time Set, calendrier avec mois et années bissextiles.
+- 7 tests RTC (BCD, DATA OUT 2 Hz, TP 64/256/2048 Hz, passage du 29 février, Time Read en série, Time Set puis libération).
+### Piège rencontré — T304
+- Le premier jet du RTC (LM Studio a coupé la connexion à l'écriture) avait trois erreurs : une seconde = 732 mclk au lieu de 24 000 000, la commande masquée à 3 bits (&7) alors que le registre de commande a 4 bits, et un seul accumulateur partagé par les quatre timers. Réécrit depuis la source MAME.
+- La carte donnait « TP bascule toutes les 24e6/256 mclk » : faux par rapport à MAME (timer 128 Hz = 24e6/128 = 187 500 mclk par bascule, onde de 64 Hz). On suit MAME.
+- Clippy : boucle d'index -> itérateur (needless_range_loop).
 
 ### Fait — T303 ng-bus latch système, registres E/S, watchdog, commandes son
 - crates/ng-bus/src/latch.rs : SystemLatch 74HC259 (Q0-Q7), écriture par décodage d'adresse (bit A1-A3 = sortie, bit A4 = valeur)

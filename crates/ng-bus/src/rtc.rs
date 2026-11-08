@@ -1,65 +1,133 @@
-//! uPD4990A RTC emulation (port of ref/mame-neogeo/upd1990a.cpp).
-//! BSD-3-Clause, copyright Curt Coder, hap.
-//! Neo Geo uses the serial variant with 32.768 kHz crystal.
-
 // license:BSD-3-Clause
-// source: ref/mame-neogeo/upd1990a.cpp (upd4990a_device)
+// copyright-holders:Curt Coder, hap
+//! uPD4990A RTC (mode série, câblage Neo Geo : CS=OE=1, C0-C2=1).
+//! Port de ref/mame-neogeo/upd1990a.cpp (upd4990a_device) ; l'horloge RTC est le quartz 32,768 kHz.
+//!
+//! Temps interne en « unités » : 1 mclk (24 MHz) = 64 unités, 1 tick du quartz = 46 875 unités,
+//! 1 seconde = 1 536 000 000 unités. Cela rend EXACTES toutes les périodes de MAME (2048 Hz et
+//! 4096 Hz donnent des demi-périodes fractionnaires en mclk).
+//!
+//! PORT-NOTE : les timers MAME (`emu_timer`) sont des compteurs à rebours ; une minuterie réarmée
+//! avec un délai nul s'exécute aussitôt (à la fin de la commande). Le mode parallèle (1990A) et
+//! la branche `oe == 0` du test_tick ne sont pas portés (câblage Neo Geo fixe).
 
-use std::time::{SystemTime, UNIX_EPOCH};
+const UNITS_PER_MCLK: u64 = 64;
+const UNITS_PER_XTAL: u64 = 46_875;
+const UNITS_PER_SEC: u64 = 1_536_000_000;
+/// Période de 0,5 s (Register Hold et Time Read : impulsion DATA OUT à 1 Hz).
+const HALF_SEC: u64 = UNITS_PER_SEC / 2;
+/// Demi-périodes de TP pour les modes 64 Hz, 256 Hz, 2048 Hz, 4096 Hz.
+const TP_PERIOD: [u64; 4] = [12_000_000, 3_000_000, 375_000, 187_500];
+/// Mode test : tick à 8192 Hz ; TP à 32 Hz (timer 64 Hz).
+const TEST_PERIOD: u64 = 187_500;
+const TEST_TP_PERIOD: u64 = 24_000_000;
+/// Nombre de ticks du quartz dans 1/64 s (diviseur du uPD4990A).
+const DIVIDER_TICKS: u64 = 512;
 
-/// uPD4990A RTC device state.
-pub struct Upd4990a {
-    // Time counter: [sec, min, hour, day, month|weekday, year] in BCD
-    time_counter: [u8; 6],
-    // Shift register (7 bytes for serial mode)
-    shift_reg: [u8; 7],
-    // Control/state bits
-    oe: bool,
-    #[allow(dead_code)]
-    cs: bool,
-    stb: bool,
-    data_in: bool,
-    data_out: bool,
-    c: u8,     // latched command
-    clk: bool, // shift clock state
-    tp: bool,  // time pulse output
-    #[allow(dead_code)]
-    c_unlatched: u8, // command waiting for STB (parallel mode only)
-    testmode: bool,
-    counter_held: bool,
-
-    // Tick-based timing (replaces MAME timers)
-    mclk_elapsed: u64,        // total master clock ticks since last advance
-    tp_tick_count: u64,       // ticks until next TP toggle
-    data_out_tick_count: u64, // ticks until next data out toggle
-    test_tick_count: u64,     // ticks until next test tick
-}
-
-// Command modes (from upd1990a.h)
 const MODE_REGISTER_HOLD: u8 = 0;
 const MODE_SHIFT: u8 = 1;
 const MODE_TIME_SET: u8 = 2;
 const MODE_TIME_READ: u8 = 3;
 const MODE_TP_64HZ: u8 = 4;
-const MODE_TP_256HZ: u8 = 5;
-const MODE_TP_2048HZ: u8 = 6;
-const MODE_TP_4096HZ: u8 = 7;
 const MODE_TP_1S_INT: u8 = 8;
-const MODE_TP_10S_INT: u8 = 9;
-const MODE_TP_30S_INT: u8 = 10;
 const MODE_TP_60S_INT: u8 = 11;
-#[allow(dead_code)]
-const MODE_INT_RESET_OUTPUT: u8 = 12;
-#[allow(dead_code)]
-const MODE_INT_RUN_CLOCK: u8 = 13;
-#[allow(dead_code)]
-const MODE_INT_STOP_CLOCK: u8 = 14;
 const MODE_TEST: u8 = 15;
 
-// Neo Geo master clock: 24 MHz
-const MCLK_HZ: u64 = 24_000_000;
-// RTC crystal: 32768 Hz
-const XTAL_HZ: u64 = 32768;
+const T_CLOCK: usize = 0;
+const T_TP: usize = 1;
+const T_DATA: usize = 2;
+const T_TEST: usize = 3;
+
+#[derive(Clone, Copy, Debug, Default)]
+struct Timer {
+    enabled: bool,
+    left: u64,
+    period: u64,
+}
+
+impl Timer {
+    /// `adjust(start, period)` de MAME : arme (et active) la minuterie.
+    fn adjust(&mut self, start: u64, period: u64) {
+        self.enabled = true;
+        self.left = start;
+        self.period = period;
+    }
+}
+
+/// Calendrier (rôle de device_rtc_interface : avance d'une seconde, mois et années bissextiles).
+#[derive(Clone, Copy, Debug)]
+struct Calendar {
+    year: u8, // 0..99
+    month: u8,
+    day: u8,
+    dow: u8, // 1..7
+    hour: u8,
+    minute: u8,
+    second: u8,
+}
+
+impl Calendar {
+    fn days_in_month(&self) -> u8 {
+        match self.month {
+            2 => {
+                if self.year.is_multiple_of(4) {
+                    29
+                } else {
+                    28
+                }
+            }
+            4 | 6 | 9 | 11 => 30,
+            _ => 31,
+        }
+    }
+
+    fn advance_seconds(&mut self) {
+        self.second += 1;
+        if self.second < 60 {
+            return;
+        }
+        self.second = 0;
+        self.minute += 1;
+        if self.minute < 60 {
+            return;
+        }
+        self.minute = 0;
+        self.hour += 1;
+        if self.hour < 24 {
+            return;
+        }
+        self.hour = 0;
+        self.dow = if self.dow >= 7 { 1 } else { self.dow + 1 };
+        self.day += 1;
+        if self.day <= self.days_in_month() {
+            return;
+        }
+        self.day = 1;
+        self.month += 1;
+        if self.month > 12 {
+            self.month = 1;
+            self.year = (self.year + 1) % 100;
+        }
+    }
+}
+
+/// uPD4990A.
+#[derive(Clone, Debug)]
+pub struct Upd4990a {
+    time_counter: [u8; 6],
+    shift_reg: [u8; 7],
+    cal: Calendar,
+    stb: bool,
+    data_in: bool,
+    data_out: bool,
+    c: u8,
+    clk: bool,
+    tp: bool,
+    testmode: bool,
+    counter_held: bool,
+    timers: [Timer; 4],
+    now: u64,
+}
 
 impl Default for Upd4990a {
     fn default() -> Self {
@@ -67,158 +135,69 @@ impl Default for Upd4990a {
     }
 }
 
+fn to_bcd(v: u8) -> u8 {
+    ((v / 10) << 4) | (v % 10)
+}
+
+fn from_bcd(b: u8) -> u8 {
+    (b >> 4) * 10 + (b & 0x0F)
+}
+
 impl Upd4990a {
     pub fn new() -> Self {
+        let mut timers = [Timer::default(); 4];
+        // device_start : timer d'horloge, 1 s sur le quartz 32,768 kHz
+        timers[T_CLOCK].adjust(UNITS_PER_SEC, UNITS_PER_SEC);
         let mut rtc = Upd4990a {
             time_counter: [0; 6],
             shift_reg: [0; 7],
-            oe: false,
-            cs: true, // Neo Geo always has CS active
+            cal: Calendar {
+                year: 0,
+                month: 1,
+                day: 1,
+                dow: 1,
+                hour: 0,
+                minute: 0,
+                second: 0,
+            },
             stb: false,
             data_in: false,
             data_out: false,
             c: 0,
             clk: false,
             tp: false,
-            c_unlatched: 0,
             testmode: false,
             counter_held: false,
-            mclk_elapsed: 0,
-            tp_tick_count: 0,
-            data_out_tick_count: 0,
-            test_tick_count: 0,
+            timers,
+            now: 0,
         };
-        // Initialize to current system time
-        rtc.set_time_from_system();
-        // Default TP mode: 64 Hz (clock/512 * 2)
-        rtc.tp_tick_count = MCLK_HZ / 512;
+        rtc.clock_updated();
         rtc
     }
 
-    /// Set inputs from Neo Geo REG_RTCCTRL ($380051).
-    /// Bits: 0=DIN, 1=CLK, 2=STB
+    /// Registre REG_RTCCTRL ($380051) : bit 0 DIN, bit 1 CLK, bit 2 STB. Ordre MAME : DIN, CLK, STB.
     pub fn set_inputs(&mut self, stb: bool, clk: bool, din: bool) {
-        // Rising edge of STB latches command and executes it
-        if !self.stb && stb {
-            self.execute_command();
-        }
-
-        // Rising edge of CLK shifts data (in serial mode always clock command register)
-        if !self.clk && clk {
-            let in_bit = din;
-            // Serial mode: shift command register bits 0-2 into position 6
-            let cmd_bit = self.shift_reg[6] & 1;
-            self.shift_reg[6] >>= 1;
-            self.shift_reg[6] |= if in_bit { 8 } else { 0 };
-
-            if self.c == MODE_SHIFT {
-                // Clock shift register
-                let max_shift = 6; // serial mode
-                for i in 0..max_shift {
-                    self.shift_reg[i] >>= 1;
-                    if i == (max_shift - 1) {
-                        self.shift_reg[i] |= if cmd_bit != 0 { 0x80 } else { 0 };
-                    } else {
-                        let next = self.shift_reg[i + 1];
-                        self.shift_reg[i] |= (next >> 7) << 7;
-                    }
-                }
-                // Data out LSB of shift register
-                self.data_out = (self.shift_reg[0] & 1) != 0;
-            }
-        }
-
-        self.stb = stb;
-        self.clk = clk;
         self.data_in = din;
+        self.clk_w(clk);
+        self.stb_w(stb);
     }
 
-    /// Get data out signal (bit 7 of $320001).
+    /// Bit 7 de $320001 (DATA OUT ; haute impédance = 1 si OE bas, jamais ici).
     pub fn data_out(&self) -> bool {
-        // In test mode, always drive output
-        if self.testmode {
-            return self.data_out;
-        }
-        // Otherwise high-impedance when OE is low (reads as 1 on Neo Geo bus)
-        if !self.oe {
-            return true;
-        }
         self.data_out
     }
 
-    /// Get time pulse signal (bit 6 of $320001).
+    /// Bit 6 de $320001 (TP).
     pub fn tp(&self) -> bool {
         self.tp
     }
 
-    /// Get raw time counter values for testing.
+    /// Compteur de temps : [secondes, minutes, heures, jour] en BCD, mois<<4 | (jour_semaine-1), année BCD.
     pub fn time_counter(&self) -> [u8; 6] {
         self.time_counter
     }
 
-    /// Advance RTC by elapsed master clock ticks.
-    pub fn advance(&mut self, mclk: u64) {
-        self.mclk_elapsed += mclk;
-
-        // TP tick (time pulse output)
-        if self.tp_tick_count > 0 && self.mclk_elapsed >= self.tp_tick_count {
-            self.tp = !self.tp;
-            self.mclk_elapsed -= self.tp_tick_count;
-            // Reset for next toggle (half period)
-            self.tp_tick_count = MCLK_HZ / 512; // Default 64 Hz mode
-        }
-
-        // Data out tick (register hold mode: 1 Hz pulse)
-        if self.c == MODE_REGISTER_HOLD
-            && !self.counter_held
-            && self.data_out_tick_count > 0
-            && self.mclk_elapsed >= self.data_out_tick_count
-        {
-            self.data_out = !self.data_out;
-            self.mclk_elapsed -= self.data_out_tick_count;
-            // Next toggle: half period of 1 Hz = 0.5 s in mclk ticks
-            self.data_out_tick_count = MCLK_HZ / (XTAL_HZ * 2);
-        }
-
-        // Test mode tick
-        if self.testmode && self.test_tick_count > 0 && self.mclk_elapsed >= self.test_tick_count {
-            self.advance_test_mode();
-            self.mclk_elapsed -= self.test_tick_count;
-            // uPD4990A test mode: 8192 Hz = clock/4
-            self.test_tick_count = MCLK_HZ / 4;
-        }
-
-        // Clock tick (second counter) - only if not held and not in test mode
-        if !self.counter_held && !self.testmode {
-            // One second = XTAL_HZ ticks of crystal = MCLK_HZ/XTAL_HZ mclk ticks
-            let one_second_mclk = MCLK_HZ / XTAL_HZ;
-            while self.mclk_elapsed >= one_second_mclk {
-                self.advance_seconds();
-                self.mclk_elapsed -= one_second_mclk;
-            }
-        }
-    }
-
-    /// Set time from system clock.
-    pub fn set_time_from_system(&mut self) {
-        match SystemTime::now().duration_since(UNIX_EPOCH) {
-            Ok(duration) => {
-                let secs = duration.as_secs() as i64;
-                // Convert to local time (simplified: assume UTC for now)
-                let s = secs % 60;
-                let m = (secs / 60) % 60;
-                let h = (secs / 3600) % 24;
-                // Days since epoch -> date calculation omitted for simplicity
-                // Use fixed values for day/month/year in test mode
-                self.set_time(2024, 1, 1, 1, h as u8, m as u8, s as u8);
-            }
-            Err(_) => {
-                self.set_time(2024, 1, 1, 1, 0, 0, 0);
-            }
-        }
-    }
-
-    /// Set time explicitly (for testing).
+    /// Fixe l'heure (fournie par le Machine). `weekday` : 1 = dimanche .. 7 = samedi.
     #[allow(clippy::too_many_arguments)]
     pub fn set_time(
         &mut self,
@@ -230,221 +209,362 @@ impl Upd4990a {
         minute: u8,
         second: u8,
     ) {
-        self.time_counter[0] = to_bcd(second);
-        self.time_counter[1] = to_bcd(minute);
-        self.time_counter[2] = to_bcd(hour);
-        self.time_counter[3] = to_bcd(day);
-        self.time_counter[4] = (month << 4) | ((weekday - 1) & 0x0F);
-        self.time_counter[5] = to_bcd((year % 100) as u8);
+        self.cal = Calendar {
+            year: (year % 100) as u8,
+            month,
+            day,
+            dow: weekday,
+            hour,
+            minute,
+            second,
+        };
+        self.clock_updated();
     }
 
-    fn execute_command(&mut self) {
-        // In serial mode, command is in shift_reg[6] bits 0-2
-        let cmd = self.shift_reg[6] & 7;
-        self.c = cmd;
-
-        let was_testmode = self.testmode;
-
-        match cmd {
-            MODE_REGISTER_HOLD => {
-                // Release counter if held
-                self.counter_held = false;
-                // Disable test mode
-                self.testmode = false;
-                // 1 Hz data out pulse (half period)
-                self.data_out_tick_count = MCLK_HZ / (XTAL_HZ * 2);
-                // TP: if coming from test mode or TP not set, default to 64 Hz
-                if was_testmode || self.tp_tick_count == 0 {
-                    self.tp_tick_count = MCLK_HZ / 512;
+    /// Fait avancer le temps de `mclk` périodes de l'horloge maître (24 MHz).
+    pub fn advance(&mut self, mclk: u64) {
+        let mut rem = mclk * UNITS_PER_MCLK;
+        self.run_due();
+        loop {
+            let step = self
+                .timers
+                .iter()
+                .filter(|t| t.enabled)
+                .map(|t| t.left)
+                .min();
+            match step {
+                Some(s) if s <= rem => {
+                    self.elapse(s);
+                    rem -= s;
+                    self.run_due();
+                }
+                _ => {
+                    self.elapse(rem);
+                    break;
                 }
             }
-            MODE_SHIFT => {
-                // Release counter if held
-                self.counter_held = false;
-                // Data out LSB of shift register
-                self.data_out = (self.shift_reg[0] & 1) != 0;
-                // In test mode, TP is 32 Hz
-                if self.testmode {
-                    self.tp_tick_count = MCLK_HZ / 1024;
-                }
-            }
-            MODE_TIME_SET => {
-                // Hold time counter
-                self.counter_held = true;
-                // Data out LSB of shift register
-                self.data_out = (self.shift_reg[0] & 1) != 0;
-                // Load shift register into time counter
-                let max_shift = 6;
-                for i in 0..max_shift {
-                    self.time_counter[i] = self.shift_reg[i];
-                }
-                // In test mode, disable TP
-                if self.testmode {
-                    self.tp_tick_count = 0;
-                    self.tp = false;
-                }
-            }
-            MODE_TIME_READ => {
-                // Release counter if held
-                if self.counter_held {
-                    self.counter_held = false;
-                }
-                // Load time counter into shift register
-                let max_shift = 6;
-                for i in 0..max_shift {
-                    self.shift_reg[i] = self.time_counter[i];
-                }
-                // uPD4990A: 1 Hz data out pulse
-                self.data_out_tick_count = MCLK_HZ / (XTAL_HZ * 2);
-                // In test mode, TP is 32 Hz
-                if self.testmode {
-                    self.tp_tick_count = MCLK_HZ / 1024;
-                }
-            }
-            MODE_TP_64HZ => {
-                self.tp_tick_count = MCLK_HZ / 512;
-            }
-            MODE_TP_256HZ => {
-                self.tp_tick_count = MCLK_HZ / 128;
-            }
-            MODE_TP_2048HZ => {
-                self.tp_tick_count = MCLK_HZ / 16;
-            }
-            MODE_TP_4096HZ => {
-                self.tp_tick_count = MCLK_HZ / 8;
-            }
-            // Timer interval modes (simplified)
-            MODE_TP_1S_INT | MODE_TP_10S_INT | MODE_TP_30S_INT | MODE_TP_60S_INT => {
-                // Not used by Neo Geo BIOS, stub
-            }
-            MODE_TEST => {
-                self.testmode = true;
-                // uPD4990A test mode: 8192 Hz
-                self.test_tick_count = MCLK_HZ / 4;
-            }
-            _ => {}
         }
     }
 
-    fn advance_seconds(&mut self) {
-        // Increment seconds, carry through minutes/hours/days/months/years
-        let mut s = from_bcd(self.time_counter[0]);
-        s += 1;
-        if s >= 60 {
-            s = 0;
-            let mut m = from_bcd(self.time_counter[1]);
-            m += 1;
-            if m >= 60 {
-                m = 0;
-                let mut h = from_bcd(self.time_counter[2]);
-                h += 1;
-                if h >= 24 {
-                    h = 0;
-                    // Day increment (simplified, no month/year rollover)
-                    let mut d = from_bcd(self.time_counter[3]);
-                    d += 1;
-                    self.time_counter[3] = to_bcd(d);
-                }
-                self.time_counter[2] = to_bcd(h);
-            }
-            self.time_counter[1] = to_bcd(m);
+    fn elapse(&mut self, units: u64) {
+        self.now += units;
+        for t in self.timers.iter_mut().filter(|t| t.enabled) {
+            t.left -= units;
         }
-        self.time_counter[0] = to_bcd(s);
     }
 
-    fn advance_test_mode(&mut self) {
+    fn run_due(&mut self) {
+        loop {
+            let mut fired = false;
+            for i in 0..self.timers.len() {
+                if self.timers[i].enabled && self.timers[i].left == 0 {
+                    self.timers[i].left = self.timers[i].period;
+                    self.fire(i);
+                    fired = true;
+                }
+            }
+            if !fired {
+                break;
+            }
+        }
+    }
+
+    fn fire(&mut self, i: usize) {
+        match i {
+            T_CLOCK => {
+                self.cal.advance_seconds();
+                self.clock_updated();
+            }
+            T_TP => self.tp = !self.tp,
+            T_DATA => self.data_out = !self.data_out,
+            _ => self.test_tick(),
+        }
+    }
+
+    /// rtc_clock_updated
+    fn clock_updated(&mut self) {
+        let c = &self.cal;
+        self.time_counter = [
+            to_bcd(c.second),
+            to_bcd(c.minute),
+            to_bcd(c.hour),
+            to_bcd(c.day),
+            (c.month << 4) | (c.dow.wrapping_sub(1) & 0x0F),
+            to_bcd(c.year),
+        ];
+    }
+
+    /// test_tick (branche OE = 1)
+    fn test_tick(&mut self) {
         if self.counter_held {
             return;
         }
-        // Simplified test mode: just increment seconds counter
-        let mut s = from_bcd(self.time_counter[0]);
-        s += 1;
-        if s >= 60 {
-            s = 0;
+        self.data_out = self.time_counter[5] == 0;
+        for b in self.time_counter.iter_mut() {
+            *b = b.wrapping_add(1);
+            if *b != 0 {
+                return;
+            }
         }
-        self.time_counter[0] = to_bcd(s);
     }
-}
 
-fn to_bcd(val: u8) -> u8 {
-    ((val / 10) << 4) | (val % 10)
-}
+    /// release_counter : fin d'un Time Set (la 1re seconde suivante arrive 63/64 s après le prochain pas du diviseur).
+    fn release_counter(&mut self) {
+        if !self.counter_held {
+            return;
+        }
+        self.counter_held = false;
+        if self.testmode {
+            return;
+        }
+        let now_ticks = self.now / UNITS_PER_XTAL;
+        let first = DIVIDER_TICKS - (now_ticks % DIVIDER_TICKS) + 63 * DIVIDER_TICKS;
+        self.timers[T_CLOCK].adjust(first * UNITS_PER_XTAL, UNITS_PER_SEC);
+    }
 
-fn from_bcd(bcd: u8) -> u8 {
-    (bcd >> 4) * 10 + (bcd & 0x0F)
+    fn clk_w(&mut self, state: bool) {
+        if !self.clk && state {
+            // mode série : le registre de commande est toujours cadencé
+            let in_bit = self.shift_reg[6] & 1;
+            self.shift_reg[6] >>= 1;
+            self.shift_reg[6] |= (self.data_in as u8) << 3;
+
+            if self.c == MODE_SHIFT {
+                for i in 0..6 {
+                    self.shift_reg[i] >>= 1;
+                    if i == 5 {
+                        self.shift_reg[i] |= in_bit << 7;
+                    } else {
+                        self.shift_reg[i] |= (self.shift_reg[i + 1] << 7) & 0x80;
+                    }
+                }
+                self.data_out = self.shift_reg[0] & 1 != 0;
+            }
+        }
+        self.clk = state;
+    }
+
+    fn stb_w(&mut self, state: bool) {
+        if !self.stb && state {
+            self.c = self.shift_reg[6];
+            let c = self.c;
+            let was_testmode = self.testmode;
+
+            if c == MODE_REGISTER_HOLD || (MODE_TP_64HZ..MODE_TEST).contains(&c) {
+                if !self.counter_held {
+                    self.timers[T_CLOCK].enabled = true;
+                }
+                self.testmode = false;
+                self.timers[T_TEST].enabled = false;
+            }
+
+            match c {
+                MODE_REGISTER_HOLD => {
+                    self.release_counter();
+                    self.timers[T_DATA].adjust(0, HALF_SEC);
+                    if was_testmode || !self.timers[T_TP].enabled {
+                        self.timers[T_TP].adjust(0, TP_PERIOD[0]);
+                    }
+                }
+                MODE_SHIFT => {
+                    if self.counter_held {
+                        self.release_counter();
+                    } else if !self.testmode {
+                        self.timers[T_CLOCK].enabled = true;
+                    }
+                    self.timers[T_DATA].enabled = false;
+                    self.data_out = self.shift_reg[0] & 1 != 0;
+                    if self.testmode {
+                        self.timers[T_TP].adjust(0, TEST_TP_PERIOD);
+                    }
+                }
+                MODE_TIME_SET => {
+                    self.timers[T_CLOCK].enabled = false;
+                    self.counter_held = true;
+                    self.timers[T_DATA].enabled = false;
+                    self.data_out = self.shift_reg[0] & 1 != 0;
+                    self.time_counter.copy_from_slice(&self.shift_reg[..6]);
+                    let tc = self.time_counter;
+                    self.cal = Calendar {
+                        year: from_bcd(tc[5]),
+                        month: tc[4] >> 4,
+                        day: from_bcd(tc[3]),
+                        dow: (tc[4] & 0x0F) + 1,
+                        hour: from_bcd(tc[2]),
+                        minute: from_bcd(tc[1]),
+                        second: from_bcd(tc[0]),
+                    };
+                    if self.testmode {
+                        self.timers[T_TP].enabled = false;
+                        self.tp = false;
+                    }
+                }
+                MODE_TIME_READ => {
+                    if self.counter_held {
+                        self.release_counter();
+                    } else if !self.testmode {
+                        self.timers[T_CLOCK].enabled = true;
+                    }
+                    let tc = self.time_counter;
+                    self.shift_reg[..6].copy_from_slice(&tc);
+                    self.timers[T_DATA].adjust(0, HALF_SEC);
+                    if self.testmode {
+                        self.timers[T_TP].adjust(0, TEST_TP_PERIOD);
+                    }
+                }
+                MODE_TP_64HZ..=7 => {
+                    self.timers[T_TP].adjust(0, TP_PERIOD[(c - MODE_TP_64HZ) as usize]);
+                }
+                MODE_TP_1S_INT..=MODE_TP_60S_INT => {
+                    const MUL: [u64; 4] = [1, 10, 30, 60];
+                    self.timers[T_TP].adjust(0, HALF_SEC * MUL[(c - MODE_TP_1S_INT) as usize]);
+                }
+                MODE_TEST => {
+                    self.timers[T_CLOCK].enabled = false;
+                    self.timers[T_DATA].enabled = false;
+                    self.testmode = true;
+                    self.timers[T_TEST].adjust(0, TEST_PERIOD);
+                }
+                _ => {} // 12..14 : TODO dans MAME
+            }
+            // un délai nul s'exécute à la fin de la commande
+            self.run_due();
+        }
+        self.stb = state;
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    fn clock_bit(r: &mut Upd4990a, din: bool) {
+        r.set_inputs(false, false, din);
+        r.set_inputs(false, true, din);
+        r.set_inputs(false, false, din);
+    }
+
+    fn strobe(r: &mut Upd4990a) {
+        r.set_inputs(true, false, false);
+        r.set_inputs(false, false, false);
+    }
+
+    /// Envoie une commande de 4 bits (LSB d'abord) puis un front montant de STB.
+    fn command(r: &mut Upd4990a, c: u8) {
+        for k in 0..4 {
+            clock_bit(r, (c >> k) & 1 != 0);
+        }
+        strobe(r);
+    }
+
     #[test]
     fn set_time_bcd_encoding() {
         let mut rtc = Upd4990a::new();
-        // Set to Feb 29, 2024 (leap year), Thursday (day 5), 12:34:56
-        rtc.set_time(2024, 2, 29, 5, 12, 34, 56);
-        // Expected BCD: sec=0x56, min=0x34, hour=0x12, day=0x29, month|weekday=0x24, year=0x24
-        assert_eq!(rtc.time_counter()[0], 0x56); // seconds
-        assert_eq!(rtc.time_counter()[1], 0x34); // minutes
-        assert_eq!(rtc.time_counter()[2], 0x12); // hours
-        assert_eq!(rtc.time_counter()[3], 0x29); // day
-        assert_eq!(rtc.time_counter()[4], 0x24); // month=2, weekday=5 -> (2<<4)|(5-1)=0x24
-        assert_eq!(rtc.time_counter()[5], 0x24); // year % 100 = 24
+        rtc.set_time(2024, 2, 29, 4, 12, 34, 56);
+        assert_eq!(&rtc.time_counter()[0..5], &[0x56, 0x34, 0x12, 0x29, 0x23]);
+        assert_eq!(rtc.time_counter()[5], 0x24);
     }
 
     #[test]
     fn register_hold_data_out_toggle() {
         let mut rtc = Upd4990a::new();
-        // Set to register hold mode (command 0)
-        rtc.shift_reg[6] = 0;
-        rtc.execute_command();
-        assert_eq!(rtc.c, MODE_REGISTER_HOLD);
-
-        // Advance by half period of 1 Hz data out (should toggle once)
-        let half_period = MCLK_HZ / (XTAL_HZ * 2);
-        let initial_out = rtc.data_out;
-        rtc.advance(half_period + 1);
-        assert_ne!(rtc.data_out, initial_out);
-
-        // Advance another half period (should toggle back)
-        let _second_out = rtc.data_out;
-        rtc.advance(half_period + 1);
-        assert_eq!(rtc.data_out, initial_out);
+        let initial = rtc.data_out();
+        command(&mut rtc, MODE_REGISTER_HOLD);
+        assert_ne!(rtc.data_out(), initial, "bascule immédiate");
+        let after = rtc.data_out();
+        rtc.advance(11_999_999);
+        assert_eq!(rtc.data_out(), after);
+        rtc.advance(1);
+        assert_ne!(rtc.data_out(), after, "bascule à 12 000 000 mclk");
+        rtc.advance(12_000_000);
+        assert_eq!(rtc.data_out(), after, "rebascule");
     }
 
     #[test]
     fn tp_64hz_default() {
         let mut rtc = Upd4990a::new();
-        // Default TP mode is 64 Hz (half period = MCLK_HZ/512)
-        let half_period = MCLK_HZ / 512;
-        let initial_tp = rtc.tp();
-        rtc.advance(half_period + 1);
-        assert_ne!(rtc.tp(), initial_tp);
+        command(&mut rtc, MODE_REGISTER_HOLD); // TP jamais réglé => 64 Hz
+        assert!(rtc.tp(), "bascule immédiate");
+        rtc.advance(187_499);
+        assert!(rtc.tp());
+        rtc.advance(1);
+        assert!(!rtc.tp(), "demi-période = 24e6/128 mclk");
+        rtc.advance(187_500);
+        assert!(rtc.tp());
     }
 
     #[test]
-    fn tp_mode_change() {
+    fn tp_mode_256hz_and_2048hz() {
         let mut rtc = Upd4990a::new();
-        // Switch to 256 Hz TP mode (command 5)
-        rtc.shift_reg[6] = MODE_TP_256HZ;
-        rtc.execute_command();
-
-        // Half period of 256 Hz = MCLK_HZ/128
-        let half_period = MCLK_HZ / 128;
-        let initial_tp = rtc.tp();
-        rtc.advance(half_period + 1);
-        assert_ne!(rtc.tp(), initial_tp);
+        command(&mut rtc, 5); // 256 Hz : bascule toutes les 24e6/512 = 46 875 mclk
+        assert!(rtc.tp());
+        rtc.advance(46_874);
+        assert!(rtc.tp());
+        rtc.advance(1);
+        assert!(!rtc.tp());
+        command(&mut rtc, 6); // 2048 Hz : 24e6/4096 = 5859,375 mclk (exact en unités)
+        let t0 = rtc.tp();
+        rtc.advance(5859);
+        assert_eq!(rtc.tp(), t0);
+        rtc.advance(1);
+        assert_ne!(rtc.tp(), t0);
     }
 
     #[test]
-    fn time_advances() {
+    fn seconds_and_leap_day_rollover() {
         let mut rtc = Upd4990a::new();
-        rtc.set_time(2024, 1, 1, 1, 0, 0, 58); // 58 seconds
+        rtc.set_time(2024, 2, 28, 3, 23, 59, 59);
+        rtc.advance(23_999_999);
+        assert_eq!(rtc.time_counter()[0], 0x59);
+        rtc.advance(1);
+        // 29 février 2024 (bissextile), mercredi->jeudi : dow 4 => 4-1 = 3
+        assert_eq!(rtc.time_counter(), [0x00, 0x00, 0x00, 0x29, 0x23, 0x24]);
+        rtc.advance(86_400 * 24_000_000);
+        assert_eq!(rtc.time_counter()[3], 0x01);
+        assert_eq!(rtc.time_counter()[4] >> 4, 3);
+    }
 
-        // Advance by 3 seconds (should wrap to 01)
-        let one_second = MCLK_HZ / XTAL_HZ;
-        rtc.advance(one_second * 3 + 1);
+    #[test]
+    fn time_read_shifts_out_the_counter() {
+        let mut rtc = Upd4990a::new();
+        rtc.set_time(2024, 2, 29, 4, 12, 34, 56);
+        command(&mut rtc, MODE_TIME_READ);
+        command(&mut rtc, MODE_SHIFT);
+        let mut out = [0u8; 6];
+        for byte in out.iter_mut() {
+            for bit in 0..8 {
+                *byte |= (rtc.data_out() as u8) << bit;
+                clock_bit(&mut rtc, false);
+            }
+        }
+        assert_eq!(out, [0x56, 0x34, 0x12, 0x29, 0x23, 0x24]);
+    }
 
-        assert_eq!(rtc.time_counter()[0], 0x01); // seconds wrapped: 58+3=61 -> 01
+    #[test]
+    fn time_set_via_serial_then_release() {
+        let mut rtc = Upd4990a::new();
+        command(&mut rtc, MODE_SHIFT);
+        // 48 bits de données puis 4 bits de commande (TIME_SET = 2) : 52 impulsions
+        let data = [0x30u8, 0x45, 0x17, 0x09, 0x73, 0x26];
+        for byte in data {
+            for bit in 0..8 {
+                clock_bit(&mut rtc, (byte >> bit) & 1 != 0);
+            }
+        }
+        for k in 0..4 {
+            clock_bit(&mut rtc, (MODE_TIME_SET >> k) & 1 != 0);
+        }
+        strobe(&mut rtc);
+        assert_eq!(rtc.time_counter(), data);
+        rtc.advance(3 * 24_000_000);
+        assert_eq!(rtc.time_counter(), data, "compteur retenu par Time Set");
+        command(&mut rtc, MODE_REGISTER_HOLD); // libère
+        rtc.advance(24_000_000);
+        assert_eq!(
+            rtc.time_counter()[0],
+            0x31,
+            "une seconde exactement après la libération"
+        );
+        assert_eq!(rtc.time_counter()[1], 0x45);
     }
 }
