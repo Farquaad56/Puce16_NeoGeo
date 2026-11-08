@@ -1,7 +1,18 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P4 Vidéo LSPC (pixel perfect). T401 terminée (2026-11-08). Prochaine : voir tasks/INDEX.md.
+P4 Vidéo LSPC (pixel perfect). T402 terminée (2026-11-08). Prochaine : voir tasks/INDEX.md.
+
+### Fait — T402 ng-lspc palette 2 banques, conversion couleur (table DAC)
+- crates/ng-lspc/src/palette.rs : struct Palette avec ram (Box<[u16; 0x2000]>), pens (Box<[u32; 0x4000]>), bank, shadow. Méthodes new(), read16(off), write16(off, data) avec conversion DAC fidèle à MAME neogeo_v.cpp paletteram_w() (lignes 95-114).
+- Conversion : dark = bit 15 ; r/g/b extraits selon formule MAME ; pens[i] = rgb(DAC[r][dark], ...) pour normal, pens[i+0x2000] = rgb(DAC[r][dark+2], ...) pour shadow.
+- pens_base() retourne la tranche de 0x1000 entrées pour bank/shadow courant ; backdrop() = pen 0xFFF.
+- Au reset toute la RAM = 0 et pens = noir (0) — MAME ne recalcule pas les pens à la mise à zéro.
+- 7 tests unitaires : write_black_gives_black, write_white_gives_max_dac, dark_bit_sets_column, shadow_pen_uses_column_plus_two, bank_isolation, backdrop_color, reset_all_black.
+- Gate OK (fmt, clippy -D warnings, tests workspace).
+
+### Piège rencontré — T402
+- Les indices de la table DAC doivent être castés en usize (r/g/b/dark sont extraits comme u16 mais Rust exige usize pour l'indexation de slice).
 
 ### Fait — T401 ng-lspc temps vidéo, IRQ1/IRQ2/IRQ3, timer d'affichage, animation auto, début de ligne
 - crates/ng-lspc/src/timing.rs : constantes MCLK_PER_PIXEL=4, MCLK_PER_LINE=1536, LINES=264, VBSTART=240, VSSTART=256, VBLANK_IRQ_OFFSET=58, RELOAD_OFFSET=1146.
