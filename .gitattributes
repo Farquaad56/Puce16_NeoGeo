@@ -1,0 +1,18 @@
+# Statistiques de langage GitHub (Linguist) : le dépôt est un projet Rust.
+# Sources de référence tierces (MAME, ymfm, crates CPU en lecture seule) : ignorées.
+ref/**                 linguist-vendored
+# Outils d'oracles (C++ / Python / Lua) : ignorés des statistiques.
+tools/**               linguist-vendored
+# Tables Rust générées par tools/gen_tables.py.
+crates/ng-cart/src/cmc_tables.rs  linguist-generated
+crates/ng-cart/src/defs.rs        linguist-generated
+crates/ng-cart/src/types.rs       linguist-generated
+crates/ng-lspc/src/dac_table.rs   linguist-generated
+crates/ng-lspc/src/zoom_table.rs  linguist-generated
+# Docs et cartes de tâches.
+docs/**                linguist-documentation
+tasks/**               linguist-documentation
+tests-data/**          linguist-vendored
+# Fins de ligne : LF pour tout le texte.
+* text=auto eol=lf
+*.ps1 text eol=lf
