@@ -5,8 +5,10 @@ pub mod dac_table;
 #[rustfmt::skip]
 pub mod zoom_table;
 
+pub mod fix;
 pub mod palette;
 pub mod regs;
+pub mod sprites;
 pub mod timing;
 pub mod vram;
 
