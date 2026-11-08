@@ -1,8 +1,8 @@
 #![forbid(unsafe_code)]
-//! Stub — voir la carte correspondante dans tasks/.
+//! ng-bus: 68000 system bus with Neo Geo memory mapping.
 
-#[cfg(test)]
-mod smoke {
-    #[test]
-    fn it_builds() {}
-}
+pub mod device;
+pub mod map68k;
+
+pub use device::{CartPort, Device, NullDevice};
+pub use map68k::Bus68k;

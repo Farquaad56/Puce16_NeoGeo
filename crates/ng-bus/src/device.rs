@@ -16,15 +16,7 @@ pub trait CartPort {
     fn read(&mut self, a: u32, p: &[u8], wram: &[u8]) -> Option<u16>;
     /// Intercept a write at address `a`.
     /// Return true if the write was consumed (no further action needed).
-    fn write(
-        &mut self,
-        a: u32,
-        d: u16,
-        upper: bool,
-        lower: bool,
-        p: &[u8],
-        wram: &[u8],
-    ) -> bool;
+    fn write(&mut self, a: u32, d: u16, upper: bool, lower: bool, p: &[u8], wram: &[u8]) -> bool;
     /// After a consumed write, check if the port requested a bank switch.
     fn take_bank(&mut self) -> Option<u32> {
         None
