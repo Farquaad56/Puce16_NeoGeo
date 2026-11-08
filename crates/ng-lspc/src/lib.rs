@@ -6,6 +6,7 @@ pub mod dac_table;
 pub mod zoom_table;
 
 pub mod regs;
+pub mod timing;
 pub mod vram;
 
 /// LSPC state machine.
@@ -25,10 +26,22 @@ pub struct Lspc {
     pub display_counter: u32,
     /// Current vertical position (MAME line 0..263), updated by timing.
     pub vpos: u16,
+
+    // Timing state (T401)
+    time: u64,
+    irq3: bool,
+    raster: bool,
+    vblank: bool,
+    timer_deadline: Option<u64>,
+    t_vbl_irq: u64,
+    t_reload: u64,
+    t_anim: u64,
+    next_line: u64,
 }
 
 impl Lspc {
     pub fn new() -> Self {
+        use timing::{MCLK_PER_LINE, RELOAD_OFFSET, VBLANK_IRQ_OFFSET, VBSTART, VSSTART};
         Self {
             vram: vram::Vram::new(),
             anim_speed: 0,
@@ -38,6 +51,15 @@ impl Lspc {
             irq2_ctrl: 0,
             display_counter: 0,
             vpos: 0,
+            time: 0,
+            irq3: true, // MAME: start with IRQ3 pending at reset
+            raster: false,
+            vblank: false,
+            timer_deadline: None,
+            t_vbl_irq: VBSTART as u64 * MCLK_PER_LINE + VBLANK_IRQ_OFFSET,
+            t_reload: VBSTART as u64 * MCLK_PER_LINE + RELOAD_OFFSET,
+            t_anim: VSSTART as u64 * MCLK_PER_LINE,
+            next_line: 0,
         }
     }
 
@@ -98,17 +120,6 @@ impl Lspc {
     /// Timer high word write ($3C0008).
     fn set_timer_high(&mut self, d: u16) {
         self.display_counter = (self.display_counter & 0xFFFF) | ((d as u32) << 16);
-    }
-
-    /// Timer low word write ($3C000A).
-    fn set_timer_low(&mut self, d: u16) {
-        // Update lower 16 bits; timer arming added by T401
-        self.display_counter = (self.display_counter & 0xFFFF0000) | (d as u32);
-    }
-
-    /// Interrupt acknowledge ($3C000C).
-    fn acknowledge(&mut self, _d: u16) {
-        // T401 will implement actual IRQ clearing
     }
 
     /// Auto-animation tick (called by timing at vpos=256).
