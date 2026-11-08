@@ -1,7 +1,31 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P3 Bus, BIOS, cartouches. T304 terminée (2026-11-08). Prochaine : T305.
+P3 Bus, BIOS, cartouches. T306 terminée (2026-11-08). Prochaine : voir tasks/INDEX.md.
+
+### Fait — T306 ng-bus banque P ROM ($2FFFF0)
+- crates/ng-bus/src/pbank.rs : initial_pbank_base() et banksel() fidèles à MAME (write_banksel + init_cpu).
+- Bus68k::new initialise pbank_base via initial_pbank_base(cart_p.len()).
+- Écritures dans $2FFFF0-$2FFFFE déclenchent banksel ; reste de la zone ignoré.
+- 6 tests unitaires : base initiale (petite/grande ROM), pas de banques, Metal Slug X (5 Mo), Metal Slug 1 (2 Mo), masquage des données.
+- Gate OK.
+
+### Piège rencontré — T306
+- Borrow checker : cart_p déplacé dans le struct avant appel à initial_pbank_base(cart_p.len()). Solution : calculer pbank_base avant la construction du Self.
+- Clippy manual_range_contains : utiliser (range).contains(&a) au lieu de comparaisons manuelles.
+
+### Fait — T305 ng-bus carte mémoire Z80, banking, ports, latches (SoundBoard + serveur de broches)
+- crates/ng-bus/src/z80port.rs : struct Z80Port (état du serveur de broches : last pins, read_data, write_done).
+- crates/ng-bus/src/sound.rs : trait Ym + struct SoundBoard<Y> avec tick() (serveur de broches 1 T-state), reset(), host_write_cmd(), nmi_level(), irq_level().
+- crates/ng-bus/src/z80map.rs : fonction banked_offset() pour le calcul d'offset des fenêtres banquées.
+- Mémoire Z80 implémentée : région fixe $0000-$7FFF (sm1 ou m1 selon use_cart), 4 fenêtres banquées ($F000/$E000/$C000/$$8000), RAM $F800-$FFFF.
+- Ports Z80 implémentés : latch commande $00, YM2610 $04-$07, banking $08-$0B (lecture), NMI enable/disable $08/$18 (écriture), reply latch $0C.
+- Banking : offset = 0x10000 + ((bank << (11+i)) & mask) | (addr - base), mask = (m1.len() - 0x10001) & 0x3FFFF. Banques initiales MAME : [0x1E, 0x0E, 0x06, 0x02].
+- Serveur de broches tick() : reproduit la boucle de puce_z80::Cpu::step pour un seul T-state, avec lecture/écriture mémoire et ports via les méthodes SoundBoard. INT/NMI forwardés selon irq_level()/nmi_level(). Pas de WAIT ni BUSRQ.
+- 17 tests unitaires : banking offset, bank switch via port, latch commande (lecture/écriture), reply latch, NMI enable/disable/niveau, RAM read/write, région fixe use_cart, ports YM2610, exécution CPU réelle (OUT, IN, NMI vector).
+### Piège rencontré — T305
+- Borrow checker : get_or_insert_with avec closure capturant self alors que self.port.read_data est déjà emprunté. Solution : take() + match manuel au lieu de get_or_insert_with.
+- Indexation slice par u8 : Rust exige usize pour les indices de slice, pas u8. Cast explicite nécessaire.
 
 ### Fait — T304 ng-bus backup RAM, mémoire carte (stub), RTC uPD4990A
 - backup.rs : BackupRam 64 Kio (miroir $D00000-$DFFFFF), écriture seulement si déverrouillée (latch q6), save/load fichier brut.
