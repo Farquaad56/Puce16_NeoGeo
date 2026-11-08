@@ -1,7 +1,17 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P3 Bus, BIOS, cartouches. T301 terminée (2026-11-08). Prochaine : T302.
+P3 Bus, BIOS, cartouches. T302 terminée (2026-11-08). Prochaine : T303.
+
+### Fait — T302 ng-bus carte mémoire 68000 (RAM, ROM, BIOS, zones)
+- crates/ng-bus/src/device.rs : trait Device + CartPort + NullDevice
+- crates/ng-bus/src/map68k.rs : Bus68k avec read16/write16 par zone (match a >> 20)
+- Zones implémentées : vecteurs ($000000), cart P-ROM fixe ($000080+), work RAM + miroirs ($100000-$1FFFFF), fenêtre bankswitch $200000, I/O/LSPC ($3x0000), palette ($400000-$7FFFFF), memcard ($800000-$BFFFFF), BIOS ($C00000), backup RAM ($D00000)
+- 16 tests unitaires passent (RAM, miroirs, byte writes, BIOS, vecteurs, bank select, open bus, périphériques NullDevice)
+- Gate OK
+
+### Piège rencontré — T302
+- La spec de la carte dit `match a >> 16` mais les gardes utilisent `(a>>20)` ; en réalité il faut `match a >> 20` car chaque zone fait 1 Mo (0x100000). Avec >>16, l'adresse 0xC00000 donne 0xC0 et ne matche aucun bras.
 
 ### Fait — T301 ng-cart chargeur BIOS + configuration neogeo.toml
 - crates/ng-cart/src/bios.rs : load_bios() avec WordSwap pour main BIOS, 4 ROMs (main/lo/sfix/sm1)
