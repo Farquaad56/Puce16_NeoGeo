@@ -3,6 +3,7 @@
 //! Implements the complete address decoding as specified in docs/spec/01-memory-map-registers.md.
 
 use crate::device::{CartPort, Device, NullDevice};
+use crate::pbank;
 
 /// The 68000 system bus with full memory mapping.
 pub struct Bus68k {
@@ -35,12 +36,13 @@ pub struct Bus68k {
 impl Bus68k {
     /// Create a new bus with null devices for all peripherals.
     pub fn new(bios: Vec<u8>, cart_p: Vec<u8>) -> Self {
+        let pbank_base = pbank::initial_pbank_base(cart_p.len());
         Self {
             work_ram: Box::new([0u8; 0x10000]),
             bios,
             cart_p,
             vectors_from_cart: false,
-            pbank_base: 0,
+            pbank_base,
             open_bus: 0xFFFF,
             io: Box::new(NullDevice),
             lspc: Box::new(NullDevice),
@@ -152,15 +154,15 @@ impl Bus68k {
                 }
             }
             0x2 => {
-                // Cart P-ROM window: port protection may consume the write
-                if let Some(ref mut port) = self.port {
+                // Cart P-ROM window: bank select at $2FFFF0-$2FFFFF, port protection elsewhere
+                if (0x2FFFF0..=0x2FFFFE).contains(&a) {
+                    pbank::banksel(&mut self.pbank_base, self.cart_p.len(), data);
+                } else if let Some(ref mut port) = self.port {
                     if port.write(a, data, upper, lower, &self.cart_p, &self.work_ram[..]) {
                         // Write consumed by port chip; check for bank switch request
                         if let Some(bank) = port.take_bank() {
                             self.pbank_base = bank;
                         }
-                    } else {
-                        // Otherwise ignored (ROM write) — T306 adds bank select logic here
                     }
                 }
             }

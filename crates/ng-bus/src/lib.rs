@@ -7,6 +7,7 @@ pub mod io;
 pub mod latch;
 pub mod map68k;
 pub mod memcard;
+pub mod pbank;
 pub mod rtc;
 pub mod sound;
 pub mod watchdog;
