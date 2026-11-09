@@ -1,7 +1,12 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P5 Audio YM2610 terminée jusqu'à T506 ; P6 : T600a, T600b, T600c et T601 terminées (2026-11-09). Prochaine : T602.
+P5 Audio YM2610 terminée jusqu'à T506 ; P6 : T600a, T600b, T600c, T601 et T602 terminées (2026-11-09). Prochaine : T603.
+
+### Fait — T602 ng-core test d'intégration BIOS boot
+- `crates/ng-core/tests/bios_boot.rs` : 5 tests dont le jalon BIOS seul 180 trames (PC ∈ [0xC00000,0xC1FFFF] ∪ RAM, ≥ 2 couleurs).
+- Test marqué `#[ignore = "requires local BIOS files from neogeo.toml"]` ; passe avec `--include-ignored` si `neogeo.toml` pointe vers des fichiers réels.
+- Tests synthétiques et de validation (comparateur couleurs, plages PC) passent sans fichiers locaux.
 
 ### Fait — T601 ng-core wait states du bus 68000
 - `crates/ng-core/src/waits.rs` : `bus_wait(addr, write) -> u32` retournant 0 pour toutes les zones (MAME ne modélise pas les wait states Neo Geo). Mécanisme en place pour remplir la table si une ROM de test hardware révèle des wait states réels.
