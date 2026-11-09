@@ -402,7 +402,7 @@
   ],
   "file": "tasks/T601.md",
   "assignee": "rust-dev",
-  "status": "todo"
+  "status": "done"
  },
  {
   "id": "T602",

@@ -17,7 +17,7 @@
 ## Décisions et points ouverts (audit 2026-11-02)
 - [RÉSOLU] Compilation : `cargo test` s'exécute chez l'utilisateur (scripts/gate.ps1) ; les oracles (ymfm, protections MAME, rendu Python) sont déjà générés par Claude dans tests-data/ (voir tools/README-golden.md).
 - [RÉSOLU] Référence vidéo : MAME 0.287 (`X:\Mame_0287`) ; captures PNG produites par tools/mame_golden.ps1 + tools/mame_snap.lua ; ROMs de test matérielles du wiki : T902.
-- [OUVERT] Q-WAIT : wait states des zones RAM/BIOS/VRAM/palette/E-S non documentés (MAME : 0). À mesurer avec une ROM de test matérielle (T901).
+- [OUVERT] Q-WAIT : wait states des zones RAM/BIOS/VRAM/palette/E-S non documentés (MAME : 0). À mesurer avec une ROM de test matérielle (T901). Wait states réels non mesurables sans le hardware : table à remplir si une ROM de test hardware les révèle.
 - [OUVERT] Q-BIOS512 : BIOS 512 Kio (sp-45/sp-j3) non pris en charge (T301).
 - [OUVERT] Q-PAR : ratio d'aspect (pixel 1:1 vs 4:3) à l'affichage (T800a).
 - [OUVERT] Q-AUDIOCLK : l'audio n'est pas l'horloge maître de l'émulation (T801a).

@@ -1,7 +1,13 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P5 Audio YM2610 terminée jusqu'à T506 ; P6 : T600a, T600b et T600c terminées (2026-11-09). Prochaine : T601.
+P5 Audio YM2610 terminée jusqu'à T506 ; P6 : T600a, T600b, T600c et T601 terminées (2026-11-09). Prochaine : T602.
+
+### Fait — T601 ng-core wait states du bus 68000
+- `crates/ng-core/src/waits.rs` : `bus_wait(addr, write) -> u32` retournant 0 pour toutes les zones (MAME ne modélise pas les wait states Neo Geo). Mécanisme en place pour remplir la table si une ROM de test hardware révèle des wait states réels.
+- `Host68k::wait_clocks` implémenté : appelle `bus_wait(addr, write) as u8`. Hook de test `wait_override` (cfg(test)) permet de forcer des wait states pour vérifier que le CPU ajoute bien +2 mclk par horloge d'attente.
+- Tests : `waits::tests::all_zones_return_zero` (7 adresses × lecture/écriture), `waits_integration.rs::wait_states_add_clocks` (MOVE.W $100000,D0 : 16 ticks sans attente, 18 avec wait_clocks(2)).
+- Ajout à docs/QUESTIONS.md : « wait states réels non mesurables sans le hardware ».
 
 ### Fait — T506 ng-core mélange audio YM + rééchantillonnage
 - crates/ng-core/src/audio_mix.rs : mix_ym() avec gains MAME exacts (FM 0.98, SSG 0.84) et AudioResampler à interpolation linéaire (état fractionnaire f64, déterministe).
