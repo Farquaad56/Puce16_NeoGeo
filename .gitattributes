@@ -9,6 +9,7 @@ crates/ng-cart/src/defs.rs        linguist-generated
 crates/ng-cart/src/types.rs       linguist-generated
 crates/ng-lspc/src/dac_table.rs   linguist-generated
 crates/ng-lspc/src/zoom_table.rs  linguist-generated
+crates/ng-ym2610/src/fm_tables.rs linguist-generated
 # Docs et cartes de tâches.
 docs/**                linguist-documentation
 tasks/**               linguist-documentation

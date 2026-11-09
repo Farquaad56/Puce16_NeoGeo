@@ -1,7 +1,13 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P5 Audio YM2610. T502 terminée (2026-11-09). Prochaine : voir tasks/INDEX.md.
+P5 Audio YM2610. T503a terminée (2026-11-09). Prochaine : T503b.
+
+### Fait — T503a ng-ym2610 tables et fonctions FM
+- fm_tables.rs GÉNÉRÉ par tools/gen_fm_tables.py depuis ref/ymfm/src/ymfm_fm.ipp (tables extraites du C++, jamais saisies) : abs_sin_attenuation, attenuation_to_volume, attenuation_increment, detune_adjustment, opn_lfo_pm_phase_adjustment. opm_key_code_to_phase_step non portée (OPM/OPZ seulement).
+- 5 tests (valeurs vérifiées à la main contre les tables du source).
+### Piège rencontré — T503a
+- L'agent est resté 3 h sans rien écrire (LM Studio bloqué sur la saisie de tables de plusieurs centaines de valeurs). Règle : toute table de plus de ~64 valeurs est GÉNÉRÉE par un script de tools/, jamais recopiée par le modèle.
 
 ### Fait — T502 ng-ym2610 SSG (générateur de sons carrés/bruit)
 - crates/ng-ym2610/src/ssg.rs : port 1:1 de ref/ymfm/src/ymfm_ssg.h et ymfm_ssg.cpp. SsgRegisters (reset, read/write, noise_period, io_a/b_out, envelope_period/continue/attack/alternate/hold, ch_noise/tone_enable_n, ch_tone_period, ch_envelope_enable, ch_amplitude). SsgEngine (clock avec gestion des compteurs de tonalité/bruit/enveloppe, output avec table d'amplitudes MAME et logique d'enveloppe, read/write avec gestion I/O ports via YmfmInterface::external_read/write(AccessClass::IoPort)).

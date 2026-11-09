@@ -8,6 +8,7 @@ pub mod common;
 pub mod fm_channel;
 pub mod fm_engine;
 pub mod fm_operator;
+#[rustfmt::skip]
 pub mod fm_tables;
 pub mod opn_regs;
 pub mod ssg;
