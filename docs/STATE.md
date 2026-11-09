@@ -1,7 +1,12 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P5 Audio YM2610. T504b et T505 terminées (2026-11-09). Prochaine : T506.
+P5 Audio YM2610. T504b, T505 et T506 terminées (2026-11-09). Prochaine : T507.
+
+### Fait — T506 ng-core mélange audio YM + rééchantillonnage
+- crates/ng-core/src/audio_mix.rs : mix_ym() avec gains MAME exacts (FM 0.98, SSG 0.84) et AudioResampler à interpolation linéaire (état fractionnaire f64, déterministe).
+- Tests : mix_ym ([32767,0,0] → [0.98*32767/32768, 0]), upsample 2x (moyennes des voisins), YM rate 55555.56→48000 Hz (48000±1 échantillons).
+- Piège : le rééchantillonneur produit des paires stéréo (2 f32 par échantillon) ; les tests doivent compter en f32, pas en échantillons.
 
 ### Fait — T504b + T505 ng-ym2610 génération audio et test d'oracle ymfm
 - crates/ng-ym2610/src/resampler.rs : SsgResampler (ssg_resampler<output_data,2,true> : 3 sorties, mélange SSG sur la sortie 2). Seuls 2:9 (MED) et nop sont portés. ym2610.rs : generate / update_prescale / clock_fm_and_adpcm / sample_rate / ssg_effective_clock, fidélité MED uniquement (échantillon à clock/144, comme MAME).
