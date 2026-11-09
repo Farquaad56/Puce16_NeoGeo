@@ -1,7 +1,11 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P5 Audio YM2610. T503b terminée (2026-11-09). Prochaine : T503c.
+P5 Audio YM2610. T503c terminée (2026-11-09). Prochaine : T503d.
+
+### Fait — T503c ng-ym2610 fm_operator
+- crates/ng-ym2610/src/fm_operator.rs : port de fm_operator (ymfm_fm.h l.158-250, ymfm_fm.ipp l.369-792). FmOperator : new/reset/prepare/clock/phase/compute_volume/compute_noise_volume/keyonoff, et en privé start_attack/start_release/clock_keystate/clock_ssg_eg_state/clock_envelope/clock_phase/envelope_attenuation. `regs: &OpnRegisters` passé en argument (plus de m_regs/m_owner). Constantes KEYON_* et EG_QUIET. Branches DEPRESS/REVERB omises (OPN). 8 tests.
+- Piège : l'agent est resté bloqué (comme T503a/b), carte faite par Claude. Attention à `(~att * increment) >> 4` : calcul u32 modulo 2^32 puis troncature en u16.
 
 ### Fait — T503b ng-ym2610 registres FM OPN
 - crates/ng-ym2610/src/opn_regs.rs : port de fm_registers_base + opn_registers_base<true> (OPNA) de ymfm. OpnRegisters (type concret, sans génériques) : new/reset/read/write (paires 0xA0-AF verrouillées, key-on 0x28), clock_noise_and_lfo, lfo_am_offset, cache_operator_data, compute_phase_step, operator_map, accesseurs de registres. OpdataCache sans pointeur de forme d'onde (accesseur waveform()). Constantes EG_* dans common.rs.
