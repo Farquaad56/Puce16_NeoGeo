@@ -1,7 +1,25 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P4 Vidéo LSPC (pixel perfect). T406 terminée (2026-11-09). Prochaine : voir tasks/INDEX.md.
+P5 Audio YM2610. T501a terminée (2026-11-09). Prochaine : voir tasks/INDEX.md.
+
+### Fait — T501a ng-ym2610 ADPCM-A (registres, canal, moteur)
+- crates/ng-ym2610/src/adpcm_a.rs : port 1:1 de ref/ymfm/src/ymfm_adpcm.h (lignes 1-210) et ymfm_adpcm.cpp (lignes 40-357). AdpcmARegisters (reset, write, dump/dump_mask/total_level/test, ch_pan_left/right/instrument_level/start/end), AdpcmAChannel (keyonoff, clock avec table s_steps/s_step_inc copiées verbatim, output avec volume/panning), AdpcMAEngine (clock, output, write avec key-on/off actif sur registre 0x00). Accès mémoire via YmfmInterface::external_read(AccessClass::AdpcmA, addr).
+- 6 tests unitaires passent : clock basic, end address stops, keyonoff stops channel, step table values, write control register, output volume.
+- Gate OK (fmt, clippy -D warnings, tests workspace).
+
+### Piège rencontré — T501a
+- L'implémentation existait déjà dans le fichier adpcm_a.rs depuis la tentative précédente qui a crashé à l'écriture ; pas besoin de réécrire, juste valider et tester.
+
+### Fait — T500 ng-ym2610 types communs ymfm (interface, sorties, utilitaires)
+- crates/ng-ym2610/src/common.rs : port 1:1 de ref/ymfm/src/ymfm.h lignes 86-317. Utilitaires bitfield(), bit(), clamp(), count_leading_zeros_u32(), roundtrip_fp() (encode/decode FP 3.10). Trait YmfmInterface avec implémentation par défaut vide pour les callbacks optionnels. Enum AccessClass { IoPort, AdpcmA, AdpcmB, Pcm }. Struct Output<const N> avec clear(), clamp16(), roundtrip_fp(), add().
+- crates/ng-ym2610/src/lib.rs : déclarations des 10 modules (common + 9 stubs vides pour les tâches suivantes).
+- 9 tests unitaires passent (bitfield, bit, clamp, roundtrip_fp x5 valeurs exactes, Output clear/add).
+- Gate OK.
+
+### Piège rencontré — T500
+- roundtrip_fp(32767) : en C++, scanvalue << 17 déborde int32_t (UB), mais le bit pattern résultant est identique à un shift u32. En Rust, utiliser (scanvalue as u32) << 17 pour reproduire exactement ce comportement. Valeur attendue : 32704 (pas 32752 comme on pourrait calculer naïvement).
+- write_file bloque si le fichier a été lu avec pagination ; utiliser patch ou re-lire sans offset/limit.
 
 ### Fait — T406 ng-lspc composition d'une ligne et boucle de rendu (début de ligne)
 - crates/ng-lspc/src/render.rs : LspcRoms struct, render_line(), on_line_start(), advance_render() portés de MAME neogeo_v.cpp l.157-167 (screen_update) et neogeo_spr.cpp l.517-527 (sprite_line_timer_callback).
