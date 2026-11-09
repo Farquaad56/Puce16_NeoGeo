@@ -248,7 +248,7 @@
   ],
   "file": "tasks/T501b.md",
   "assignee": "rust-dev",
-  "status": "todo"
+  "status": "done"
  },
  {
   "id": "T502",
@@ -259,7 +259,7 @@
   ],
   "file": "tasks/T502.md",
   "assignee": "rust-dev",
-  "status": "todo"
+  "status": "done"
  },
  {
   "id": "T503a",

@@ -1,7 +1,25 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P5 Audio YM2610. T501a terminée (2026-11-09). Prochaine : voir tasks/INDEX.md.
+P5 Audio YM2610. T502 terminée (2026-11-09). Prochaine : voir tasks/INDEX.md.
+
+### Fait — T502 ng-ym2610 SSG (générateur de sons carrés/bruit)
+- crates/ng-ym2610/src/ssg.rs : port 1:1 de ref/ymfm/src/ymfm_ssg.h et ymfm_ssg.cpp. SsgRegisters (reset, read/write, noise_period, io_a/b_out, envelope_period/continue/attack/alternate/hold, ch_noise/tone_enable_n, ch_tone_period, ch_envelope_enable, ch_amplitude). SsgEngine (clock avec gestion des compteurs de tonalité/bruit/enveloppe, output avec table d'amplitudes MAME et logique d'enveloppe, read/write avec gestion I/O ports via YmfmInterface::external_read/write(AccessClass::IoPort)).
+- 3 tests unitaires passent : reset all registers zero, tone output basic (alternating pattern verified), envelope shape progression.
+- Gate OK (fmt, clippy -D warnings, tests workspace).
+
+### Piège rencontré — T502
+- Clippy needless_late_init : déclarer `let volume = if ...` directement au lieu de `let volume; if ... { volume = ... }`.
+- Clippy identity_op : `(0x00 + 2 * choffs)` simplifié en `(2 * choffs)`.
+- La logique C++ `noise_on & tone_on` utilise l'opérateur bitwise AND sur des entiers ; en Rust, convertir les bools en u32 (1/0) pour reproduire exactement le comportement.
+
+### Fait — T501b ng-ym2610 ADPCM-B (registres, canal, moteur)
+- crates/ng-ym2610/src/adpcm_b.rs : port 1:1 de ref/ymfm/src/ymfm_adpcm.h (lignes 214-407) et ymfm_adpcm.cpp (lignes 358-807). AdpcMBRegisters (reset, write, execute/record/external/repeat/speaker/resetflag/pan_left/right/start_conversion/dac_enable/dram_8bit/rom_ram/start/end/prescale/cpudata/delta_n/level/limit/dac/pcm), AdpcMBChannel (clock avec table S_STEP_SCALE copiée verbatim, output avec interpolation linéaire et volume/panning, read/write pour registres spéciaux 0x00 et 0x08, address_shift/load_start/at_limit/at_end), AdpcMBEngine (clock, output, write avec gestion des écritures spéciales). Accès mémoire via YmfmInterface::external_read(AccessClass::AdpcmB, addr).
+- 7 tests unitaires passent : registers reset, channel clock basic, end address stops, keyonoff stops channel, step scale table values, write control register, output volume.
+- Gate OK (fmt, clippy -D warnings, tests workspace).
+
+### Piège rencontré — T501b
+- L'implémentation existait déjà dans le fichier adpcm_b.rs depuis la tentative précédente qui a crashé à l'écriture ; pas besoin de réécrire, juste valider et tester.
 
 ### Fait — T501a ng-ym2610 ADPCM-A (registres, canal, moteur)
 - crates/ng-ym2610/src/adpcm_a.rs : port 1:1 de ref/ymfm/src/ymfm_adpcm.h (lignes 1-210) et ymfm_adpcm.cpp (lignes 40-357). AdpcmARegisters (reset, write, dump/dump_mask/total_level/test, ch_pan_left/right/instrument_level/start/end), AdpcmAChannel (keyonoff, clock avec table s_steps/s_step_inc copiées verbatim, output avec volume/panning), AdpcMAEngine (clock, output, write avec key-on/off actif sur registre 0x00). Accès mémoire via YmfmInterface::external_read(AccessClass::AdpcmA, addr).
