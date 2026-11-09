@@ -1,8 +1,14 @@
 #![forbid(unsafe_code)]
-//! Stub — voir la carte correspondante dans tasks/.
+//! ng-ym2610: YM2610 FM/ADPCM sound chip emulation (Neo Geo).
+//! Ported from ymfm by Aaron Giles (BSD 3-Clause License).
 
-#[cfg(test)]
-mod smoke {
-    #[test]
-    fn it_builds() {}
-}
+pub mod adpcm_a;
+pub mod adpcm_b;
+pub mod common;
+pub mod fm_channel;
+pub mod fm_engine;
+pub mod fm_operator;
+pub mod fm_tables;
+pub mod opn_regs;
+pub mod ssg;
+pub mod ym2610;
