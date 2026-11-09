@@ -1,7 +1,13 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P5 Audio YM2610. T503e terminée (2026-11-09). Prochaine : T504a.
+P5 Audio YM2610. T504a terminée (2026-11-09). Prochaine : T504b.
+
+### Fait — T504a ng-ym2610 YM2610 (registres, statut, lecture/écriture)
+- crates/ng-ym2610/src/ym2610.rs : port de ym2610 (ymfm_opn.h l.645-720, ymfm_opn.cpp l.1838-2109). Ym2610 : new/reset/read_status/read_data/read_status_hi/read_data_hi/read/write_address/write_data/write_address_hi/write_data_hi/write, plus engine_timer_expired(tnum) pour l'hôte. generate/set_fidelity/save_restore : T504b et T604. 7 tests.
+- Interface hôte partagée : `SharedIntf = Rc<RefCell<dyn YmfmInterface>>`, relayée aux moteurs SSG/ADPCM-A/ADPCM-B par `IntfHandle` (ymfm partage une seule interface, nos moteurs possèdent un Box). Ym2610 n'est donc pas Send : créer la machine dans le thread d'émulation.
+- Bug trouvé et corrigé dans T501a : AdpcMAEngine::new codait le décalage d'adresse à 1 ; ymfm passe 8 pour le YM2610. Signature `new(intf, addrshift)` (tests existants gardent 1).
+- Le brouillon laissé par l'agent (Box.clone, DummyInterface) ne compilait pas : réécrit.
 
 ### Fait — T503e ng-ym2610 fm_engine
 - crates/ng-ym2610/src/fm_engine.rs : port de fm_engine_base (ymfm_fm.h l.345-463, ymfm_fm.ipp l.1180-1592). FmEngine possède regs, 6 canaux, 24 opérateurs ; new/reset/clock/output/write/status/set_reset_status/set_irq_mask/clock_prescale/sample_rate, engine_timer_expired/engine_check_interrupts/engine_mode_write, assign_operators, update_timer. Interface hôte passée en `&mut dyn YmfmInterface`. 7 tests (timers, IRQ, env_counter, key on).

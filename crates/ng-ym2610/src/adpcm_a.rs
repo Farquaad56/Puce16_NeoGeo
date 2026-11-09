@@ -245,14 +245,15 @@ pub struct AdpcMAEngine {
 }
 
 impl AdpcMAEngine {
-    pub fn new(intf: Box<dyn YmfmInterface>) -> Self {
+    /// `addrshift` : décalage à gauche des adresses (ymfm : 8 pour le YM2610).
+    pub fn new(intf: Box<dyn YmfmInterface>, addrshift: u32) -> Self {
         let mut channels = [
-            AdpcmAChannel::new(0, 1),
-            AdpcmAChannel::new(1, 1),
-            AdpcmAChannel::new(2, 1),
-            AdpcmAChannel::new(3, 1),
-            AdpcmAChannel::new(4, 1),
-            AdpcmAChannel::new(5, 1),
+            AdpcmAChannel::new(0, addrshift),
+            AdpcmAChannel::new(1, addrshift),
+            AdpcmAChannel::new(2, addrshift),
+            AdpcmAChannel::new(3, addrshift),
+            AdpcmAChannel::new(4, addrshift),
+            AdpcmAChannel::new(5, addrshift),
         ];
 
         // Reset all channels
@@ -382,7 +383,7 @@ mod tests {
         // Test basic ADPCM-A channel clocking with known data.
         // Data: 0x12, 0x34, 0x56 (nibbles: 1,2,3,4,5,6)
         let intf = Box::new(TestInterface::new(vec![0x12, 0x34, 0x56]));
-        let mut engine = AdpcMAEngine::new(intf);
+        let mut engine = AdpcMAEngine::new(intf, 1);
 
         // Set up channel 0: start at address 0, end at address 10 (inclusive)
         engine.set_start_end(0, 0, 10);
@@ -400,7 +401,7 @@ mod tests {
     #[test]
     fn test_adpcm_a_keyonoff_stops_channel() {
         let intf = Box::new(TestInterface::new(vec![0x12, 0x34, 0x56]));
-        let mut engine = AdpcMAEngine::new(intf);
+        let mut engine = AdpcMAEngine::new(intf, 1);
 
         // Set up channel 0
         engine.set_start_end(0, 0, 10);
@@ -423,7 +424,7 @@ mod tests {
     #[test]
     fn test_adpcm_a_write_control_register() {
         let intf = Box::new(TestInterface::new(vec![0x00; 64]));
-        let mut engine = AdpcMAEngine::new(intf);
+        let mut engine = AdpcMAEngine::new(intf, 1);
 
         // Write control register: key on channel 0 (bit 7=0, bit 0=1)
         engine.write(0x00, 0x01);
@@ -445,7 +446,7 @@ mod tests {
     #[test]
     fn test_adpcm_a_output_volume() {
         let intf = Box::new(TestInterface::new(vec![0x00; 64]));
-        let mut engine = AdpcMAEngine::new(intf);
+        let mut engine = AdpcMAEngine::new(intf, 1);
 
         // Set total level to max (silence) - register 0x01, bits 0-5
         engine.write(0x01, 0x3f);
@@ -467,7 +468,7 @@ mod tests {
     #[test]
     fn test_adpcm_a_end_address_stops() {
         let intf = Box::new(TestInterface::new(vec![0x12, 0x34]));
-        let mut engine = AdpcMAEngine::new(intf);
+        let mut engine = AdpcMAEngine::new(intf, 1);
 
         // Set up channel 0 with range start=0, end=1 (one word at address 0)
         engine.set_start_end(0, 0, 1);
