@@ -1,7 +1,11 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P5 Audio YM2610. T503c terminée (2026-11-09). Prochaine : T503d.
+P5 Audio YM2610. T503d terminée (2026-11-09). Prochaine : T503e.
+
+### Fait — T503d ng-ym2610 fm_channel
+- crates/ng-ym2610/src/fm_channel.rs : port de fm_channel (ymfm_fm.h l.250-345, ymfm_fm.ipp l.793-1077). FmChannel : new/reset/assign/keyonoff/prepare/clock/output_2op/output_4op/is4op, table des 12 algorithmes. Opérateurs référencés par indices dans `ops: &[FmOperator]`, `regs: &OpnRegisters` en argument. output_rhythm_* (OPL), log_keyon et save_restore non portés. 7 tests.
+- Piège : opout[] est un int16_t[8] en C++ et `op1value = m_feedback_in = ...` tronque en int16 : reproduit avec `as i16`. Un commentaire `///` indenté avec un schéma ASCII est pris pour un doctest : utiliser `//`.
 
 ### Fait — T503c ng-ym2610 fm_operator
 - crates/ng-ym2610/src/fm_operator.rs : port de fm_operator (ymfm_fm.h l.158-250, ymfm_fm.ipp l.369-792). FmOperator : new/reset/prepare/clock/phase/compute_volume/compute_noise_volume/keyonoff, et en privé start_attack/start_release/clock_keystate/clock_ssg_eg_state/clock_envelope/clock_phase/envelope_attenuation. `regs: &OpnRegisters` passé en argument (plus de m_regs/m_owner). Constantes KEYON_* et EG_QUIET. Branches DEPRESS/REVERB omises (OPN). 8 tests.

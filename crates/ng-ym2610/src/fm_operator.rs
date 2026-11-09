@@ -90,6 +90,13 @@ impl FmOperator {
         &mut self.cache
     }
 
+    /// Force l'état de l'enveloppe (tests des canaux).
+    #[cfg(test)]
+    pub(crate) fn test_set_envelope(&mut self, attenuation: u16, state: usize) {
+        self.env_attenuation = attenuation;
+        self.env_state = state;
+    }
+
     /// Prépare avant l'horloge ; true tant que l'opérateur est actif.
     pub fn prepare(&mut self, regs: &OpnRegisters) -> bool {
         // met les données en cache
