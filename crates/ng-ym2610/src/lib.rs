@@ -11,5 +11,6 @@ pub mod fm_operator;
 #[rustfmt::skip]
 pub mod fm_tables;
 pub mod opn_regs;
+pub mod resampler;
 pub mod ssg;
 pub mod ym2610;

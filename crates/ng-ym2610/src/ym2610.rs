@@ -7,15 +7,17 @@
 //! (SSG, ADPCM-A, ADPCM-B) possède un `Box<dyn YmfmInterface>` : l'interface hôte est donc un
 //! `Rc<RefCell<dyn YmfmInterface>>` (`SharedIntf`), enveloppé dans un `IntfHandle` par moteur.
 //! `ssg_override`, `set_fidelity`, `update_prescale`, `save_restore` et `generate` sont hors de cette
-//! carte (generate : T504b ; savestates : T604). `ym2610b` n'existe pas ici (channel_mask par défaut 0x36).
+//! carte (savestates : T604). `generate`, `update_prescale` et `clock_fm_and_adpcm` (T504b) ne portent que la
+//! fidélité MED (échantillon à clock/144, SSG 2:9), celle de MAME ; les autres fidélités ne sont pas portées. `ym2610b` n'existe pas ici (channel_mask par défaut 0x36).
 
 use std::cell::RefCell;
 use std::rc::Rc;
 
 use crate::adpcm_a::AdpcMAEngine;
-use crate::adpcm_b::AdpcMBEngine;
-use crate::common::{bitfield, AccessClass, YmfmInterface};
+use crate::adpcm_b::{AdpcMBChannel, AdpcMBEngine};
+use crate::common::{bitfield, AccessClass, Output, YmfmInterface};
 use crate::fm_engine::FmEngine;
+use crate::resampler::SsgResampler;
 use crate::ssg::SsgEngine;
 
 /// Interface hôte partagée entre les moteurs de la puce.
@@ -60,11 +62,16 @@ pub struct Ym2610 {
     eos_status: u8,
     /// Contrôle du masque de drapeaux.
     flag_mask: u8,
+    /// Nombre d'échantillons FM par échantillon de sortie.
+    fm_samples_per_output: u8,
+    /// Dernière sortie FM.
+    last_fm: Output<2>,
     /// Interface propre au moteur FM (les autres moteurs ont la leur).
     fm_intf: IntfHandle,
     /// Moteur FM central.
     fm: FmEngine,
     ssg: SsgEngine,
+    ssg_resampler: SsgResampler,
     adpcm_a: AdpcMAEngine,
     adpcm_b: AdpcMBEngine,
 }
@@ -77,17 +84,23 @@ impl Ym2610 {
 
     /// Constructeur ; `channel_mask` vaut 0x36 pour le YM2610.
     pub fn new(intf: SharedIntf, channel_mask: u8) -> Self {
-        Ym2610 {
+        let mut chip = Ym2610 {
             address: 0,
             fm_mask: channel_mask,
             eos_status: 0x00,
             flag_mask: Self::EOS_FLAGS_MASK,
+            fm_samples_per_output: 1,
+            last_fm: Output::<2> { data: [0; 2] },
             fm_intf: IntfHandle(intf.clone()),
             fm: FmEngine::new(),
             ssg: SsgEngine::new(Box::new(IntfHandle(intf.clone()))),
+            ssg_resampler: SsgResampler::new(),
             adpcm_a: AdpcMAEngine::new(Box::new(IntfHandle(intf.clone())), 8),
             adpcm_b: AdpcMBEngine::new(Box::new(IntfHandle(intf)), 8),
-        }
+        };
+        chip.last_fm.clear();
+        chip.update_prescale();
+        chip
     }
 
     /// Remet le système à zéro.
@@ -248,6 +261,81 @@ impl Ym2610 {
         self.fm_intf.set_busy_end(32 * self.fm.clock_prescale());
     }
 
+    /// Fréquence d'échantillonnage de sortie (fidélité MED : horloge / 144).
+    pub fn sample_rate(&self, input_clock: u32) -> u32 {
+        input_clock / 144
+    }
+
+    /// Horloge effective du SSG.
+    pub fn ssg_effective_clock(&self, input_clock: u32) -> u32 {
+        input_clock / 4
+    }
+
+    /// Génère `numsamples` échantillons : [0] = FM gauche, [1] = FM droite, [2] = SSG mono.
+    pub fn generate(&mut self, output: &mut [[i32; 3]], numsamples: u32) {
+        // la sortie FM est simplement répétée le nombre de fois du prescale
+        for samp in 0..numsamples {
+            if self.ssg_resampler.sampindex().wrapping_add(samp) % self.fm_samples_per_output as u32
+                == 0
+            {
+                self.clock_fm_and_adpcm();
+            }
+            output[samp as usize][0] = self.last_fm.data[0];
+            output[samp as usize][1] = self.last_fm.data[1];
+        }
+
+        // rééchantillonne le SSG comme configuré
+        self.ssg_resampler
+            .resample(&mut self.ssg, output, numsamples);
+    }
+
+    /// Met à jour le prescale en recalculant les valeurs dérivées.
+    fn update_prescale(&mut self) {
+        // Fidélité :  ---- minimum ----    ---- moyenne ----    ---- maximum ----
+        //              rate = clock/144     rate = clock/144     rate = clock/16
+        // Prescale    FM rate  SSG rate    FM rate  SSG rate    FM rate  SSG rate
+        //     6          1:1     2:9          1:1     2:9         9:1     2:1
+
+        // PORT-NOTE : seule la fidélité MED est portée (celle de MAME) ; `ssg.overridden()` n'existe pas.
+        self.fm_samples_per_output = 1;
+        self.ssg_resampler.configure(2, 9);
+    }
+
+    /// Cadence l'état FM et ADPCM.
+    fn clock_fm_and_adpcm(&mut self) {
+        // cadence le système
+        let env_counter = self.fm.clock(self.fm_mask as u32);
+
+        // cadence l'ADPCM-A à chaque cycle d'enveloppe
+        if bitfield(env_counter, 0, 2) == 0 {
+            self.eos_status |= self.adpcm_a.clock(0x3f) as u8;
+        }
+
+        // cadence l'ADPCM-B à chaque cycle
+        self.adpcm_b.clock();
+
+        // la dernière valeur EOS de l'ADPCM-B est suivie dans le bit 6 (caché des appelants) ;
+        // si elle a changé depuis le dernier échantillon, met à jour l'état EOS visible dans le bit 7
+        let live_eos: u8 = if (self.adpcm_b.status() & AdpcMBChannel::STATUS_EOS) != 0 {
+            0x40
+        } else {
+            0x00
+        };
+        if ((live_eos ^ self.eos_status) & 0x40) != 0 {
+            self.eos_status = (self.eos_status & !0xc0) | live_eos | (live_eos << 1);
+        }
+
+        // met à jour le contenu FM ; l'OPNB est en 13 bits sans écrêtage intermédiaire
+        self.last_fm.clear();
+        self.fm
+            .output(&mut self.last_fm, 1, 32767, self.fm_mask as u32);
+
+        // mélange l'ADPCM et écrête
+        self.adpcm_a.output(&mut self.last_fm, 0x3f);
+        self.adpcm_b.output(&mut self.last_fm, 1);
+        self.last_fm.clamp16();
+    }
+
     /// Gère une écriture via l'interface de registres.
     pub fn write(&mut self, offset: u32, data: u8) {
         match offset & 3 {
@@ -405,5 +493,38 @@ mod tests {
                 .ch_block_freq(crate::opn_regs::OpnRegisters::channel_offset(3)),
             0x0B56
         );
+    }
+
+    #[test]
+    fn generate_after_reset_is_silent() {
+        let (mut chip, _mock) = chip();
+        let mut out = [[1, 1, 1]; 4];
+        chip.generate(&mut out, 4);
+        assert_eq!(out, [[0, 0, 0]; 4]);
+        assert_eq!(
+            chip.sample_rate(8_000_000 * 3 / 2 * 12 / 12),
+            8_000_000 * 3 / 2 / 144
+        );
+    }
+
+    #[test]
+    fn ssg_tone_reaches_the_third_output_only() {
+        let (mut chip, _mock) = chip();
+        for (reg, val) in [(0u8, 0x01u8), (1, 0x00), (7, 0x38), (8, 0x0F)] {
+            chip.write(0, reg);
+            chip.write(1, val);
+        }
+        let mut out = [[0; 3]; 200];
+        chip.generate(&mut out, 200);
+        assert!(out.iter().any(|s| s[2] != 0));
+        assert!(out.iter().all(|s| s[0] == 0 && s[1] == 0));
+    }
+
+    #[test]
+    fn sample_index_advances_with_generate() {
+        let (mut chip, _mock) = chip();
+        let mut out = [[0; 3]; 5];
+        chip.generate(&mut out, 5);
+        assert_eq!(chip.ssg_resampler.sampindex(), 5);
     }
 }

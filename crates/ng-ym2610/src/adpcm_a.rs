@@ -187,21 +187,18 @@ impl AdpcmAChannel {
         }
 
         // Compute the ADPCM delta
-        let step = S_STEPS[self.step_index as usize] as i32;
-        let nibble_val = data as i32;
-        let delta = (2 * nibble_val + 1) * step / 8;
-        if bitfield(nibble_val as u32, 3, 1) != 0 {
-            self.accumulator = (self.accumulator as i32 - delta) as i16;
-        } else {
-            self.accumulator = (self.accumulator as i32 + delta) as i16;
+        // PORT-NOTE: the magnitude is the low 3 bits of the nibble (bitfield(data, 0, 3)); bit 3 is the sign.
+        let magnitude = (data & 7) as usize;
+        let mut delta = (2 * magnitude as i32 + 1) * S_STEPS[self.step_index as usize] as i32 / 8;
+        if bitfield(data as u32, 3, 1) != 0 {
+            delta = -delta;
         }
 
         // The 12-bit accumulator wraps on YM2610 and YM2608 (like MSM5205)
-        self.accumulator &= 0xfff;
+        self.accumulator = ((self.accumulator as i32 + delta) & 0xfff) as i16;
 
         // Adjust ADPCM step
-        let inc = S_STEP_INC[nibble_val as usize];
-        let new_index = self.step_index as i32 + inc as i32;
+        let new_index = self.step_index as i32 + S_STEP_INC[magnitude] as i32;
         self.step_index = clamp(new_index, 0, 48) as u8;
 
         false
@@ -224,7 +221,8 @@ impl AdpcmAChannel {
 
         // m_accumulator is a 12-bit value; shift up to sign-extend.
         // The downshift is incorporated into 'shift'.
-        let value = ((self.accumulator as i32) << 4) * mul;
+        // PORT-NOTE: int16_t(m_accumulator << 4) truncates to 16 bits, which sign-extends the 12-bit value.
+        let value = (((self.accumulator as i32) << 4) as i16 as i32) * mul;
         let value = (value >> shift) & !3;
 
         // Apply to left/right as appropriate

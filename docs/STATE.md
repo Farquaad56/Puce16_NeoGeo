@@ -1,7 +1,14 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P5 Audio YM2610. T504a terminée (2026-11-09). Prochaine : T504b.
+P5 Audio YM2610. T504b et T505 terminées (2026-11-09). Prochaine : T506.
+
+### Fait — T504b + T505 ng-ym2610 génération audio et test d'oracle ymfm
+- crates/ng-ym2610/src/resampler.rs : SsgResampler (ssg_resampler<output_data,2,true> : 3 sorties, mélange SSG sur la sortie 2). Seuls 2:9 (MED) et nop sont portés. ym2610.rs : generate / update_prescale / clock_fm_and_adpcm / sample_rate / ssg_effective_clock, fidélité MED uniquement (échantillon à clock/144, comme MAME).
+- T505 faite dans la foulée : crates/ng-ym2610/tests/{common/mod.rs,ym_golden.rs} rejoue les 7 scénarios de tools/ymfm_golden.cpp. Résultat : les 7 (silence, fm, ssg, adpcma, adpcmb, timers + statut, mix) sont IDENTIQUES au vrai ymfm, échantillon par échantillon. Le YM2610 est donc validé contre l'oracle.
+- Bugs trouvés par l'oracle dans T501a (ADPCM-A) : (1) l'amplitude et l'index de la table de pas utilisaient le nibble complet (0-15) au lieu de ses 3 bits bas -> panique ; (2) la sortie n'étendait pas le signe de l'accumulateur 12 bits (`int16_t(acc << 4)`). Corrigés dans adpcm_a.rs. Leçon : les tests unitaires écrits par les agents n'attrapaient pas ces erreurs ; seul l'oracle ymfm le fait.
+- Ajout `AdpcMBChannel::STATUS_EOS`, `#[derive(Clone, Copy, Debug, PartialEq, Eq)]` sur `Output`.
+- Suite : T506 (mélange YM aux gains MAME + rééchantillonnage vers l'hôte).
 
 ### Fait — T504a ng-ym2610 YM2610 (registres, statut, lecture/écriture)
 - crates/ng-ym2610/src/ym2610.rs : port de ym2610 (ymfm_opn.h l.645-720, ymfm_opn.cpp l.1838-2109). Ym2610 : new/reset/read_status/read_data/read_status_hi/read_data_hi/read/write_address/write_data/write_address_hi/write_data_hi/write, plus engine_timer_expired(tnum) pour l'hôte. generate/set_fidelity/save_restore : T504b et T604. 7 tests.

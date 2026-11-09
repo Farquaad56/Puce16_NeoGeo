@@ -134,6 +134,7 @@ pub trait YmfmInterface {
 }
 
 /// Struct containing an array of output values.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Output<const N: usize> {
     pub data: [i32; N],
 }

@@ -146,6 +146,9 @@ pub struct AdpcMBChannel {
 }
 
 impl AdpcMBChannel {
+    /// Bit de statut « fin d'échantillon » (ymfm_adpcm.h : STATUS_EOS).
+    pub const STATUS_EOS: u8 = 0x01;
+
     pub fn new(address_shift: u32) -> Self {
         Self {
             address_shift,
