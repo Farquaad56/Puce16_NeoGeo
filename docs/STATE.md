@@ -1,7 +1,19 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P4 Vidéo LSPC (pixel perfect). T405a terminée (2026-11-08). Prochaine : voir tasks/INDEX.md.
+P4 Vidéo LSPC (pixel perfect). T406 terminée (2026-11-09). Prochaine : voir tasks/INDEX.md.
+
+### Fait — T406 ng-lspc composition d'une ligne et boucle de rendu (début de ligne)
+- crates/ng-lspc/src/render.rs : LspcRoms struct, render_line(), on_line_start(), advance_render() portés de MAME neogeo_v.cpp l.157-167 (screen_update) et neogeo_spr.cpp l.517-527 (sprite_line_timer_callback).
+- render_line(v) : hors zone visible [16,239] → rien ; sinon backdrop + sprites + fix layer dans row[320], copie dans fb.pixels[(v-16)*320..].
+- on_line_start(line) : si line != 0 { render_line(line-1) } puis parse_sprites(line).
+- advance_render(to, roms, fb) : boucle while time < to { if let Some(line)=advance(to) { on_line_start(line) } }.
+- crates/ng-lspc/tests/scenes.rs : 8 tests — 5 scènes de référence (fix_std, sprites_plain, sprites_zoom_chain, fix_garou, fix_kof2000) comparées pixel par pixel à expected.raw ; trame vide → tous pixels = backdrop ; ordre fix/sprite couvert par fix_std ; advance_render(405_504) avance exactement une frame.
+- Gate OK (fmt, clippy -D warnings, tests workspace).
+
+### Piège rencontré — T406
+- draw_sprites_line et draw_fixed_line exigent des ROMs non vides même pour des tests triviaux : fournir c_rom[4], s_rom[32] (une tuile), lo_rom[256] (zoom table row 0).
+- Clippy needless_range_loop dans les tests : utiliser iter().enumerate() au lieu de for i in 0..N { arr[i] = src[i] }.
 
 ### Fait — T405a ng-lspc dessin des sprites d'une ligne (zoom, flips, animation, décodage C ROM)
 - crates/ng-lspc/src/draw.rs : sprite_gfx_mask(), draw_pixel() et draw_sprites_line() portés de MAME neogeo_spr.cpp l.277-461, l.542-562, l.631-654.
