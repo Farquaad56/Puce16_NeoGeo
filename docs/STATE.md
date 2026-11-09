@@ -1,7 +1,12 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P5 Audio YM2610. T503d terminée (2026-11-09). Prochaine : T503e.
+P5 Audio YM2610. T503e terminée (2026-11-09). Prochaine : T504a.
+
+### Fait — T503e ng-ym2610 fm_engine
+- crates/ng-ym2610/src/fm_engine.rs : port de fm_engine_base (ymfm_fm.h l.345-463, ymfm_fm.ipp l.1180-1592). FmEngine possède regs, 6 canaux, 24 opérateurs ; new/reset/clock/output/write/status/set_reset_status/set_irq_mask/clock_prescale/sample_rate, engine_timer_expired/engine_check_interrupts/engine_mode_write, assign_operators, update_timer. Interface hôte passée en `&mut dyn YmfmInterface`. 7 tests (timers, IRQ, env_counter, key on).
+- Décision : les hooks ymfm `sync_mode_write` / `sync_check_interrupts` sont appelés en direct (comportement par défaut de ymfm) ; si T504a veut différer l'écriture du mode, c'est à elle de le faire. Branche rythme OPL omise.
+- Correction de la carte : après 3 `clock()` env_counter vaut 4 (et non 3) d'après le source : 1, 2, 3->4, 5.
 
 ### Fait — T503d ng-ym2610 fm_channel
 - crates/ng-ym2610/src/fm_channel.rs : port de fm_channel (ymfm_fm.h l.250-345, ymfm_fm.ipp l.793-1077). FmChannel : new/reset/assign/keyonoff/prepare/clock/output_2op/output_4op/is4op, table des 12 algorithmes. Opérateurs référencés par indices dans `ops: &[FmOperator]`, `regs: &OpnRegisters` en argument. output_rhythm_* (OPL), log_keyon et save_restore non portés. 7 tests.
