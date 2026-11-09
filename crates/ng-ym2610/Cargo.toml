@@ -5,3 +5,7 @@ edition.workspace = true
 
 [dependencies]
 ng-common = { path = "../ng-common" }
+serde = { version = "1", features = ["derive"], optional = true }
+
+[features]
+serde = ["dep:serde"]

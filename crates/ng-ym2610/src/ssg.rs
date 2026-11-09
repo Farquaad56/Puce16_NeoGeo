@@ -5,6 +5,7 @@
 use crate::common::{bitfield, AccessClass, Output, YmfmInterface};
 
 /// SSG register map (3 tone channels + noise + envelope).
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SsgRegisters {
     regdata: [u8; 0x10],
 }
@@ -108,7 +109,9 @@ impl SsgRegisters {
 }
 
 /// SSG engine (square wave generator with noise and envelope).
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SsgEngine {
+    #[cfg_attr(feature = "serde", serde(skip, default = "crate::common::null_intf"))]
     intf: Box<dyn YmfmInterface>,
     tone_count: [u32; 3],
     tone_state: [u32; 3],
@@ -293,6 +296,14 @@ impl SsgEngine {
     /// Return a reference to our registers.
     pub fn regs(&self) -> &SsgRegisters {
         &self.regs
+    }
+}
+
+#[cfg(feature = "serde")]
+impl SsgEngine {
+    /// Échange les interfaces hôtes (restauration d'un savestate).
+    pub(crate) fn swap_intf(&mut self, other: &mut Self) {
+        std::mem::swap(&mut self.intf, &mut other.intf);
     }
 }
 

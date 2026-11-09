@@ -39,6 +39,7 @@ const T_DATA: usize = 2;
 const T_TEST: usize = 3;
 
 #[derive(Clone, Copy, Debug, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 struct Timer {
     enabled: bool,
     left: u64,
@@ -56,6 +57,7 @@ impl Timer {
 
 /// Calendrier (rôle de device_rtc_interface : avance d'une seconde, mois et années bissextiles).
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 struct Calendar {
     year: u8, // 0..99
     month: u8,
@@ -113,6 +115,7 @@ impl Calendar {
 
 /// uPD4990A.
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Upd4990a {
     time_counter: [u8; 6],
     shift_reg: [u8; 7],

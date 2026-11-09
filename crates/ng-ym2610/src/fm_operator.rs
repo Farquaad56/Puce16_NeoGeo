@@ -21,6 +21,7 @@ pub const KEYON_CSM: u32 = 2;
 pub const EG_QUIET: u32 = 0x380;
 
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct FmOperator {
     choffs: u32,
     opoffs: u32,

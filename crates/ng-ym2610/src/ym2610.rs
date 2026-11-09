@@ -53,6 +53,7 @@ impl YmfmInterface for IntfHandle {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Ym2610 {
     /// Registre d'adresse.
     address: u16,
@@ -67,6 +68,7 @@ pub struct Ym2610 {
     /// Dernière sortie FM.
     last_fm: Output<2>,
     /// Interface propre au moteur FM (les autres moteurs ont la leur).
+    #[cfg_attr(feature = "serde", serde(skip, default = "null_handle"))]
     fm_intf: IntfHandle,
     /// Moteur FM central.
     fm: FmEngine,
@@ -348,6 +350,23 @@ impl Ym2610 {
             // port de données haut
             _ => self.write_data_hi(data),
         }
+    }
+}
+
+#[cfg(feature = "serde")]
+fn null_handle() -> IntfHandle {
+    IntfHandle(Rc::new(RefCell::new(crate::common::NullIntf)))
+}
+
+#[cfg(feature = "serde")]
+impl Ym2610 {
+    /// Remplace tout l'état par `other` (désérialisé) en conservant les interfaces hôtes.
+    pub fn restore(&mut self, mut other: Ym2610) {
+        std::mem::swap(&mut self.fm_intf, &mut other.fm_intf);
+        self.ssg.swap_intf(&mut other.ssg);
+        self.adpcm_a.swap_intf(&mut other.adpcm_a);
+        self.adpcm_b.swap_intf(&mut other.adpcm_b);
+        *self = other;
     }
 }
 

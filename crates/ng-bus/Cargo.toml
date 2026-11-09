@@ -9,3 +9,7 @@ ng-cart = { path = "../ng-cart" }
 ng-lspc = { path = "../ng-lspc" }
 ng-ym2610 = { path = "../ng-ym2610" }
 puce-z80 = { workspace = true }
+serde = { version = "1", features = ["derive"], optional = true }
+
+[features]
+serde = ["dep:serde"]

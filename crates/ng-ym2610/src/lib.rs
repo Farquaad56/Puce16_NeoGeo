@@ -14,3 +14,6 @@ pub mod opn_regs;
 pub mod resampler;
 pub mod ssg;
 pub mod ym2610;
+
+#[cfg(feature = "serde")]
+pub(crate) mod serde_arr;

@@ -47,6 +47,7 @@ const ALGORITHM_OPS: [u16; 12] = [
 ];
 
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct FmChannel {
     /// Décalage de canal dans les registres.
     choffs: u32,

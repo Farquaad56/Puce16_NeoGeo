@@ -245,3 +245,17 @@ impl<Y: Ym> SoundBoard<Y> {
         self.time += 6;
     }
 }
+
+impl<Y: Ym> SoundBoard<Y> {
+    /// État du serveur de broches Z80 (savestates) : broches, donnée lue, écriture faite.
+    pub fn port_state(&self) -> (u64, Option<u8>, bool) {
+        (self.port.last.0, self.port.read_data, self.port.write_done)
+    }
+
+    /// Restaure l'état du serveur de broches Z80.
+    pub fn set_port_state(&mut self, s: (u64, Option<u8>, bool)) {
+        self.port.last.0 = s.0;
+        self.port.read_data = s.1;
+        self.port.write_done = s.2;
+    }
+}

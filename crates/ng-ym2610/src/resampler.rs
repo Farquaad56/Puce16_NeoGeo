@@ -15,12 +15,14 @@ use crate::ssg::SsgEngine;
 const FIRST_OUTPUT: usize = 2;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 enum Resampler {
     Nop,
     TwoNine,
 }
 
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SsgResampler {
     sampindex: u32,
     resampler: Resampler,

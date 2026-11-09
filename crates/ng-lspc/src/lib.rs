@@ -10,11 +10,14 @@ pub mod fix;
 pub mod palette;
 pub mod regs;
 pub mod render;
+#[cfg(feature = "serde")]
+pub(crate) mod serde_arr;
 pub mod sprites;
 pub mod timing;
 pub mod vram;
 
 /// LSPC state machine.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Lspc {
     pub vram: vram::Vram,
     /// Auto-animation speed (frames per tick).

@@ -21,6 +21,7 @@ const OPERATORS: usize = OpnRegisters::OPERATORS as usize;
 const ALL_CHANNELS: u32 = OpnRegisters::ALL_CHANNELS;
 
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct FmEngine {
     /// Compteur d'enveloppe ; les 2 bits bas sont un sous-compteur.
     env_counter: u32,

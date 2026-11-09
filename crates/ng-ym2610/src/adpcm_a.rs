@@ -5,7 +5,9 @@
 use crate::common::{bitfield, clamp, AccessClass, Output, YmfmInterface};
 
 /// ADPCM-A register map (6 channels).
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AdpcmARegisters {
+    #[cfg_attr(feature = "serde", serde(with = "crate::serde_arr"))]
     regdata: [u8; 0x30],
 }
 
@@ -103,6 +105,7 @@ impl AdpcmARegisters {
 }
 
 /// ADPCM-A channel.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AdpcmAChannel {
     choffs: u32,
     address_shift: u32,
@@ -236,7 +239,9 @@ impl AdpcmAChannel {
 }
 
 /// ADPCM-A engine (6 channels).
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AdpcMAEngine {
+    #[cfg_attr(feature = "serde", serde(skip, default = "crate::common::null_intf"))]
     intf: Box<dyn YmfmInterface>,
     channels: [AdpcmAChannel; 6],
     regs: AdpcmARegisters,
@@ -342,6 +347,14 @@ const S_STEPS: [u16; 49] = [
 
 // Step index adjustment table (copied verbatim from ymfm_adpcm.cpp)
 const S_STEP_INC: [i8; 8] = [-1, -1, -1, -1, 2, 5, 7, 9];
+
+#[cfg(feature = "serde")]
+impl AdpcMAEngine {
+    /// Échange les interfaces hôtes (restauration d'un savestate).
+    pub(crate) fn swap_intf(&mut self, other: &mut Self) {
+        std::mem::swap(&mut self.intf, &mut other.intf);
+    }
+}
 
 #[cfg(test)]
 mod tests {

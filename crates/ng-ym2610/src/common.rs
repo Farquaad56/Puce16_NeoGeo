@@ -135,7 +135,9 @@ pub trait YmfmInterface {
 
 /// Struct containing an array of output values.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Output<const N: usize> {
+    #[cfg_attr(feature = "serde", serde(with = "crate::serde_arr"))]
     pub data: [i32; N],
 }
 
@@ -183,6 +185,21 @@ pub const EG_RELEASE: usize = 4;
 /// OPQ/OPZ only.
 pub const EG_REVERB: usize = 5;
 pub const EG_STATES: usize = 6;
+
+/// Interface inerte posée à la désérialisation, remplacée par `Ym2610::restore`.
+#[cfg(feature = "serde")]
+pub(crate) struct NullIntf;
+
+#[cfg(feature = "serde")]
+impl YmfmInterface for NullIntf {
+    fn sync_mode_write(&mut self, _data: u8) {}
+    fn sync_check_interrupts(&mut self) {}
+}
+
+#[cfg(feature = "serde")]
+pub(crate) fn null_intf() -> Box<dyn YmfmInterface> {
+    Box::new(NullIntf)
+}
 
 #[cfg(test)]
 mod tests {

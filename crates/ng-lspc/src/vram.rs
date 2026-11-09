@@ -1,7 +1,9 @@
 //! VRAM access for LSPC (neogeo_spr.cpp l.76-110).
 //! 0x0000-0x7FFF slow, 0x8000-0x87FF fast; index = address & 0x87FF.
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Vram {
+    #[cfg_attr(feature = "serde", serde(with = "crate::serde_arr"))]
     pub data: Box<[u16; 0x8800]>,
     pub(crate) offset: u16,
     read_buffer: u16,

@@ -12,6 +12,7 @@ use crate::fm_tables::{abs_sin_attenuation, detune_adjustment, opn_lfo_pm_phase_
 
 /// Données calculées une fois au début de l'horloge et constantes pendant la génération.
 #[derive(Clone, Copy, Debug, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct OpdataCache {
     /// Pas de phase, ou `PHASE_STEP_DYNAMIC` si la PM est active.
     pub phase_step: u32,
@@ -68,10 +69,13 @@ fn effective_rate(rawrate: u32, ksr: u32) -> u8 {
 
 /// Registres OPNA.
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct OpnRegisters {
     lfo_counter: u32,
     lfo_am: u8,
-    regdata: [u8; Self::REGISTERS],
+    #[cfg_attr(feature = "serde", serde(with = "crate::serde_arr"))]
+    regdata: [u8; OpnRegisters::REGISTERS],
+    #[cfg_attr(feature = "serde", serde(with = "crate::serde_arr"))]
     waveform: [u16; WAVEFORM_LENGTH],
 }
 
