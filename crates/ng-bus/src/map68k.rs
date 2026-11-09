@@ -178,7 +178,16 @@ impl Bus68k {
                 // I/O and LSPC register writes
                 match (a >> 16) & 0xFE {
                     0x3C => self.lspc.write(a, data, upper, lower),
-                    0x30 | 0x32 | 0x34 | 0x38 | 0x3A => self.io.write(a, data, upper, lower),
+                    0x30 | 0x32 | 0x34 | 0x38 | 0x3A => {
+                        // `Io` décode l'octet par la parité de l'adresse (pair = octet bas du mot,
+                        // impair = octet haut) ; le 68000 donne une adresse de mot et choisit la voie
+                        // par uds/lds (pair -> D8-D15, impair -> D0-D7) : conversion ici.
+                        match (upper, lower) {
+                            (false, true) => self.io.write(a | 1, data << 8, upper, lower),
+                            (true, false) => self.io.write(a, data >> 8, upper, lower),
+                            _ => self.io.write(a, data, upper, lower),
+                        }
+                    }
                     _ => {} // Unmapped I/O: ignored
                 }
             }

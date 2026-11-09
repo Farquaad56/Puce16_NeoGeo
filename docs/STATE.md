@@ -1,7 +1,7 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P5 Audio YM2610 terminée jusqu'à T506 ; P6 : T600a terminée (2026-11-09). Prochaine : T600b (T507 en attente dans la chaîne selon le tableau Kanban).
+P5 Audio YM2610 terminée jusqu'à T506 ; P6 : T600a et T600b terminées (2026-11-09). Prochaine : T600c.
 
 ### Fait — T506 ng-core mélange audio YM + rééchantillonnage
 - crates/ng-core/src/audio_mix.rs : mix_ym() avec gains MAME exacts (FM 0.98, SSG 0.84) et AudioResampler à interpolation linéaire (état fractionnaire f64, déterministe).
@@ -310,3 +310,9 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 - `shared.rs` : adaptateurs `Shared<T: Device>`, `SharedLspc`, `SharedPalette` (écritures octet fusionnées).
 - `ym_adapter.rs` réécrit (la version agent bouclait sur Default) : séparation `YmIntf` (interface hôte partagée avec la puce : temps, timers, IRQ, busy, ROM) / `YmAdapter` (puce + échantillons, 432 mclk/échantillon). Écart assumé par rapport à la carte (un seul type impossible car la puce garde un Rc vers son interface).
 - `Host68k` est minimal (pas de catch-up) : à étendre en T600b.
+
+### Fait — T600b ng-core ordonnanceur à l'horloge (Claude)
+- `host68k.rs` : `Host68k` (read/write avec catch-up, ipl = avance LSPC puis `irq_level`, int_ack None, on_tick now+=2), `Machine::split()`, `catch_up` (LSPC rendu, Z80 au T-state, YM, RTC, watchdog), `after_write` (commande son, verrou $3A, chien de garde). `sched.rs` : `run_frame`, `finish_instruction`. `wait_clocks` = 0 jusqu'à T601.
+- PIÈGE corrigé dans ng-bus/map68k.rs : le bus alignait l'adresse, donc `Io` (décodage par parité d'adresse) ne voyait jamais d'octet impair : commande son et kick watchdog ($300001) étaient perdus. Conversion uds/lds -> adresse/donnée ajoutée pour les régions E/S. Les écritures MOT vers E/S restent décodées comme avant (octet bas).
+- Carte : « écriture 0x3A0003 (q1=1) » est inexacte : le latch utilise A4 comme valeur, donc $3A0013 = q1=1 et $3A0003 = q1=0.
+- Le reset fait maintenant un catch-up (Z80 à ~78 mclk après reset).

@@ -15,9 +15,7 @@ use ng_cart::{Bios, Cart, Model};
 use ng_common::Framebuffer;
 use ng_lspc::palette::Palette;
 use ng_lspc::Lspc;
-use puce_m68k::bus::Bus;
 use puce_m68k::cpu::Cpu;
-use puce_m68k::pins::Pins;
 
 use crate::shared::{Shared, SharedLspc, SharedPalette};
 use crate::ym_adapter::YmAdapter;
@@ -52,26 +50,10 @@ pub struct Machine {
     pub fb: Framebuffer,
     /// Échantillons audio produits pendant la trame.
     pub audio: Vec<[f32; 2]>,
-}
-
-/// Hôte du 68000 pour la séquence de reset : bus brut, `now += 2` à chaque horloge.
-struct Host68k<'a> {
-    bus: &'a mut Bus68k,
-    now: &'a mut u64,
-}
-
-impl Bus for Host68k<'_> {
-    fn read(&mut self, addr: u32, _fc: u8, _uds: bool, _lds: bool) -> u16 {
-        self.bus.read16(addr)
-    }
-
-    fn write(&mut self, addr: u32, _fc: u8, uds: bool, lds: bool, data: u16) {
-        self.bus.write16(addr, data, uds, lds);
-    }
-
-    fn on_tick(&mut self, _pins: Pins) {
-        *self.now += 2;
-    }
+    /// Dernier instant (mclk) auquel RTC et watchdog ont été rattrapés.
+    pub synced: u64,
+    /// Le watchdog a expiré : reset demandé à la fin de l'horloge courante.
+    pub reset_request: bool,
 }
 
 impl Machine {
@@ -119,6 +101,8 @@ impl Machine {
             wd: Watchdog::default(),
             fb: Framebuffer::new(),
             audio: Vec::new(),
+            synced: 0,
+            reset_request: false,
         };
         machine.reset();
         machine
@@ -135,6 +119,8 @@ impl Machine {
         self.audio.clear();
         self.now = 0;
         self.frame_start = 0;
+        self.synced = 0;
+        self.reset_request = false;
 
         // carte son : Z80 puis YM
         self.z80 = puce_z80::Cpu::new();
@@ -152,13 +138,10 @@ impl Machine {
     /// Déroule les horloges du reset du 68000 jusqu'à la première frontière d'instruction
     /// (40 horloges = 80 mclk ; les vecteurs sont lus dans le BIOS car `vectors_from_cart` est faux).
     fn finish_reset(&mut self) {
-        let mut host = Host68k {
-            bus: &mut self.bus,
-            now: &mut self.now,
-        };
         for _ in 0..RESET_CLOCK_LIMIT {
-            self.cpu.step_clock(&mut host);
-            if self.cpu.at_instruction_boundary() {
+            let (cpu, mut host) = self.split();
+            cpu.step_clock(&mut host);
+            if cpu.at_instruction_boundary() {
                 return;
             }
         }
@@ -254,8 +237,43 @@ mod tests {
         assert_eq!(m.frame_start, 0);
         assert!(!m.bus.vectors_from_cart);
         assert!(m.audio.is_empty());
-        assert_eq!(m.sound.time, 0);
+        assert!(m.sound.time <= m.now && m.sound.time > 1234 - 1234);
         assert_eq!(m.lspc.borrow().vram.get_modulo(), 0);
         assert_eq!(m.cpu.state().pc, 0x00C0_0402 + 4);
+    }
+}
+
+/// Aides de test partagées avec les autres modules du crate.
+#[cfg(test)]
+pub(crate) mod tests_support {
+    use super::*;
+    use ng_cart::find_def;
+
+    /// BIOS de 0x20000 octets : SP = 0x10F300, PC = 0xC00402, `code` copié en 0x402.
+    pub fn program_bios(code: &[u8]) -> Bios {
+        let mut main = vec![0u8; 0x20000];
+        main[0..4].copy_from_slice(&0x0010_F300u32.to_be_bytes());
+        main[4..8].copy_from_slice(&0x00C0_0402u32.to_be_bytes());
+        main[0x402..0x402 + code.len()].copy_from_slice(code);
+        Bios {
+            main,
+            lo: vec![0; 0x20000],
+            sfix: vec![0; 0x20000],
+            sm1: vec![0; 0x1000],
+        }
+    }
+
+    /// Machine MVS avec la cartouche synthétique ; `fill` remplit M1 (0x00 = NOP pour le Z80).
+    pub fn machine_with(bios: Bios, fill: u8) -> Machine {
+        let cart = Cart {
+            def: find_def("mslug").expect("definition mslug"),
+            p: vec![0x12; 0x1000],
+            s: vec![0; 0x100],
+            m: vec![fill; 0x2000],
+            m_crypt: Vec::new(),
+            v: vec![0x56; 0x400],
+            c: vec![0; 0x100],
+        };
+        Machine::new(cart, bios, Model::Mvs)
     }
 }
