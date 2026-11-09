@@ -172,6 +172,17 @@ impl<const N: usize> Output<N> {
     }
 }
 
+// Envelope states (ymfm.h `envelope_state`).
+/// OPLL only.
+pub const EG_DEPRESS: usize = 0;
+pub const EG_ATTACK: usize = 1;
+pub const EG_DECAY: usize = 2;
+pub const EG_SUSTAIN: usize = 3;
+pub const EG_RELEASE: usize = 4;
+/// OPQ/OPZ only.
+pub const EG_REVERB: usize = 5;
+pub const EG_STATES: usize = 6;
+
 #[cfg(test)]
 mod tests {
     use super::*;

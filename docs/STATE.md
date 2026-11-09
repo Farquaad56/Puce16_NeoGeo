@@ -1,7 +1,11 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P5 Audio YM2610. T503a terminée (2026-11-09). Prochaine : T503b.
+P5 Audio YM2610. T503b terminée (2026-11-09). Prochaine : T503c.
+
+### Fait — T503b ng-ym2610 registres FM OPN
+- crates/ng-ym2610/src/opn_regs.rs : port de fm_registers_base + opn_registers_base<true> (OPNA) de ymfm. OpnRegisters (type concret, sans génériques) : new/reset/read/write (paires 0xA0-AF verrouillées, key-on 0x28), clock_noise_and_lfo, lfo_am_offset, cache_operator_data, compute_phase_step, operator_map, accesseurs de registres. OpdataCache sans pointeur de forme d'onde (accesseur waveform()). Constantes EG_* dans common.rs.
+- log_keyon et save_restore non portés (savestates : T604). 9 tests.
 
 ### Fait — T503a ng-ym2610 tables et fonctions FM
 - fm_tables.rs GÉNÉRÉ par tools/gen_fm_tables.py depuis ref/ymfm/src/ymfm_fm.ipp (tables extraites du C++, jamais saisies) : abs_sin_attenuation, attenuation_to_volume, attenuation_increment, detune_adjustment, opn_lfo_pm_phase_adjustment. opm_key_code_to_phase_step non portée (OPM/OPZ seulement).
