@@ -7,10 +7,12 @@ edition.workspace = true
 ng-common = { path = "../ng-common" }
 puce-m68k = { workspace = true }
 puce-z80 = { workspace = true }
-ng-lspc = { path = "../ng-lspc" }
-ng-ym2610 = { path = "../ng-ym2610" }
+ng-lspc = { path = "../ng-lspc", features = ["serde"] }
+ng-ym2610 = { path = "../ng-ym2610", features = ["serde"] }
 ng-cart = { path = "../ng-cart" }
-ng-bus = { path = "../ng-bus" }
+ng-bus = { path = "../ng-bus", features = ["serde"] }
+serde = { version = "1", features = ["derive"] }
+bincode = "1.3"
 
 [dev-dependencies]
 ng-testkit = { path = "../ng-testkit" }

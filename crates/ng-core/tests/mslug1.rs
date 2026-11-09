@@ -77,3 +77,30 @@ fn mslug_600_frames() {
         );
     }
 }
+
+#[test]
+#[ignore = "requires local mslug.zip and BIOS"]
+fn mslug_savestate_resumes_identically() {
+    let root = repo_root();
+    let cfg = load_config(&root.join("neogeo.toml")).expect("neogeo.toml");
+    let mut m = load_machine(&cfg, "mslug").expect("load mslug");
+    for _ in 0..300 {
+        m.run_frame();
+    }
+    let saved = m.save_state();
+    for _ in 0..120 {
+        m.run_frame();
+    }
+    let fb_a = m.framebuffer().pixels.clone();
+    let end_a = m.save_state();
+
+    m.load_state(&saved).expect("load_state");
+    for _ in 0..120 {
+        m.run_frame();
+    }
+    assert!(
+        m.framebuffer().pixels == fb_a,
+        "image différente après reprise"
+    );
+    assert!(m.save_state() == end_a, "état différent après reprise");
+}

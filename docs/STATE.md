@@ -1,7 +1,7 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P5 Audio YM2610 terminée jusqu'à T506 ; P6 : T600a à T603 terminées (2026-11-09). Prochaine : T604.
+P5 Audio YM2610 terminée jusqu'à T506 ; P6 Intégration terminée (T600a à T604, 2026-11-09). Prochaine : T700.
 
 ### Fait — T602 ng-core test d'intégration BIOS boot
 - `crates/ng-core/tests/bios_boot.rs` : 5 tests dont le jalon BIOS seul 180 trames (PC ∈ [0xC00000,0xC1FFFF] ∪ RAM, ≥ 2 couleurs).
@@ -339,3 +339,11 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 - Piège : le BIOS attend les broches du uPD4990A (TP, DATA OUT en $320001) et la réponse du Z80 ($320000) ; `Host68k` les recopie dans `Io` et relaie REG_RTCCTRL ($380051) vers le RTC.
 - `tools/mame_snap.lua` : la souscription au notifier doit rester dans une globale (sinon ramasse-miettes Lua, aucune capture).
 - Goldens, cfg/ et nvram/ de MAME restent locaux (.gitignore). Suite : T604 savestates.
+
+### Fait - T604 savestates (Claude)
+- `crates/ng-core/src/state.rs` : `Machine::save_state(&mut self) -> Vec<u8>` et `load_state(&[u8]) -> Result<(), String>` ; format NGST, version 1, blocs bincode 1.3 ; CRC32 de la ROM P vérifié (Err contenant « crc » pour un autre jeu).
+- Feature `serde` dans ng-ym2610, ng-lspc, ng-bus (activée par ng-core) et puce-z80. Tableaux > 32 éléments : module `serde_arr` local à chaque crate (ng-common est gelé).
+- YM2610 : les `Box<dyn YmfmInterface>` sont ignorés à la sérialisation ; `Ym2610::restore` remet les interfaces hôtes après désérialisation.
+- `save_state` termine l'instruction du 68000, fait le catch-up, puis amène le Z80 à une frontière d'instruction.
+- Tests : `state::` (4) et `mslug_savestate_resumes_identically` (ROM locale : 300 trames, save, 120 trames ; reprise identique image + état).
+- Limites : état STOP/arrêt du 68000 (Q-M68KSTATE) et état d'un port de protection de cartouche non sauvegardés (à compléter en T702/T703b/T705b).

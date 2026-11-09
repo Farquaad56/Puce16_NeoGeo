@@ -195,6 +195,39 @@ impl Ym for YmAdapter {
     }
 }
 
+/// État hors puce : temps, échéances, IRQ, busy, échantillons, prochain échantillon.
+type YmHostState = (u64, [Option<u64>; 2], bool, u64, Vec<[f32; 2]>, u64);
+
+impl YmAdapter {
+    /// Écrit l'état (puce, interface hôte, échantillons) à la suite de `buf` (savestates).
+    pub(crate) fn save_into(&self, buf: &mut Vec<u8>) {
+        let i = self.intf.borrow();
+        let host: YmHostState = (
+            i.ym_time,
+            i.timer_deadline,
+            i.irq,
+            i.busy_end,
+            self.samples.clone(),
+            self.next_sample,
+        );
+        bincode::serialize_into(&mut *buf, &self.ym).expect("savestate YM en mémoire");
+        bincode::serialize_into(&mut *buf, &host).expect("savestate YM en mémoire");
+    }
+
+    /// Relit l'état écrit par `save_into` ; la ROM ADPCM est conservée.
+    pub(crate) fn load_from(&mut self, rd: &mut &[u8]) -> Result<(), String> {
+        let err = |e: bincode::Error| format!("savestate YM illisible : {e}");
+        let ym: Ym2610 = bincode::deserialize_from(&mut *rd).map_err(err)?;
+        let host: YmHostState = bincode::deserialize_from(&mut *rd).map_err(err)?;
+        self.ym.restore(ym);
+        let mut i = self.intf.borrow_mut();
+        (i.ym_time, i.timer_deadline, i.irq, i.busy_end) = (host.0, host.1, host.2, host.3);
+        self.samples = host.4;
+        self.next_sample = host.5;
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
