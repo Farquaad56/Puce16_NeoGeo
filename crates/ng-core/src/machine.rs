@@ -12,7 +12,8 @@ use ng_bus::memcard::MemCardStub;
 use ng_bus::rtc::Upd4990a;
 use ng_bus::{Bus68k, Io, SoundBoard, SystemLatch, Watchdog};
 use ng_cart::{Bios, Cart, Model};
-use ng_common::Framebuffer;
+use ng_common::clock::MCLK_PER_FRAME;
+use ng_common::{Framebuffer, PadState, SystemButtons};
 use ng_lspc::palette::Palette;
 use ng_lspc::Lspc;
 use puce_m68k::cpu::Cpu;
@@ -146,6 +147,41 @@ impl Machine {
             }
         }
         panic!("le reset du 68000 ne se termine pas");
+    }
+
+    /// Définit les états des manettes et boutons système.
+    pub fn set_inputs(&mut self, p1: PadState, p2: PadState, sys: SystemButtons) {
+        let mut io = self.io.borrow_mut();
+        io.pad[0] = p1;
+        io.pad[1] = p2;
+        io.system = sys;
+    }
+
+    /// Retourne un emprunt du framebuffer.
+    pub fn framebuffer(&self) -> &Framebuffer {
+        &self.fb
+    }
+
+    /// Récupère les échantillons audio produits pendant la dernière trame.
+    pub fn take_audio(&mut self) -> Vec<[f32; 2]> {
+        std::mem::take(&mut self.audio)
+    }
+
+    /// Retourne le nombre de trames exécutées depuis le reset.
+    pub fn frame_count(&self) -> u64 {
+        self.frame_start / MCLK_PER_FRAME
+    }
+
+    /// Sauvegarde la backup RAM dans un fichier.
+    pub fn save_backup(&self, path: &std::path::Path) {
+        let backup = self.backup.borrow();
+        backup.save(path).expect("erreur sauvegarde backup");
+    }
+
+    /// Charge la backup RAM depuis un fichier.
+    pub fn load_backup(&mut self, path: &std::path::Path) {
+        let mut backup = self.backup.borrow_mut();
+        backup.load(path);
     }
 }
 

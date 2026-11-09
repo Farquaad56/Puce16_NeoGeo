@@ -69,6 +69,15 @@ impl Vram {
         };
         self.data[idx] = data;
     }
+
+    /// Direct slice access for rendering (not through the offset mechanism).
+    pub fn data(&self) -> &[u16] {
+        &self.data[..]
+    }
+
+    pub fn data_mut(&mut self) -> &mut [u16] {
+        &mut self.data[..]
+    }
 }
 
 impl Default for Vram {

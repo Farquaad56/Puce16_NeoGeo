@@ -7,6 +7,13 @@ pub enum FixBankType {
     Kof2000,
 }
 
+impl Copy for FixBankType {}
+impl Clone for FixBankType {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
 /// Dessine une ligne de la couche fix (background fixe).
 /// vpos ∈ [16, 239] — position verticale dans l'écran visible.
 pub fn draw_fixed_line(

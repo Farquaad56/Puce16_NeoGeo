@@ -1,7 +1,7 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P5 Audio YM2610 terminée jusqu'à T506 ; P6 : T600a et T600b terminées (2026-11-09). Prochaine : T600c.
+P5 Audio YM2610 terminée jusqu'à T506 ; P6 : T600a, T600b et T600c terminées (2026-11-09). Prochaine : T601.
 
 ### Fait — T506 ng-core mélange audio YM + rééchantillonnage
 - crates/ng-core/src/audio_mix.rs : mix_ym() avec gains MAME exacts (FM 0.98, SSG 0.84) et AudioResampler à interpolation linéaire (état fractionnaire f64, déterministe).
@@ -316,3 +316,9 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 - PIÈGE corrigé dans ng-bus/map68k.rs : le bus alignait l'adresse, donc `Io` (décodage par parité d'adresse) ne voyait jamais d'octet impair : commande son et kick watchdog ($300001) étaient perdus. Conversion uds/lds -> adresse/donnée ajoutée pour les régions E/S. Les écritures MOT vers E/S restent décodées comme avant (octet bas).
 - Carte : « écriture 0x3A0003 (q1=1) » est inexacte : le latch utilise A4 comme valeur, donc $3A0013 = q1=1 et $3A0003 = q1=0.
 - Le reset fait maintenant un catch-up (Z80 à ~78 mclk après reset).
+
+### Fait - T600c ng-core démarrage et API publique (Claude)
+- `boot::load_machine(cfg, game)` : zip dans roms_dir, find_def, load_cart, load_bios, Machine::new, rechargement de `<game>.sram` ; `save_machine` l'écrit.
+- `Machine` : set_inputs, framebuffer, take_audio, frame_count (frame_start / MCLK_PER_FRAME), save_backup/load_backup (64 Kio).
+- Une trame = ~938 échantillons (55555,56 Hz sur 405 504 mclk à 59,18 Hz ; le 925 du cahier supposait 60 Hz).
+- Le Z80 démarre au reset (`sound.reset()` dans `Machine::reset`). Protection de cartouche : stub, rien à installer.

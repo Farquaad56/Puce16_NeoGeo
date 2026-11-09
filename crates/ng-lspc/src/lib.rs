@@ -9,6 +9,7 @@ pub mod draw;
 pub mod fix;
 pub mod palette;
 pub mod regs;
+pub mod render;
 pub mod sprites;
 pub mod timing;
 pub mod vram;
