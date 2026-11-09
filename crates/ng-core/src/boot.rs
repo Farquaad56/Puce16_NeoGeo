@@ -101,6 +101,26 @@ mod tests {
     }
 
     #[test]
+    fn z80_reply_and_rtc_pins_reach_status_a() {
+        use puce_m68k::bus::Bus;
+        let mut m = running();
+        m.sound.reply = 0xC3;
+        let (_, mut host) = m.split();
+        assert_eq!(host.read(0x320000, 5, true, true) >> 8, 0xC3);
+        // REG_RTCCTRL : commande série 0x4 (TP 64 Hz) puis STB ; TP bascule ensuite.
+        for bit in [0u16, 0, 1, 0] {
+            host.write(0x380050, 5, false, true, bit);
+            host.write(0x380050, 5, false, true, bit | 2);
+        }
+        host.write(0x380050, 5, false, true, 4);
+        host.write(0x380050, 5, false, true, 0);
+        let tp0 = host.read(0x320000, 5, true, true) & 0x40;
+        *host.now += 24_000_000 / 128; // demi-période de 64 Hz
+        let tp1 = host.read(0x320000, 5, true, true) & 0x40;
+        assert_ne!(tp0, tp1);
+    }
+
+    #[test]
     fn backup_roundtrip() {
         let dir = std::env::temp_dir().join(format!("ng_core_boot_{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();

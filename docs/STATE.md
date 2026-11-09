@@ -1,7 +1,7 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P5 Audio YM2610 terminée jusqu'à T506 ; P6 : T600a, T600b, T600c, T601 et T602 terminées (2026-11-09). Prochaine : T603.
+P5 Audio YM2610 terminée jusqu'à T506 ; P6 : T600a à T603 terminées (2026-11-09). Prochaine : T604.
 
 ### Fait — T602 ng-core test d'intégration BIOS boot
 - `crates/ng-core/tests/bios_boot.rs` : 5 tests dont le jalon BIOS seul 180 trames (PC ∈ [0xC00000,0xC1FFFF] ∪ RAM, ≥ 2 couleurs).
@@ -333,3 +333,9 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 - `Machine` : set_inputs, framebuffer, take_audio, frame_count (frame_start / MCLK_PER_FRAME), save_backup/load_backup (64 Kio).
 - Une trame = ~938 échantillons (55555,56 Hz sur 405 504 mclk à 59,18 Hz ; le 925 du cahier supposait 60 Hz).
 - Le Z80 démarre au reset (`sound.reset()` dans `Machine::reset`). Protection de cartouche : stub, rien à installer.
+
+### Fait - T603 Metal Slug 1 : démarrage et attract mode (Claude)
+- `crates/ng-core/tests/mslug1.rs` (#[ignore], ROM locale) : 600 trames sans double faute, SP en RAM, fb(120) != fb(600), diff <= 2 % avec les goldens MAME des trames 120 et 600.
+- Piège : le BIOS attend les broches du uPD4990A (TP, DATA OUT en $320001) et la réponse du Z80 ($320000) ; `Host68k` les recopie dans `Io` et relaie REG_RTCCTRL ($380051) vers le RTC.
+- `tools/mame_snap.lua` : la souscription au notifier doit rester dans une globale (sinon ramasse-miettes Lua, aucune capture).
+- Goldens, cfg/ et nvram/ de MAME restent locaux (.gitignore). Suite : T604 savestates.

@@ -11,3 +11,6 @@ ng-lspc = { path = "../ng-lspc" }
 ng-ym2610 = { path = "../ng-ym2610" }
 ng-cart = { path = "../ng-cart" }
 ng-bus = { path = "../ng-bus" }
+
+[dev-dependencies]
+ng-testkit = { path = "../ng-testkit" }

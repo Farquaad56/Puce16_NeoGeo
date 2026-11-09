@@ -121,6 +121,25 @@ impl Host68k<'_> {
             }
             *self.synced = now;
         }
+        self.sync_io_inputs();
+    }
+
+    /// Recopie dans `Io` les sorties du uPD4990A (TP, DATA OUT : $320001 bits 6 et 7) et la réponse son.
+    fn sync_io_inputs(&mut self) {
+        let mut io = self.io.borrow_mut();
+        io.rtc_tp = self.rtc.tp();
+        io.rtc_data_out = self.rtc.data_out();
+        // Réponse du Z80 (port $0C) lue par le 68000 en $320000.
+        io.sound_reply = self.sound.reply;
+    }
+
+    /// REG_RTCCTRL ($380051) : bit 0 DIN, bit 1 CLK, bit 2 STB.
+    fn rtc_control(&mut self, addr: u32, lds: bool, data: u16) {
+        if lds && addr & 0xFE_0000 == 0x38_0000 && (addr >> 1) & 0x78 == 0x28 {
+            self.rtc
+                .set_inputs(data & 4 != 0, data & 2 != 0, data & 1 != 0);
+            self.sync_io_inputs();
+        }
     }
 
     /// Effets de bord d'une écriture : commande son, verrou système, coup de chien de garde.
@@ -154,6 +173,7 @@ impl Bus for Host68k<'_> {
     fn write(&mut self, addr: u32, _fc: u8, uds: bool, lds: bool, data: u16) {
         self.catch_up();
         self.bus.write16(addr, data, uds, lds);
+        self.rtc_control(addr, lds, data);
         self.after_write(addr);
     }
 

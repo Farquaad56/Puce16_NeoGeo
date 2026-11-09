@@ -27,3 +27,8 @@ tests-data/hwtests/
 *.rar
 *.gz
 *.tgz
+
+# sorties locales de MAME (goldens, config, nvram)
+cfg/
+nvram/
+tests-data/golden/
