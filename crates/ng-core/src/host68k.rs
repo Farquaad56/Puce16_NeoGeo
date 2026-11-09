@@ -22,6 +22,7 @@ use puce_m68k::cpu::Cpu;
 use puce_m68k::pins::Pins;
 
 use crate::machine::Machine;
+use crate::waits::bus_wait;
 use crate::ym_adapter::YmAdapter;
 
 /// Références disjointes vers les champs de `Machine` autres que `cpu`.
@@ -42,6 +43,9 @@ pub struct Host68k<'a> {
     pub now: &'a mut u64,
     pub synced: &'a mut u64,
     pub reset_request: &'a mut bool,
+    /// Override pour les tests : si Some(f), wait_clocks appelle f(addr) au lieu de bus_wait.
+    #[cfg(test)]
+    pub wait_override: Option<Box<dyn Fn(u32) -> u8>>,
 }
 
 impl Machine {
@@ -66,6 +70,8 @@ impl Machine {
                 now: &mut self.now,
                 synced: &mut self.synced,
                 reset_request: &mut self.reset_request,
+                #[cfg(test)]
+                wait_override: None,
             },
         )
     }
@@ -154,6 +160,19 @@ impl Bus for Host68k<'_> {
     fn ipl(&mut self) -> u8 {
         self.lspc_advance();
         self.lspc.borrow().irq_level()
+    }
+
+    #[cfg(test)]
+    fn wait_clocks(&mut self, addr: u32, _write: bool) -> u8 {
+        if let Some(ref f) = self.wait_override {
+            return f(addr);
+        }
+        bus_wait(addr, _write) as u8
+    }
+
+    #[cfg(not(test))]
+    fn wait_clocks(&mut self, addr: u32, write: bool) -> u8 {
+        bus_wait(addr, write) as u8
     }
 
     fn int_ack(&mut self, _level: u8) -> Option<u8> {

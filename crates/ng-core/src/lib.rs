@@ -7,6 +7,7 @@ pub mod host68k;
 pub mod machine;
 pub mod sched;
 pub mod shared;
+pub mod waits;
 pub mod ym_adapter;
 
 pub use boot::{load_machine, save_machine};
