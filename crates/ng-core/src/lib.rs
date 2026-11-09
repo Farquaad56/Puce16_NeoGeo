@@ -1,8 +1,9 @@
 #![forbid(unsafe_code)]
-//! Stub — voir la carte correspondante dans tasks/.
+//! ng-core : ordonnanceur, wait states, démarrage et intégration de la machine Neo Geo.
 
-#[cfg(test)]
-mod smoke {
-    #[test]
-    fn it_builds() {}
-}
+pub mod audio_mix;
+pub mod machine;
+pub mod shared;
+pub mod ym_adapter;
+
+pub use machine::Machine;

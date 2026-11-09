@@ -1,7 +1,7 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P5 Audio YM2610. T504b, T505 et T506 terminées (2026-11-09). Prochaine : T507.
+P5 Audio YM2610 terminée jusqu'à T506 ; P6 : T600a terminée (2026-11-09). Prochaine : T600b (T507 en attente dans la chaîne selon le tableau Kanban).
 
 ### Fait — T506 ng-core mélange audio YM + rééchantillonnage
 - crates/ng-core/src/audio_mix.rs : mix_ym() avec gains MAME exacts (FM 0.98, SSG 0.84) et AudioResampler à interpolation linéaire (état fractionnaire f64, déterministe).
@@ -304,3 +304,9 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 - Oracles GÉNÉRÉS (versionnés) : tests-data/ym (ymfm réel, 3 voies, T505), tests-data/prot (CRC des fonctions MAME réelles, T700/T701/T703a/T704/T705a), tests-data/scenes (rendu LSPC de référence Python, T406). Outils et conventions : tools/README-golden.md ; régénération : `powershell tools/oracles.ps1` (g++ + python). Pas de #[ignore] : leur absence fait échouer les tests. T712 supprimée. Limites : le brouillage M1 (cmc50_m1_decrypt) n'est vérifié que par le CRC MAME ; les scènes sprites sont synthétiques.
 - Référence vidéo : MAME 0.287 sur X:\Mame_0287 ; `powershell tools/mame_golden.ps1 -Game mslug -Frames 120,600,1500 -Out tests-data/golden/mslug`.
 - Nom de dépôt/exécution : le gate (scripts/gate.ps1) tourne sur le PC de l'utilisateur ; Claude ne compile que pour vérifier les tables générées.
+
+### Fait — T600a ng-core Machine : structure, construction, reset (Claude)
+- `machine.rs` : `Machine` (cpu, z80, bus, sound, lspc/pal/io/backup en `Rc<RefCell>`, latch, rtc, cart, bios, wd, fb, audio). Régions P/M/V et BIOS main/sm1 déplacées (mem::take) vers bus/carte son/ROM ADPCM. `reset()` : 68000 jusqu'à la 1re frontière d'instruction, now == 80, vecteurs lus dans le BIOS.
+- `shared.rs` : adaptateurs `Shared<T: Device>`, `SharedLspc`, `SharedPalette` (écritures octet fusionnées).
+- `ym_adapter.rs` réécrit (la version agent bouclait sur Default) : séparation `YmIntf` (interface hôte partagée avec la puce : temps, timers, IRQ, busy, ROM) / `YmAdapter` (puce + échantillons, 432 mclk/échantillon). Écart assumé par rapport à la carte (un seul type impossible car la puce garde un Rc vers son interface).
+- `Host68k` est minimal (pas de catch-up) : à étendre en T600b.
