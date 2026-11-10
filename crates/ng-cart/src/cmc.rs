@@ -49,7 +49,10 @@ fn decrypt(
 /// Full graphics ROM decryption (MAME lines 501-551).
 fn gfx_decrypt(rom: &mut [u8], tables: Tables, extra_xor: i32) {
     let rom_size = rom.len();
-    assert!(rom_size.is_power_of_two(), "ROM size must be power of two");
+    assert!(
+        rom_size.is_power_of_two() || rom_size == 0x300_0000 || rom_size == 0x600_0000,
+        "ROM size must be power of two (or 0x3000000, 0x6000000), got 0x{rom_size:X}"
+    );
 
     // Data xor pass (MAME lines 507-511)
     let mut buf = vec![0u8; rom_size];
@@ -108,8 +111,24 @@ fn gfx_decrypt(rom: &mut [u8], tables: Tables, extra_xor: i32) {
         baser ^= (tables.address_16_23_xor2[((baser >> 8) & 0xff) as usize] as u32) << 16;
         baser ^= tables.address_0_7_xor[((baser >> 8) & 0xff) as usize] as u32;
 
-        // Clamp to ROM size (MAME lines 543-544)
-        baser &= (rom_size / 4 - 1) as u32;
+        // Taille réelle de la ROM (MAME lignes 529-544) : 0x3000000 (preisle2, mslug4) et
+        // 0x6000000 (kf2k3pcb) ont un traitement particulier pour le dernier bloc.
+        let quarter = (rom_size / 4) as u32;
+        if rom_size == 0x300_0000 {
+            if (rpos as u32) < 0x200_0000 / 4 {
+                baser &= 0x200_0000 / 4 - 1;
+            } else {
+                baser = 0x200_0000 / 4 + (baser & (0x100_0000 / 4 - 1));
+            }
+        } else if rom_size == 0x600_0000 {
+            if (rpos as u32) < 0x400_0000 / 4 {
+                baser &= 0x400_0000 / 4 - 1;
+            } else {
+                baser = 0x400_0000 / 4 + (baser & (0x100_0000 / 4 - 1));
+            }
+        } else {
+            baser &= quarter - 1;
+        }
 
         rom[4 * rpos] = buf[4 * baser as usize];
         rom[4 * rpos + 1] = buf[4 * baser as usize + 1];

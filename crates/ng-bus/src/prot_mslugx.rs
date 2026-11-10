@@ -8,6 +8,7 @@ use crate::device::CartPort;
 pub struct MslugX {
     command: u16,
     counter: u16,
+    accesses: u64,
 }
 
 impl MslugX {
@@ -15,16 +16,22 @@ impl MslugX {
         Self {
             command: 0,
             counter: 0,
+            accesses: 0,
         }
     }
 }
 
 impl CartPort for MslugX {
+    fn access_count(&self) -> u64 {
+        self.accesses
+    }
+
     fn read(&mut self, a: u32, p: &[u8], wram: &[u8]) -> Option<u16> {
         // Only active in $2FFFE0-$2FFFEF range
         if !(0x2FFFE0..=0x2FFFEF).contains(&a) {
             return None;
         }
+        self.accesses += 1;
 
         match self.command {
             0x0001 => {
@@ -66,6 +73,7 @@ impl CartPort for MslugX {
         if !(0x2FFFE0..=0x2FFFEF).contains(&a) {
             return false;
         }
+        self.accesses += 1;
 
         let offset = (a - 0x2FFFE0) >> 1;
         match offset {

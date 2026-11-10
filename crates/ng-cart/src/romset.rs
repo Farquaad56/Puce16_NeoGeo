@@ -59,6 +59,28 @@ impl Source {
         }
     }
 
+    /// Lit `name` ; si l'archive ne contient pas ce nom, cherche l'entrée dont le CRC32 vaut `crc`
+    /// (MAME identifie aussi les ROM par CRC : ex. `neo-sma` pour `green.neo-sma`).
+    pub fn read_or_crc(&mut self, name: &str, crc: u32) -> Result<Vec<u8>, CartError> {
+        match self.read(name) {
+            Err(CartError::MissingFile(_)) => {}
+            other => return other,
+        }
+        if let Source::Zip(archive) = self {
+            for i in 0..archive.len() {
+                let mut file = archive
+                    .by_index(i)
+                    .map_err(|e| CartError::Zip(e.to_string()))?;
+                if file.crc32() == crc {
+                    let mut data = Vec::with_capacity(file.size() as usize);
+                    file.read_to_end(&mut data)?;
+                    return Ok(data);
+                }
+            }
+        }
+        Err(CartError::MissingFile(name.to_string()))
+    }
+
     pub fn read(&mut self, name: &str) -> Result<Vec<u8>, CartError> {
         match self {
             Source::Zip(archive) => {
@@ -100,7 +122,7 @@ pub fn load_cart(path: &Path, def: &'static CartDef, check_crc: bool) -> Result<
     // Step 2: Load each part
     let mut source = Source::open(path)?;
     for part in def.parts {
-        let data = source.read(part.file)?;
+        let data = source.read_or_crc(part.file, part.crc)?;
 
         if check_crc {
             let got = ng_common::crc::crc32_bytes(&data);
@@ -505,5 +527,28 @@ mod tests {
         assert_eq!(crate::defs::ALL_CARTS.len(), 6);
         let mslug3 = find_def("mslug3").expect("mslug3 should exist");
         assert_eq!(mslug3.sizes.c, 0x4000000);
+    }
+    #[test]
+    fn zip_entry_is_found_by_crc_when_name_differs() {
+        // MAME identifie les ROM par CRC : `neo-sma` dans l'archive pour `green.neo-sma` attendu.
+        let data = [9u8, 8, 7, 6];
+        let crc = ng_common::crc::crc32_bytes(&data);
+        let mut buf = Vec::new();
+        {
+            let mut w = zip::ZipWriter::new(std::io::Cursor::new(&mut buf));
+            w.start_file("neo-sma", zip::write::FileOptions::<()>::default())
+                .unwrap();
+            w.write_all(&data).unwrap();
+            w.finish().unwrap();
+        }
+        let dir = tempdir().unwrap();
+        let zip_path = dir.path().join("t.zip");
+        fs::write(&zip_path, &buf).unwrap();
+        let mut src = Source::open(&zip_path).unwrap();
+        assert_eq!(src.read_or_crc("green.neo-sma", crc).unwrap(), data);
+        assert!(matches!(
+            src.read_or_crc("green.neo-sma", crc ^ 1),
+            Err(CartError::MissingFile(_))
+        ));
     }
 }

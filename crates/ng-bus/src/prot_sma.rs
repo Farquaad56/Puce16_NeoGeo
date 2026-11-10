@@ -27,7 +27,7 @@ const BANKOFFSET: [u32; 64] = [
 /// Port of MAME prot_sma.cpp mslug3_bank_base (lines 250-274).
 pub fn mslug3_bank_base(sel: u16) -> u32 {
     // Unscramble bank number using bitswap with the specified bit permutation
-    let data = bitswap::<6>(sel as u32, [11, 12, 6, 1, 3, 15]);
+    let data = bitswap::<6>(sel as u32, [9, 3, 6, 15, 12, 14]);
     0x100000 + BANKOFFSET[data as usize]
 }
 
@@ -35,15 +35,23 @@ pub fn mslug3_bank_base(sel: u16) -> u32 {
 #[derive(Default)]
 pub struct Sma3 {
     bank: Option<u32>,
+    bank_changes: u64,
 }
 
 impl Sma3 {
     pub fn new() -> Self {
-        Self { bank: None }
+        Self {
+            bank: None,
+            bank_changes: 0,
+        }
     }
 }
 
 impl CartPort for Sma3 {
+    fn bank_change_count(&self) -> u64 {
+        self.bank_changes
+    }
+
     fn read(&mut self, a: u32, _p: &[u8], _wram: &[u8]) -> Option<u16> {
         // Protection read at $2FE446 returns constant 0x9A37 (MAME prot_sma.cpp line 328)
         if a == 0x2FE446 {
@@ -65,6 +73,7 @@ impl CartPort for Sma3 {
         // Bank select at $2FFFE4 (MAME neogeo.cpp line 1465)
         if a == 0x2FFFE4 {
             self.bank = Some(mslug3_bank_base(d));
+            self.bank_changes += 1;
             true
         } else {
             false
@@ -97,25 +106,26 @@ mod tests {
     }
 
     #[test]
-    fn bitswap_sel_0x8000_gives_bank_1() {
-        // sel=0x8000 (bit 15 set) -> last in list [11,12,6,1,3,15] -> bit 0 of data
-        // data = 1 -> base = 0x100000 + BANKOFFSET[1] = 0x100000 + 0x020000 = 0x120000
-        assert_eq!(mslug3_bank_base(0x8000), 0x120000);
+    fn bitswap_sel_0x4000_gives_bank_1() {
+        // MAME : bitswap<6>(sel, 9, 3, 6, 15, 12, 14) ; bit 14 = poids faible de data
+        // data = 1 -> base = 0x100000 + BANKOFFSET[1] = 0x120000
+        assert_eq!(mslug3_bank_base(0x4000), 0x120000);
+        // bit 15 -> data = 4 -> 0x100000 + 0x070000
+        assert_eq!(mslug3_bank_base(0x8000), 0x170000);
     }
 
     #[test]
-    fn bitswap_sel_0x0800_gives_bank_32() {
-        // sel=0x0800 (bit 11 set) -> first in list [11,12,6,1,3,15] -> bit 5 of data
-        // data = 32 -> base = 0x100000 + BANKOFFSET[32] = 0x100000 + 0x320000 = 0x420000
-        assert_eq!(mslug3_bank_base(0x0800), 0x420000);
+    fn bitswap_sel_0x0200_gives_bank_32() {
+        // bit 9 = poids fort de data (32) -> 0x100000 + BANKOFFSET[32] = 0x420000
+        assert_eq!(mslug3_bank_base(0x0200), 0x420000);
     }
 
     #[test]
     fn write_bank_select_and_take() {
         let mut prot = Sma3::new();
 
-        // Write bank select at $2FFFE4 with sel=0x8000
-        assert!(prot.write(0x2FFFE4, 0x8000, true, true, &[], &[]));
+        // Write bank select at $2FFFE4 with sel=0x4000
+        assert!(prot.write(0x2FFFE4, 0x4000, true, true, &[], &[]));
 
         // take_bank should return the computed base address
         assert_eq!(prot.take_bank(), Some(0x120000));

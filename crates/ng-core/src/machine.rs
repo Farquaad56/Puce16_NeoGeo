@@ -299,6 +299,21 @@ pub(crate) mod tests_support {
         }
     }
 
+    /// Cartouche vide aux tailles du jeu `name`.
+    pub fn cart_named(name: &str) -> Cart {
+        let def = find_def(name).expect("definition");
+        let z = def.sizes;
+        Cart {
+            def,
+            p: vec![0; z.p as usize],
+            s: vec![0; z.s as usize],
+            m: vec![0; z.m as usize],
+            m_crypt: vec![0; z.m_crypt as usize],
+            v: vec![0; 16],
+            c: vec![0; 16],
+        }
+    }
+
     /// Machine MVS avec la cartouche synthétique ; `fill` remplit M1 (0x00 = NOP pour le Z80).
     pub fn machine_with(bios: Bios, fill: u8) -> Machine {
         let cart = Cart {

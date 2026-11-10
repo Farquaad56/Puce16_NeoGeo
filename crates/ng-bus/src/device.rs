@@ -23,6 +23,14 @@ pub trait CartPort {
     }
     /// Reset the protection chip state.
     fn reset(&mut self) {}
+    /// Nombre d'accès traités par la puce depuis sa création (tests de validation).
+    fn access_count(&self) -> u64 {
+        0
+    }
+    /// Nombre de changements de banque demandés par la puce depuis sa création (tests de validation).
+    fn bank_change_count(&self) -> u64 {
+        0
+    }
 }
 
 /// Null device: reads return 0xFFFF, writes are ignored.

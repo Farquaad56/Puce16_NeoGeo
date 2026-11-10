@@ -24,10 +24,13 @@ fn draw_pixel(c_rom: &[u8], romaddr: u32, dst: &mut u32, line_pens: &[u32]) {
     let x = romaddr & 7;
 
     // Extract 4 color planes at pixel position x
-    let gfx = (bit(c_rom[s as usize + 3], x) << 3)
-        | (bit(c_rom[s as usize + 1], x) << 2)
-        | (bit(c_rom[s as usize + 2], x) << 1)
-        | bit(c_rom[s as usize], x);
+    // Adresse au-delà de la ROM C (région non puissance de 2, ex. mslugx 0x3000000) : rien n'est
+    // câblé, on lit 0 (pixel transparent) au lieu de paniquer.
+    let at = |i: usize| c_rom.get(i).copied().unwrap_or(0);
+    let gfx = (bit(at(s as usize + 3), x) << 3)
+        | (bit(at(s as usize + 1), x) << 2)
+        | (bit(at(s as usize + 2), x) << 1)
+        | bit(at(s as usize), x);
 
     if gfx != 0 {
         *dst = line_pens[gfx as usize];

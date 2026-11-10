@@ -6,13 +6,28 @@
 
 use std::path::{Path, PathBuf};
 
-use ng_cart::{find_def, load_bios, load_cart, Config};
+use ng_bus::prot_mslugx::MslugX;
+use ng_bus::prot_pvc::Pvc;
+use ng_bus::prot_sma::Sma3;
+use ng_bus::CartPort;
+use ng_cart::types::RuntimeProt;
+use ng_cart::{find_def, load_bios, load_cart, Cart, Config};
 
 use crate::machine::Machine;
 
 /// Fichier de sauvegarde de la backup RAM d'un jeu.
 fn backup_path(cfg: &Config, game: &str) -> PathBuf {
     cfg.saves_dir.join(format!("{game}.sram"))
+}
+
+/// Port de protection runtime de la cartouche (`$200000-$2FFFFF`), s'il y en a un.
+pub fn make_port(cart: &Cart) -> Option<Box<dyn CartPort>> {
+    match cart.def.prot.runtime {
+        RuntimeProt::None => None,
+        RuntimeProt::Msx => Some(Box::new(MslugX::new())),
+        RuntimeProt::Sma3 => Some(Box::new(Sma3::new())),
+        RuntimeProt::Pvc => Some(Box::new(Pvc::new())),
+    }
 }
 
 /// Construit une machine pour `game` (zip dans `cfg.roms_dir`).
@@ -27,10 +42,13 @@ pub fn load_machine(cfg: &Config, game: &str) -> Result<Machine, String> {
             zip.display()
         ));
     }
-    let cart = load_cart(&zip, def, true).map_err(|e| format!("{game}.zip : {e:?}"))?;
+    let mut cart = load_cart(&zip, def, true).map_err(|e| format!("{game}.zip : {e:?}"))?;
     let bios = load_bios(&cfg.bios_dir, &cfg.bios).map_err(|e| format!("BIOS : {e:?}"))?;
-    // Protection de cartouche : rien à installer pour l'instant.
+    // Protections de cartouche : déchiffrement (MAME decrypt_all) puis port runtime.
+    cart.decrypt_all();
+    let port = make_port(&cart);
     let mut machine = Machine::new(cart, bios, cfg.model.clone());
+    machine.bus.port = port;
     let sram = backup_path(cfg, game);
     if sram.exists() {
         machine.load_backup(&sram);
@@ -66,6 +84,17 @@ mod tests {
     fn running() -> Machine {
         // BRA.s * : boucle infinie.
         machine_with(program_bios(&[0x60, 0xFE]), 0x00)
+    }
+
+    #[test]
+    fn make_port_follows_the_protection_table() {
+        use crate::machine::tests_support::cart_named;
+        assert!(make_port(&cart_named("mslugx")).is_some());
+        assert!(make_port(&cart_named("mslug3")).is_some());
+        assert!(make_port(&cart_named("mslug5")).is_some());
+        assert!(make_port(&cart_named("mslug")).is_none());
+        assert!(make_port(&cart_named("mslug2")).is_none());
+        assert!(make_port(&cart_named("mslug4")).is_none());
     }
 
     #[test]

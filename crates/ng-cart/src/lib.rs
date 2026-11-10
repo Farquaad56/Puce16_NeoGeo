@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 //! ng-cart : cartouches (chargeur, déchiffrement). Voir tasks/T300.
 pub mod cmc;
+pub mod install;
 #[rustfmt::skip]
 pub mod cmc_tables;
 pub mod pcm2;

@@ -22,6 +22,7 @@ fn combine_data(old: u16, new: u16, upper: bool, lower: bool) -> u16 {
 pub struct Pvc {
     ram: [u16; 0x1000],
     bank: Option<u32>,
+    bank_changes: u64,
 }
 
 impl Default for Pvc {
@@ -35,6 +36,7 @@ impl Pvc {
         Self {
             ram: [0; 0x1000],
             bank: None,
+            bank_changes: 0,
         }
     }
 
@@ -81,6 +83,10 @@ impl Pvc {
 }
 
 impl CartPort for Pvc {
+    fn bank_change_count(&self) -> u64 {
+        self.bank_changes
+    }
+
     fn read(&mut self, a: u32, _p: &[u8], _wram: &[u8]) -> Option<u16> {
         // PVC protection RAM at $2FE000-$2FFFFF (MAME neogeo.cpp lines 1231-1243)
         if (0x2FE000..=0x2FFFFF).contains(&a) {
@@ -107,9 +113,10 @@ impl CartPort for Pvc {
                 self.pack_color();
             }
 
-            // Bank switch on writes to offsets > 0xFF8 (MAME neogeo.cpp line 1483)
-            if offset > 0xFF8 {
+            // Bank switch on writes to offsets >= 0xFF8 (MAME neogeo.cpp write_bankprot_pvc : offset >= 0xff8)
+            if offset >= 0xFF8 {
                 self.bank = Some(self.get_bank_base());
+                self.bank_changes += 1;
             }
 
             true
@@ -195,25 +202,29 @@ mod tests {
 
     #[test]
     fn bank_switch() {
-        // Test from task spec: ram[0xFF8]=0x0200, then write to trigger bank switch
+        // MAME write_bankprot_pvc : toute écriture à l'offset >= 0xFF8 déclenche get_bank_base().
         let mut prot = Pvc::new();
 
-        // Write high byte of bank address (offset 0xFF8)
+        // Offset 0xFF8 : bankaddress = (0x0200>>8)|(0<<8) = 2 ; ram[0xFF8] devient 0x02A0
         prot.write(0x2FFFF0, 0x0200, true, true, &[], &[]);
-        assert_eq!(prot.ram[0xFF8], 0x0200);
+        assert_eq!(prot.ram[0xFF8], 0x02A0);
+        assert_eq!(prot.take_bank(), Some(0x100002));
 
-        // Write low byte of bank address (offset 0xFF9) - this triggers bank switch
+        // Offset 0xFF9 : bankaddress = (0x02A0>>8)|(1<<8) = 0x102 ; ram[0xFF9] &= 0x7FFF
         prot.write(0x2FFFF2, 0x0001, true, true, &[], &[]);
-        assert_eq!(prot.ram[0xFF9], 1);
-
-        // Expected: bankaddress = (0x0200>>8)|(1<<8) = 0x02|0x100 = 0x102
-        // After switch: ram[0xFF8] = (0x0200&0xFE00)|0xA0 = 0x02A0
-        //               ram[0xFF9] = 1 & 0x7FFF = 1
         assert_eq!(prot.ram[0xFF8], 0x02A0);
         assert_eq!(prot.ram[0xFF9], 1);
-
-        // take_bank should return bankaddress + 0x100000 = 0x102 + 0x100000 = 0x100102
         assert_eq!(prot.take_bank(), Some(0x100102));
+    }
+
+    #[test]
+    fn game_sequence_ff9_then_ff8_selects_the_final_bank() {
+        // Mslug5 écrit $2FFFF2 (0x1000) puis $2FFFF0 (0) : la banque finale suit l'ordre MAME.
+        let mut prot = Pvc::new();
+        prot.write(0x2FFFF2, 0x1000, true, true, &[], &[]);
+        prot.write(0x2FFFF0, 0x0000, true, true, &[], &[]);
+        // bankaddress = (0x0000>>8)|(0x1000<<8) = 0x100000 ; + 0x100000
+        assert_eq!(prot.take_bank(), Some(0x200000));
     }
 
     #[test]

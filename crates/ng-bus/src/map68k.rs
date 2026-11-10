@@ -162,16 +162,19 @@ impl Bus68k {
                 }
             }
             0x2 => {
-                // Cart P-ROM window: bank select at $2FFFF0-$2FFFFF, port protection elsewhere
-                if (0x2FFFF0..=0x2FFFFE).contains(&a) {
-                    pbank::banksel(&mut self.pbank_base, self.cart_p.len(), data);
-                } else if let Some(ref mut port) = self.port {
+                // Fenêtre P-ROM : la puce de protection (si présente) a priorité, sinon sélection
+                // de banque standard en $2FFFF0-$2FFFFE.
+                let mut consumed = false;
+                if let Some(ref mut port) = self.port {
                     if port.write(a, data, upper, lower, &self.cart_p, &self.work_ram[..]) {
-                        // Write consumed by port chip; check for bank switch request
+                        consumed = true;
                         if let Some(bank) = port.take_bank() {
                             self.pbank_base = bank;
                         }
                     }
+                }
+                if !consumed && (0x2FFFF0..=0x2FFFFE).contains(&a) {
+                    pbank::banksel(&mut self.pbank_base, self.cart_p.len(), data);
                 }
             }
             0x3 => {
