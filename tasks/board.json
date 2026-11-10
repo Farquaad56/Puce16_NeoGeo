@@ -1,715 +1,782 @@
 [
- {
-  "id": "T000",
-  "title": "T000 Workspace Cargo vérifié, outillage de gate, métriques",
-  "phase": "P0 Fondations",
-  "deps": [],
-  "file": "tasks/T000.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T001",
-  "title": "T001 ng-common : horloge, framebuffer, entrées, CRC",
-  "phase": "P0 Fondations",
-  "deps": [
-   "T000"
-  ],
-  "file": "tasks/T001.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T004",
-  "title": "T004 Configuration locale (neogeo.example.toml)",
-  "phase": "P0 Fondations",
-  "deps": [
-   "T001"
-  ],
-  "file": "tasks/T004.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T005",
-  "title": "T005 Dépendances CPU : puce-m68k et puce-z80 (git épinglé) et test de fumée",
-  "phase": "P0 Fondations",
-  "deps": [
-   "T004"
-  ],
-  "file": "tasks/T005.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T006",
-  "title": "T006 ng-testkit : comparateur d'images golden (PNG de MAME contre trame)",
-  "phase": "P0 Fondations",
-  "deps": [
-   "T005"
-  ],
-  "file": "tasks/T006.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T300",
-  "title": "T300 ng-cart : chargeur de jeux (zip ou dossier), régions, CRC",
-  "phase": "P3 Bus, BIOS, cartouches",
-  "deps": [
-   "T006"
-  ],
-  "file": "tasks/T300.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T301",
-  "title": "T301 ng-cart : chargeur BIOS + configuration neogeo.toml",
-  "phase": "P3 Bus, BIOS, cartouches",
-  "deps": [
-   "T300"
-  ],
-  "file": "tasks/T301.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T302",
-  "title": "T302 ng-bus : carte mémoire 68000 (RAM, ROM, BIOS, zones)",
-  "phase": "P3 Bus, BIOS, cartouches",
-  "deps": [
-   "T301"
-  ],
-  "file": "tasks/T302.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T303",
-  "title": "T303 ng-bus : latch système, registres E/S, watchdog, commandes son",
-  "phase": "P3 Bus, BIOS, cartouches",
-  "deps": [
-   "T302"
-  ],
-  "file": "tasks/T303.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T304",
-  "title": "T304 ng-bus : backup RAM, mémoire carte (stub), RTC uPD4990A",
-  "phase": "P3 Bus, BIOS, cartouches",
-  "deps": [
-   "T303"
-  ],
-  "file": "tasks/T304.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T305",
-  "title": "T305 ng-bus : carte mémoire Z80, banking, ports, latches (SoundBoard + serveur de broches)",
-  "phase": "P3 Bus, BIOS, cartouches",
-  "deps": [
-   "T304"
-  ],
-  "file": "tasks/T305.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T306",
-  "title": "T306 ng-bus : banque P ROM ($2FFFF0)",
-  "phase": "P3 Bus, BIOS, cartouches",
-  "deps": [
-   "T305"
-  ],
-  "file": "tasks/T306.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T307",
-  "title": "T307 Différences AES (console)",
-  "phase": "P3 Bus, BIOS, cartouches",
-  "deps": [
-   "T306"
-  ],
-  "file": "tasks/T307.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T400",
-  "title": "T400 ng-lspc : structure Lspc, VRAM, registres $3C0000, auto-animation",
-  "phase": "P4 Vidéo LSPC (pixel perfect)",
-  "deps": [
-   "T307"
-  ],
-  "file": "tasks/T400.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T401",
-  "title": "T401 ng-lspc : temps vidéo, IRQ1/IRQ2/IRQ3, timer d'affichage, animation auto, début de ligne",
-  "phase": "P4 Vidéo LSPC (pixel perfect)",
-  "deps": [
-   "T400"
-  ],
-  "file": "tasks/T401.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T402",
-  "title": "T402 ng-lspc : palette 2 banques, conversion couleur (table DAC)",
-  "phase": "P4 Vidéo LSPC (pixel perfect)",
-  "deps": [
-   "T401"
-  ],
-  "file": "tasks/T402.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T403",
-  "title": "T403 ng-lspc : couche fix (une ligne), banking Garou/KOF2000",
-  "phase": "P4 Vidéo LSPC (pixel perfect)",
-  "deps": [
-   "T402"
-  ],
-  "file": "tasks/T403.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-   "id": "T404",
-   "title": "T404 ng-lspc : analyse des sprites d'une ligne (parse_sprites)",
-   "phase": "P4 Vidéo LSPC (pixel perfect)",
-   "deps": [
-    "T403"
-   ],
-   "file": "tasks/T404.md",
-   "assignee": "rust-dev",
-   "status": "done"
- },
- {
-   "id": "T405a",
-   "title": "T405a ng-lspc : dessin des sprites d'une ligne (zoom, flips, animation, décodage C ROM)",
-   "phase": "P4 Vidéo LSPC (pixel perfect)",
-   "deps": [
-    "T404"
-   ],
-   "file": "tasks/T405a.md",
-   "assignee": "rust-dev",
-   "status": "done"
- },
- {
-  "id": "T406",
-  "title": "T406 ng-lspc : composition d'une ligne et boucle de rendu (début de ligne), test sur scènes de référence",
-  "phase": "P4 Vidéo LSPC (pixel perfect)",
-  "deps": [
-   "T405a"
-  ],
-  "file": "tasks/T406.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T500",
-  "title": "T500 ng-ym2610 : types communs ymfm (interface, sorties, utilitaires)",
-  "phase": "P5 Audio YM2610",
-  "deps": [
-   "T406"
-  ],
-  "file": "tasks/T500.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T501a",
-  "title": "T501a ng-ym2610 : ADPCM-A (registres, canal, moteur)",
-  "phase": "P5 Audio YM2610",
-  "deps": [
-   "T500"
-  ],
-  "file": "tasks/T501a.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T501b",
-  "title": "T501b ng-ym2610 : ADPCM-B (registres, canal, moteur)",
-  "phase": "P5 Audio YM2610",
-  "deps": [
-   "T501a"
-  ],
-  "file": "tasks/T501b.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T502",
-  "title": "T502 ng-ym2610 : SSG (générateur de sons carrés/bruit)",
-  "phase": "P5 Audio YM2610",
-  "deps": [
-   "T501b"
-  ],
-  "file": "tasks/T502.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T503a",
-  "title": "T503a ng-ym2610 : tables et fonctions FM (sin, atténuation, détune, LFO)",
-  "phase": "P5 Audio YM2610",
-  "deps": [
-   "T502"
-  ],
-  "file": "tasks/T503a.md",
-  "assignee": "rust-dev",
-  "status": "todo"
- },
- {
-  "id": "T503b",
-  "title": "T503b ng-ym2610 : registres FM OPN (fm_registers_base + opn_registers_base)",
-  "phase": "P5 Audio YM2610",
-  "deps": [
-   "T503a"
-  ],
-  "file": "tasks/T503b.md",
-  "assignee": "rust-dev",
-  "status": "todo"
- },
- {
-  "id": "T503c",
-  "title": "T503c ng-ym2610 : fm_operator (enveloppe, phase, SSG-EG)",
-  "phase": "P5 Audio YM2610",
-  "deps": [
-   "T503b"
-  ],
-  "file": "tasks/T503c.md",
-  "assignee": "rust-dev",
-  "status": "todo"
- },
- {
-  "id": "T503d",
-  "title": "T503d ng-ym2610 : fm_channel (algorithmes 2 et 4 opérateurs)",
-  "phase": "P5 Audio YM2610",
-  "deps": [
-   "T503c"
-  ],
-  "file": "tasks/T503d.md",
-  "assignee": "rust-dev",
-  "status": "todo"
- },
- {
-  "id": "T503e",
-  "title": "T503e ng-ym2610 : fm_engine (timers, LFO, enveloppe globale)",
-  "phase": "P5 Audio YM2610",
-  "deps": [
-   "T503d"
-  ],
-  "file": "tasks/T503e.md",
-  "assignee": "rust-dev",
-  "status": "todo"
- },
- {
-  "id": "T504a",
-  "title": "T504a ng-ym2610 : YM2610 (registres, statut, lecture/écriture)",
-  "phase": "P5 Audio YM2610",
-  "deps": [
-   "T503e"
-  ],
-  "file": "tasks/T504a.md",
-  "assignee": "rust-dev",
-  "status": "todo"
- },
- {
-  "id": "T504b",
-  "title": "T504b ng-ym2610 : YM2610 génération audio (prescale, rééchantillonnage SSG)",
-  "phase": "P5 Audio YM2610",
-  "deps": [
-   "T504a"
-  ],
-  "file": "tasks/T504b.md",
-  "assignee": "rust-dev",
-  "status": "todo"
- },
- {
-  "id": "T505",
-  "title": "T505 Test de comparaison YM2610 aux vecteurs ymfm (oracle fourni)",
-  "phase": "P5 Audio YM2610",
-  "deps": [
-   "T504b"
-  ],
-  "file": "tasks/T505.md",
-  "assignee": "rust-dev",
-  "status": "todo"
- },
- {
-  "id": "T506",
-  "title": "T506 Sortie audio : mélange YM (gains MAME) + rééchantillonnage vers l'hôte",
-  "phase": "P5 Audio YM2610",
-  "deps": [
-   "T505"
-  ],
-  "file": "tasks/T506.md",
-  "assignee": "rust-dev",
-  "status": "todo"
- },
- {
-  "id": "T600a",
-  "title": "T600a ng-core : structure Machine, construction et reset",
-  "phase": "P6 Intégration cycle-exact",
-  "deps": [
-   "T506"
-  ],
-  "file": "tasks/T600a.md",
-  "assignee": "rust-dev",
-  "status": "todo"
- },
- {
-  "id": "T600b",
-  "title": "T600b ng-core : ordonnanceur à l'horloge (68000 maître, Z80 au T-state, catch-up des autres puces)",
-  "phase": "P6 Intégration cycle-exact",
-  "deps": [
-   "T600a"
-  ],
-  "file": "tasks/T600b.md",
-  "assignee": "rust-dev",
-  "status": "todo"
- },
- {
-  "id": "T600c",
-  "title": "T600c ng-core : séquence de démarrage Z80, reset conjoint, boucle de trame publique",
-  "phase": "P6 Intégration cycle-exact",
-  "deps": [
-   "T600b"
-  ],
-  "file": "tasks/T600c.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T601",
-  "title": "T601 ng-core : wait states du bus 68000",
-  "phase": "P6 Intégration cycle-exact",
-  "deps": [
-   "T600c"
-  ],
-  "file": "tasks/T601.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T602",
-  "title": "T602 Démarrage du BIOS jusqu'à l'écran (test d'intégration)",
-  "phase": "P6 Intégration cycle-exact",
-  "deps": [
-   "T601"
-  ],
-  "file": "tasks/T602.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T603",
-  "title": "T603 Metal Slug 1 : démarrage et attract mode",
-  "phase": "P6 Intégration cycle-exact",
-  "deps": [
-   "T602"
-  ],
-  "file": "tasks/T603.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T604",
-  "title": "T604 Savestates (sérialisation complète)",
-  "phase": "P6 Intégration cycle-exact",
-  "deps": [
-   "T603"
-  ],
-  "file": "tasks/T604.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T700",
-  "title": "T700 ng-cart : bitswap + déchiffrement ROM C (CMC42 / CMC50)",
-  "phase": "P7 Protections Metal Slug",
-  "deps": [
-   "T604"
-  ],
-  "file": "tasks/T700.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T701",
-  "title": "T701 ng-cart : sfix_decrypt, cmc50_m1_decrypt",
-  "phase": "P7 Protections Metal Slug",
-  "deps": [
-   "T700"
-  ],
-  "file": "tasks/T701.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T702",
-  "title": "T702 Metal Slug X : protection runtime ($2FFFE0-$2FFFEF)",
-  "phase": "P7 Protections Metal Slug",
-  "deps": [
-   "T701"
-  ],
-  "file": "tasks/T702.md",
-  "assignee": "rust-dev",
-  "status": "todo"
- },
- {
-  "id": "T703a",
-  "title": "T703a ng-cart : SMA Metal Slug 3 — déchiffrement P ROM",
-  "phase": "P7 Protections Metal Slug",
-  "deps": [
-   "T702"
-  ],
-  "file": "tasks/T703a.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T703b",
-  "title": "T703b ng-bus : SMA Metal Slug 3 — registres runtime (banque $2FFFE4, lecture $2FE446)",
-  "phase": "P7 Protections Metal Slug",
-  "deps": [
-   "T703a"
-  ],
-  "file": "tasks/T703b.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T704",
-  "title": "T704 ng-cart : PCM2 (ROM V) — decrypt et swap",
-  "phase": "P7 Protections Metal Slug",
-  "deps": [
-   "T703b"
-  ],
-  "file": "tasks/T704.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T705a",
-  "title": "T705a ng-cart : PVC Metal Slug 5 — déchiffrement P ROM",
-  "phase": "P7 Protections Metal Slug",
-  "deps": [
-   "T704"
-  ],
-  "file": "tasks/T705a.md",
-  "assignee": "rust-dev",
-  "status": "todo"
- },
- {
-  "id": "T705b",
-  "title": "T705b ng-bus : PVC Metal Slug 5 — RAM de protection $2FE000-$2FFFFF",
-  "phase": "P7 Protections Metal Slug",
-  "deps": [
-   "T705a"
-  ],
-  "file": "tasks/T705b.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T706",
-  "title": "T706 Validation mslug2 (démarrage + attract)",
-  "phase": "P7 Protections Metal Slug",
-  "deps": [
-   "T705b"
-  ],
-  "file": "tasks/T706.md",
-  "assignee": "rust-dev",
-  "status": "done"
- },
- {
-  "id": "T707",
-  "title": "T707 Validation mslugx (démarrage + attract)",
-  "phase": "P7 Protections Metal Slug",
-  "deps": [
-   "T706"
-  ],
-  "file": "tasks/T707.md",
-  "assignee": "rust-dev",
-  "status": "todo"
- },
- {
-  "id": "T711",
-  "title": "T711 ng-cart/ng-core : chaîne de déchiffrement par jeu et installation des ports",
-  "phase": "P7 Protections Metal Slug",
-  "deps": [
-   "T707"
-  ],
-  "file": "tasks/T711.md",
-  "assignee": "rust-dev",
-  "status": "todo"
- },
- {
-  "id": "T708",
-  "title": "T708 Validation mslug3 (démarrage + attract)",
-  "phase": "P7 Protections Metal Slug",
-  "deps": [
-   "T711"
-  ],
-  "file": "tasks/T708.md",
-  "assignee": "rust-dev",
-  "status": "todo"
- },
- {
-  "id": "T709",
-  "title": "T709 Validation mslug4 (démarrage + attract)",
-  "phase": "P7 Protections Metal Slug",
-  "deps": [
-   "T708"
-  ],
-  "file": "tasks/T709.md",
-  "assignee": "rust-dev",
-  "status": "todo"
- },
- {
-  "id": "T710",
-  "title": "T710 Validation mslug5 (démarrage + attract)",
-  "phase": "P7 Protections Metal Slug",
-  "deps": [
-   "T709"
-  ],
-  "file": "tasks/T710.md",
-  "assignee": "rust-dev",
-  "status": "todo"
- },
- {
-  "id": "T800a",
-  "title": "T800a ng-gui : application eframe, thread d'émulation, affichage de la trame",
-  "phase": "P8 GUI egui",
-  "deps": [
-   "T710"
-  ],
-  "file": "tasks/T800a.md",
-  "assignee": "rust-dev",
-  "status": "todo"
- },
- {
-  "id": "T800b",
-  "title": "T800b ng-gui : menu Fichier (ouvrir un jeu), liste des jeux, pause/reset, capture d'écran",
-  "phase": "P8 GUI egui",
-  "deps": [
-   "T800a"
-  ],
-  "file": "tasks/T800b.md",
-  "assignee": "rust-dev",
-  "status": "todo"
- },
- {
-  "id": "T801a",
-  "title": "T801a ng-gui : sortie audio (cpal) avec tampon circulaire",
-  "phase": "P8 GUI egui",
-  "deps": [
-   "T800b"
-  ],
-  "file": "tasks/T801a.md",
-  "assignee": "rust-dev",
-  "status": "todo"
- },
- {
-  "id": "T801b",
-  "title": "T801b ng-gui : entrées clavier et manettes (gilrs), table de touches configurable",
-  "phase": "P8 GUI egui",
-  "deps": [
-   "T801a"
-  ],
-  "file": "tasks/T801b.md",
-  "assignee": "rust-dev",
-  "status": "todo"
- },
- {
-  "id": "T802a",
-  "title": "T802a ng-gui : débogueur — registres CPU et visionneuse mémoire",
-  "phase": "P8 GUI egui",
-  "deps": [
-   "T801b"
-  ],
-  "file": "tasks/T802a.md",
-  "assignee": "rust-dev",
-  "status": "todo"
- },
- {
-  "id": "T802b",
-  "title": "T802b ng-gui : débogueur — VRAM, palette, sprites",
-  "phase": "P8 GUI egui",
-  "deps": [
-   "T802a"
-  ],
-  "file": "tasks/T802b.md",
-  "assignee": "rust-dev",
-  "status": "todo"
- },
- {
-  "id": "T900",
-  "title": "T900 Banc de performance (criterion) et mesure de référence",
-  "phase": "P9 Précision, outils, AES",
-  "deps": [
-   "T802b"
-  ],
-  "file": "tasks/T900.md",
-  "assignee": "rust-dev",
-  "status": "todo"
- },
- {
-  "id": "T900b",
-  "title": "T900b Optimisation : catch-up paresseux sans changer le résultat",
-  "phase": "P9 Précision, outils, AES",
-  "deps": [
-   "T900"
-  ],
-  "file": "tasks/T900b.md",
-  "assignee": "rust-dev",
-  "status": "todo"
- },
- {
-  "id": "T901",
-  "title": "T901 Précision restante : bus ouvert, PAL, wait states mesurés (liste QUESTIONS)",
-  "phase": "P9 Précision, outils, AES",
-  "deps": [
-   "T900b"
-  ],
-  "file": "tasks/T901.md",
-  "assignee": "rust-dev",
-  "status": "todo"
- },
- {
-  "id": "T902",
-  "title": "T902 ROMs de test matérielles (wiki neogeodev) : intégration et captures MAME",
-  "phase": "P9 Précision, outils, AES",
-  "deps": [
-   "T901"
-  ],
-  "file": "tasks/T902.md",
-  "assignee": "rust-dev",
-  "status": "todo"
- },
- {
-  "id": "T903",
-  "title": "T903 Carte mémoire (memory card) et AES : validation",
-  "phase": "P9 Précision, outils, AES",
-  "deps": [
-   "T902"
-  ],
-  "file": "tasks/T903.md",
-  "assignee": "rust-dev",
-  "status": "todo"
- }
+  {
+    "id": "T000",
+    "title": "T000 Workspace Cargo vérifié, outillage de gate, métriques",
+    "phase": "P0 Fondations",
+    "deps": [],
+    "file": "tasks/T000.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T001",
+    "title": "T001 ng-common : horloge, framebuffer, entrées, CRC",
+    "phase": "P0 Fondations",
+    "deps": [
+      "T000"
+    ],
+    "file": "tasks/T001.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T004",
+    "title": "T004 Configuration locale (neogeo.example.toml)",
+    "phase": "P0 Fondations",
+    "deps": [
+      "T001"
+    ],
+    "file": "tasks/T004.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T005",
+    "title": "T005 Dépendances CPU : puce-m68k et puce-z80 (git épinglé) et test de fumée",
+    "phase": "P0 Fondations",
+    "deps": [
+      "T004"
+    ],
+    "file": "tasks/T005.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T006",
+    "title": "T006 ng-testkit : comparateur d'images golden (PNG de MAME contre trame)",
+    "phase": "P0 Fondations",
+    "deps": [
+      "T005"
+    ],
+    "file": "tasks/T006.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T300",
+    "title": "T300 ng-cart : chargeur de jeux (zip ou dossier), régions, CRC",
+    "phase": "P3 Bus, BIOS, cartouches",
+    "deps": [
+      "T006"
+    ],
+    "file": "tasks/T300.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T301",
+    "title": "T301 ng-cart : chargeur BIOS + configuration neogeo.toml",
+    "phase": "P3 Bus, BIOS, cartouches",
+    "deps": [
+      "T300"
+    ],
+    "file": "tasks/T301.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T302",
+    "title": "T302 ng-bus : carte mémoire 68000 (RAM, ROM, BIOS, zones)",
+    "phase": "P3 Bus, BIOS, cartouches",
+    "deps": [
+      "T301"
+    ],
+    "file": "tasks/T302.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T303",
+    "title": "T303 ng-bus : latch système, registres E/S, watchdog, commandes son",
+    "phase": "P3 Bus, BIOS, cartouches",
+    "deps": [
+      "T302"
+    ],
+    "file": "tasks/T303.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T304",
+    "title": "T304 ng-bus : backup RAM, mémoire carte (stub), RTC uPD4990A",
+    "phase": "P3 Bus, BIOS, cartouches",
+    "deps": [
+      "T303"
+    ],
+    "file": "tasks/T304.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T305",
+    "title": "T305 ng-bus : carte mémoire Z80, banking, ports, latches (SoundBoard + serveur de broches)",
+    "phase": "P3 Bus, BIOS, cartouches",
+    "deps": [
+      "T304"
+    ],
+    "file": "tasks/T305.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T306",
+    "title": "T306 ng-bus : banque P ROM ($2FFFF0)",
+    "phase": "P3 Bus, BIOS, cartouches",
+    "deps": [
+      "T305"
+    ],
+    "file": "tasks/T306.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T307",
+    "title": "T307 Différences AES (console)",
+    "phase": "P3 Bus, BIOS, cartouches",
+    "deps": [
+      "T306"
+    ],
+    "file": "tasks/T307.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T400",
+    "title": "T400 ng-lspc : structure Lspc, VRAM, registres $3C0000, auto-animation",
+    "phase": "P4 Vidéo LSPC (pixel perfect)",
+    "deps": [
+      "T307"
+    ],
+    "file": "tasks/T400.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T401",
+    "title": "T401 ng-lspc : temps vidéo, IRQ1/IRQ2/IRQ3, timer d'affichage, animation auto, début de ligne",
+    "phase": "P4 Vidéo LSPC (pixel perfect)",
+    "deps": [
+      "T400"
+    ],
+    "file": "tasks/T401.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T402",
+    "title": "T402 ng-lspc : palette 2 banques, conversion couleur (table DAC)",
+    "phase": "P4 Vidéo LSPC (pixel perfect)",
+    "deps": [
+      "T401"
+    ],
+    "file": "tasks/T402.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T403",
+    "title": "T403 ng-lspc : couche fix (une ligne), banking Garou/KOF2000",
+    "phase": "P4 Vidéo LSPC (pixel perfect)",
+    "deps": [
+      "T402"
+    ],
+    "file": "tasks/T403.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T404",
+    "title": "T404 ng-lspc : analyse des sprites d'une ligne (parse_sprites)",
+    "phase": "P4 Vidéo LSPC (pixel perfect)",
+    "deps": [
+      "T403"
+    ],
+    "file": "tasks/T404.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T405a",
+    "title": "T405a ng-lspc : dessin des sprites d'une ligne (zoom, flips, animation, décodage C ROM)",
+    "phase": "P4 Vidéo LSPC (pixel perfect)",
+    "deps": [
+      "T404"
+    ],
+    "file": "tasks/T405a.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T406",
+    "title": "T406 ng-lspc : composition d'une ligne et boucle de rendu (début de ligne), test sur scènes de référence",
+    "phase": "P4 Vidéo LSPC (pixel perfect)",
+    "deps": [
+      "T405a"
+    ],
+    "file": "tasks/T406.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T500",
+    "title": "T500 ng-ym2610 : types communs ymfm (interface, sorties, utilitaires)",
+    "phase": "P5 Audio YM2610",
+    "deps": [
+      "T406"
+    ],
+    "file": "tasks/T500.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T501a",
+    "title": "T501a ng-ym2610 : ADPCM-A (registres, canal, moteur)",
+    "phase": "P5 Audio YM2610",
+    "deps": [
+      "T500"
+    ],
+    "file": "tasks/T501a.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T501b",
+    "title": "T501b ng-ym2610 : ADPCM-B (registres, canal, moteur)",
+    "phase": "P5 Audio YM2610",
+    "deps": [
+      "T501a"
+    ],
+    "file": "tasks/T501b.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T502",
+    "title": "T502 ng-ym2610 : SSG (générateur de sons carrés/bruit)",
+    "phase": "P5 Audio YM2610",
+    "deps": [
+      "T501b"
+    ],
+    "file": "tasks/T502.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T503a",
+    "title": "T503a ng-ym2610 : tables et fonctions FM (sin, atténuation, détune, LFO)",
+    "phase": "P5 Audio YM2610",
+    "deps": [
+      "T502"
+    ],
+    "file": "tasks/T503a.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T503b",
+    "title": "T503b ng-ym2610 : registres FM OPN (fm_registers_base + opn_registers_base)",
+    "phase": "P5 Audio YM2610",
+    "deps": [
+      "T503a"
+    ],
+    "file": "tasks/T503b.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T503c",
+    "title": "T503c ng-ym2610 : fm_operator (enveloppe, phase, SSG-EG)",
+    "phase": "P5 Audio YM2610",
+    "deps": [
+      "T503b"
+    ],
+    "file": "tasks/T503c.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T503d",
+    "title": "T503d ng-ym2610 : fm_channel (algorithmes 2 et 4 opérateurs)",
+    "phase": "P5 Audio YM2610",
+    "deps": [
+      "T503c"
+    ],
+    "file": "tasks/T503d.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T503e",
+    "title": "T503e ng-ym2610 : fm_engine (timers, LFO, enveloppe globale)",
+    "phase": "P5 Audio YM2610",
+    "deps": [
+      "T503d"
+    ],
+    "file": "tasks/T503e.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T504a",
+    "title": "T504a ng-ym2610 : YM2610 (registres, statut, lecture/écriture)",
+    "phase": "P5 Audio YM2610",
+    "deps": [
+      "T503e"
+    ],
+    "file": "tasks/T504a.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T504b",
+    "title": "T504b ng-ym2610 : YM2610 génération audio (prescale, rééchantillonnage SSG)",
+    "phase": "P5 Audio YM2610",
+    "deps": [
+      "T504a"
+    ],
+    "file": "tasks/T504b.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T505",
+    "title": "T505 Test de comparaison YM2610 aux vecteurs ymfm (oracle fourni)",
+    "phase": "P5 Audio YM2610",
+    "deps": [
+      "T504b"
+    ],
+    "file": "tasks/T505.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T506",
+    "title": "T506 Sortie audio : mélange YM (gains MAME) + rééchantillonnage vers l'hôte",
+    "phase": "P5 Audio YM2610",
+    "deps": [
+      "T505"
+    ],
+    "file": "tasks/T506.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T600a",
+    "title": "T600a ng-core : structure Machine, construction et reset",
+    "phase": "P6 Intégration cycle-exact",
+    "deps": [
+      "T506"
+    ],
+    "file": "tasks/T600a.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T600b",
+    "title": "T600b ng-core : ordonnanceur à l'horloge (68000 maître, Z80 au T-state, catch-up des autres puces)",
+    "phase": "P6 Intégration cycle-exact",
+    "deps": [
+      "T600a"
+    ],
+    "file": "tasks/T600b.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T600c",
+    "title": "T600c ng-core : séquence de démarrage Z80, reset conjoint, boucle de trame publique",
+    "phase": "P6 Intégration cycle-exact",
+    "deps": [
+      "T600b"
+    ],
+    "file": "tasks/T600c.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T601",
+    "title": "T601 ng-core : wait states du bus 68000",
+    "phase": "P6 Intégration cycle-exact",
+    "deps": [
+      "T600c"
+    ],
+    "file": "tasks/T601.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T602",
+    "title": "T602 Démarrage du BIOS jusqu'à l'écran (test d'intégration)",
+    "phase": "P6 Intégration cycle-exact",
+    "deps": [
+      "T601"
+    ],
+    "file": "tasks/T602.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T603",
+    "title": "T603 Metal Slug 1 : démarrage et attract mode",
+    "phase": "P6 Intégration cycle-exact",
+    "deps": [
+      "T602"
+    ],
+    "file": "tasks/T603.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T604",
+    "title": "T604 Savestates (sérialisation complète)",
+    "phase": "P6 Intégration cycle-exact",
+    "deps": [
+      "T603"
+    ],
+    "file": "tasks/T604.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T700",
+    "title": "T700 ng-cart : bitswap + déchiffrement ROM C (CMC42 / CMC50)",
+    "phase": "P7 Protections Metal Slug",
+    "deps": [
+      "T604"
+    ],
+    "file": "tasks/T700.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T701",
+    "title": "T701 ng-cart : sfix_decrypt, cmc50_m1_decrypt",
+    "phase": "P7 Protections Metal Slug",
+    "deps": [
+      "T700"
+    ],
+    "file": "tasks/T701.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T702",
+    "title": "T702 Metal Slug X : protection runtime ($2FFFE0-$2FFFEF)",
+    "phase": "P7 Protections Metal Slug",
+    "deps": [
+      "T701"
+    ],
+    "file": "tasks/T702.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T703a",
+    "title": "T703a ng-cart : SMA Metal Slug 3 — déchiffrement P ROM",
+    "phase": "P7 Protections Metal Slug",
+    "deps": [
+      "T702"
+    ],
+    "file": "tasks/T703a.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T703b",
+    "title": "T703b ng-bus : SMA Metal Slug 3 — registres runtime (banque $2FFFE4, lecture $2FE446)",
+    "phase": "P7 Protections Metal Slug",
+    "deps": [
+      "T703a"
+    ],
+    "file": "tasks/T703b.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T704",
+    "title": "T704 ng-cart : PCM2 (ROM V) — decrypt et swap",
+    "phase": "P7 Protections Metal Slug",
+    "deps": [
+      "T703b"
+    ],
+    "file": "tasks/T704.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T705a",
+    "title": "T705a ng-cart : PVC Metal Slug 5 — déchiffrement P ROM",
+    "phase": "P7 Protections Metal Slug",
+    "deps": [
+      "T704"
+    ],
+    "file": "tasks/T705a.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T705b",
+    "title": "T705b ng-bus : PVC Metal Slug 5 — RAM de protection $2FE000-$2FFFFF",
+    "phase": "P7 Protections Metal Slug",
+    "deps": [
+      "T705a"
+    ],
+    "file": "tasks/T705b.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T706",
+    "title": "T706 Validation mslug2 (démarrage + attract)",
+    "phase": "P7 Protections Metal Slug",
+    "deps": [
+      "T705b"
+    ],
+    "file": "tasks/T706.md",
+    "assignee": "rust-dev",
+    "status": "done"
+  },
+  {
+    "id": "T707",
+    "title": "T707 Validation mslugx (démarrage + attract)",
+    "phase": "P7 Protections Metal Slug",
+    "deps": [
+      "T706"
+    ],
+    "file": "tasks/T707.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T711",
+    "title": "T711 ng-cart/ng-core : chaîne de déchiffrement par jeu et installation des ports",
+    "phase": "P7 Protections Metal Slug",
+    "deps": [
+      "T707"
+    ],
+    "file": "tasks/T711.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T708",
+    "title": "T708 Validation mslug3 (démarrage + attract)",
+    "phase": "P7 Protections Metal Slug",
+    "deps": [
+      "T711"
+    ],
+    "file": "tasks/T708.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T709",
+    "title": "T709 Validation mslug4 (démarrage + attract)",
+    "phase": "P7 Protections Metal Slug",
+    "deps": [
+      "T708"
+    ],
+    "file": "tasks/T709.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T710",
+    "title": "T710 Validation mslug5 (démarrage + attract)",
+    "phase": "P7 Protections Metal Slug",
+    "deps": [
+      "T709"
+    ],
+    "file": "tasks/T710.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T800a",
+    "title": "T800a ng-gui : application eframe, thread d'émulation, affichage de la trame",
+    "phase": "P8 GUI egui",
+    "deps": [
+      "T710"
+    ],
+    "file": "tasks/T800a.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T800b",
+    "title": "T800b ng-gui : menu Fichier (ouvrir un jeu), liste des jeux, pause/reset, capture d'écran",
+    "phase": "P8 GUI egui",
+    "deps": [
+      "T800a"
+    ],
+    "file": "tasks/T800b.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T801a",
+    "title": "T801a ng-gui : sortie audio (cpal) avec tampon circulaire",
+    "phase": "P8 GUI egui",
+    "deps": [
+      "T800b"
+    ],
+    "file": "tasks/T801a.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T801b",
+    "title": "T801b ng-gui : entrées clavier et manettes (gilrs), table de touches configurable",
+    "phase": "P8 GUI egui",
+    "deps": [
+      "T801a"
+    ],
+    "file": "tasks/T801b.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T802a",
+    "title": "T802a ng-gui : débogueur — registres CPU et visionneuse mémoire",
+    "phase": "P8 GUI egui",
+    "deps": [
+      "T801b"
+    ],
+    "file": "tasks/T802a.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T802b",
+    "title": "T802b ng-gui : débogueur — VRAM, palette, sprites",
+    "phase": "P8 GUI egui",
+    "deps": [
+      "T802a"
+    ],
+    "file": "tasks/T802b.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T900",
+    "title": "T900 Banc de performance (criterion) et mesure de référence",
+    "phase": "P9 Précision, outils, AES",
+    "deps": [
+      "T802b"
+    ],
+    "file": "tasks/T900.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T900b",
+    "title": "T900b Optimisation : catch-up paresseux sans changer le résultat",
+    "phase": "P9 Précision, outils, AES",
+    "deps": [
+      "T900"
+    ],
+    "file": "tasks/T900b.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T901",
+    "title": "T901 Précision restante : bus ouvert, PAL, wait states mesurés (liste QUESTIONS)",
+    "phase": "P9 Précision, outils, AES",
+    "deps": [
+      "T900b"
+    ],
+    "file": "tasks/T901.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T902",
+    "title": "T902 ROMs de test matérielles (wiki neogeodev) : intégration et captures MAME",
+    "phase": "P9 Précision, outils, AES",
+    "deps": [
+      "T901"
+    ],
+    "file": "tasks/T902.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T903",
+    "title": "T903 Carte mémoire (memory card) et AES : validation",
+    "phase": "P9 Précision, outils, AES",
+    "deps": [
+      "T902"
+    ],
+    "file": "tasks/T903.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T804a",
+    "title": "T804a ng-gui : préférences persistantes (gui.toml)",
+    "phase": "P8 GUI egui",
+    "deps": [
+      "T903"
+    ],
+    "file": "tasks/T804a.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T804b",
+    "title": "T804b ng-gui : menu de sélection du BIOS et du modèle (MVS/AES)",
+    "phase": "P8 GUI egui",
+    "deps": [
+      "T804a"
+    ],
+    "file": "tasks/T804b.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T804c",
+    "title": "T804c ng-gui : configuration des touches et des manettes (rebind) sauvegardée",
+    "phase": "P8 GUI egui",
+    "deps": [
+      "T804a"
+    ],
+    "file": "tasks/T804c.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T805a",
+    "title": "T805a ng-gui : affichage pixel perfect, plein écran et réglages vidéo sauvegardés",
+    "phase": "P8 GUI egui",
+    "deps": [
+      "T804a"
+    ],
+    "file": "tasks/T805a.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T805b",
+    "title": "T805b ng-gui : refonte du débogueur — fenêtre à onglets, barre d'état, CPU et mémoire",
+    "phase": "P8 GUI egui",
+    "deps": [
+      "T805a",
+      "T802b"
+    ],
+    "file": "tasks/T805b.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T805c",
+    "title": "T805c ng-gui : refonte du débogueur vidéo — palette, sprites, couche fix, registres LSPC",
+    "phase": "P8 GUI egui",
+    "deps": [
+      "T805b"
+    ],
+    "file": "tasks/T805c.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  }
 ]
