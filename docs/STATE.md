@@ -1,7 +1,14 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P5 Audio YM2610 terminée jusqu'à T506 ; P6 Intégration terminée (T600a à T604, 2026-11-09). Prochaine : T700.
+P5 Audio YM2610 terminée jusqu'à T506 ; P6 Intégration terminée (T600a à T604, 2026-11-09). Prochaine : T701.
+
+### Fait — T700 ng-cart bitswap + déchiffrement ROM C (CMC42 / CMC50)
+- `crates/ng-common/src/bitswap.rs` : fonction générique `bitswap::<N>(v, bits)` (sortie bit k = entrée bit args[N-1-k]).
+- `crates/ng-cart/src/cmc.rs` : port 1:1 de MAME prot_cmc.cpp l.474-590 — `decrypt()` élémentaire, `gfx_decrypt()` (passes data xor + address xor), wrappers `cmc42_gfx_decrypt()` / `cmc50_gfx_decrypt()`.
+- Tables KOF99_* et KOF2000_* déjà générées dans `cmc_tables.rs` ; association exacte CMC42=KOF99, CMC50=KOF2000.
+- 7 tests cmc + 3 tests bitswap passent (oracles MAME réels : CRC des ROMs déchiffrées).
+- Piège : clippy `too_many_arguments` sur decrypt() (10 args) — `#[allow(clippy::too_many_arguments)]` requis.
 
 ### Fait — T602 ng-core test d'intégration BIOS boot
 - `crates/ng-core/tests/bios_boot.rs` : 5 tests dont le jalon BIOS seul 180 trames (PC ∈ [0xC00000,0xC1FFFF] ∪ RAM, ≥ 2 couleurs).
