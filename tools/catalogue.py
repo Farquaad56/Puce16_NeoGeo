@@ -8,6 +8,8 @@ PROTECTED = {
     # T1005 : puce CMC42 seule (GFX + fixe chiffrés), pas de protection au runtime
     "zupapa": "C42_ZUPAPA", "ganryu": "C42_GANRYU", "s1945p": "C42_S1945P", "preisle2": "C42_PREISLE2",
     "bangbead": "C42_BANGBEAD", "nitd": "C42_NITD", "sengoku3": "C42_SENGOKU3",
+    # T1006 : puce CMC50 (M1 chiffrée, C et S chiffrées)
+    "kof2001": "C50_KOF2001", "jockeygp": "C50_JOCKEYGP",
 }
 # Jeux protégés extraits dès maintenant (ROM_START dans romsets_all.txt) mais définis par les cartes T1005+.
 TO_EXTRACT = "kof98 fatfury2 ssideki sbp vliner kof99 garou kof2000 kof2001 jockeygp kof2002 kof2003 svc samsho5 samsh5sp rotd pnyaa zupapa ganryu s1945p preisle2 bangbead nitd sengoku3".split()

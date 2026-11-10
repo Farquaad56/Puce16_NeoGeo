@@ -529,3 +529,10 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 - Écart de carte : la région fixe de ces jeux est de 0x20000 (et non 0x80000) dans MAME ; le test fixe `sizes.s == 0x20000`. `cmc.rs` n'a pas eu besoin de modification (toutes les tailles C passent).
 - Banc réel (BIOS sp-s2, trames 120 et 600) : les 7 jeux à 0,00 % de différence avec MAME.
 - Suite : T1006 (CMC50).
+
+## T1006 - Jeux à puce CMC50 (kof2001, jockeygp)
+- `PROT_C50_KOF2001` (0x1E) et `PROT_C50_JOCKEYGP` (0xAC) : C50 + m1_decrypt + sfix_decrypt, banc Garou. `ALL_CARTS` = 143. Tests `cmc50_tests` (table ; chaîne sur zéros, `m.len()==0x90000`). Région fixe 0x20000 (MAME), comme T1005.
+- Banc : le BIOS puis le jeu démarrent (kof2001 identique à MAME aux trames 120, 560, 580), mais la chronologie du jeu diverge ensuite : MAME affiche le gris/logo dès la trame 600, nous un peu plus tard (trame 900 : logo Eolith chez nous, scène d'intro chez MAME ; trame 1500 : scène d'intro chez nous, noir chez MAME). Le jeu tourne (images plausibles) : écart de rythme, pas de déchiffrement faux. À étudier (démarrage Z80/son ?) ; même symptôme que kof96, lastblad, samsho4 à la trame 600.
+- jockeygp : se charge, reste noir à la trame 600 (attendu : il lui faut la RAM de cartouche, T1014).
+- Outils : le banc accepte `NG_DUMP=1` (écrit `target/catalogue-dump/<jeu>_f<N>.ppm`).
+- Suite : T1007 (SMA : kof99, garou, kof2000).

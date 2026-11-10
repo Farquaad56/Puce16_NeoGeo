@@ -28,3 +28,5 @@
 
 - [PARTIEL T901] Bus ouvert : option `open_bus_follows_prefetch` disponible (défaut faux = $FFFF comme MAME). À activer si une ROM de test matérielle (T902) montre que le matériel renvoie le dernier mot préchargé.
 - [OUVERT T901] Ordre des événements à égalité de tick et table de wait states : aucun écart MAME constaté, rien changé.
+
+- (T1006) kof2001/kof96/lastblad/samsho4 : la chronologie de démarrage du jeu est en retard sur MAME (BIOS identique jusqu'à ~580 trames). Cause à étudier : rythme du handshake son Z80, chien de garde, ou durée d'un écran d'attente.

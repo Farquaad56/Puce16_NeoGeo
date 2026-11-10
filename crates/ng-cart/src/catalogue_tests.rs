@@ -12,7 +12,7 @@ const ADPCM_B: [&str; 13] = [
 
 #[test]
 fn catalogue_has_expected_size_and_unique_names() {
-    assert_eq!(ALL_CARTS.len(), 141);
+    assert_eq!(ALL_CARTS.len(), 143);
     let names: HashSet<_> = ALL_CARTS.iter().map(|d| d.name).collect();
     assert_eq!(names.len(), ALL_CARTS.len());
 }
@@ -170,6 +170,49 @@ mod cmc42_tests {
             assert_eq!(c.p.len(), s.p as usize, "{name}");
             assert_eq!(c.s.len(), s.s as usize, "{name}");
             assert_eq!(c.c.len(), s.c as usize, "{name}");
+        }
+    }
+}
+
+// ---- T1006 : jeux à puce CMC50 ----
+#[cfg(test)]
+mod cmc50_tests {
+    use crate::romset::{find_def, Cart};
+    use crate::types::{Cmc, FixBank, PDecrypt, Pcm2, RuntimeProt};
+
+    #[test]
+    fn cmc50_protection_tables() {
+        for (name, key) in [("kof2001", 0x1Eu8), ("jockeygp", 0xAC)] {
+            let p = find_def(name).expect(name).prot;
+            assert_eq!(p.cmc, Cmc::C50, "{name}");
+            assert_eq!(p.gfx_key, key, "{name}");
+            assert!(p.m1_decrypt && p.sfix_decrypt, "{name}");
+            assert_eq!(p.fix_bank, FixBank::Garou, "{name}");
+            assert_eq!(p.pcm2, Pcm2::None, "{name}");
+            assert_eq!(p.p_decrypt, PDecrypt::None, "{name}");
+            assert_eq!(p.runtime, RuntimeProt::None, "{name}");
+        }
+    }
+
+    #[test]
+    fn cmc50_decrypt_chain_runs() {
+        for name in ["kof2001", "jockeygp"] {
+            let def = find_def(name).expect(name);
+            let s = def.sizes;
+            assert_eq!((s.m, s.m_crypt), (0x90000, 0x80000), "{name}");
+            let mut c = Cart {
+                def,
+                p: vec![0; s.p as usize],
+                s: vec![0; s.s as usize],
+                m: vec![0; s.m as usize],
+                m_crypt: vec![0; s.m_crypt as usize],
+                v: vec![0; s.v as usize],
+                vb: Vec::new(),
+                c: vec![0; s.c as usize],
+            };
+            c.decrypt_all();
+            assert_eq!(c.m.len(), 0x90000, "{name}");
+            assert_eq!(c.s.len(), s.s as usize, "{name}");
         }
     }
 }

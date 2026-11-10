@@ -71,6 +71,22 @@ fn diff_percent(root: &Path, game: &str, frame: u32, px: &[u32]) -> Option<f64> 
     Some(d.different as f64 * 100.0 / d.total as f64)
 }
 
+/// NG_DUMP=1 : écrit la trame finale dans target/catalogue-dump/<jeu>_f<N>.ppm.
+fn dump_ppm(root: &Path, game: &str, frame: u32, px: &[u32]) {
+    use std::io::Write;
+    let dir = root.join("target/catalogue-dump");
+    let _ = std::fs::create_dir_all(&dir);
+    let Ok(mut f) = std::fs::File::create(dir.join(format!("{game}_f{frame}.ppm"))) else {
+        return;
+    };
+    let _ = write!(f, "P6\n320 224\n255\n");
+    let bytes: Vec<u8> = px
+        .iter()
+        .flat_map(|p| [(p >> 16) as u8, (p >> 8) as u8, *p as u8])
+        .collect();
+    let _ = f.write_all(&bytes);
+}
+
 struct Row {
     game: String,
     etat: Etat,
@@ -104,6 +120,9 @@ fn run_game(
         }
     }
     let fb600 = m.framebuffer().pixels.clone();
+    if std::env::var_os("NG_DUMP").is_some() {
+        dump_ppm(root, game, frames, &fb600);
+    }
     let colors = fb600.iter().collect::<HashSet<_>>().len();
     let d120 = diff_percent(root, game, 120, &fb120);
     let d600 = diff_percent(root, game, frames, &fb600);

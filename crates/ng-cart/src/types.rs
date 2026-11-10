@@ -38,3 +38,6 @@ pub const PROT_C42_PREISLE2: Protection = Protection { cmc: Cmc::C42, gfx_key: 0
 pub const PROT_C42_BANGBEAD: Protection = Protection { cmc: Cmc::C42, gfx_key: 0xF8, sfix_decrypt: true, fix_bank: FixBank::Garou, ..N };
 pub const PROT_C42_NITD: Protection = Protection { cmc: Cmc::C42, gfx_key: 0xFF, sfix_decrypt: true, fix_bank: FixBank::Garou, ..N };
 pub const PROT_C42_SENGOKU3: Protection = Protection { cmc: Cmc::C42, gfx_key: 0xFE, sfix_decrypt: true, fix_bank: FixBank::Garou, ..N };
+// T1006 : puce CMC50 (cmc.cpp) : cmc50_m1_decrypt + cmc50_gfx_decrypt(clé) + sfix_decrypt ; banc fixe Garou
+pub const PROT_C50_KOF2001: Protection = Protection { cmc: Cmc::C50, gfx_key: 0x1E, sfix_decrypt: true, m1_decrypt: true, fix_bank: FixBank::Garou, ..N };
+pub const PROT_C50_JOCKEYGP: Protection = Protection { cmc: Cmc::C50, gfx_key: 0xAC, sfix_decrypt: true, m1_decrypt: true, fix_bank: FixBank::Garou, ..N };
