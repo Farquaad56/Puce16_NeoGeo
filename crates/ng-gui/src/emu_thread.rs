@@ -6,7 +6,10 @@ use std::time::{Duration, Instant};
 use crossbeam_channel::{bounded, unbounded, Receiver, Sender, TryRecvError};
 use ng_cart::Config;
 use ng_common::{PadState, SystemButtons};
+use ng_core::audio_mix::AudioResampler;
 use ng_core::{load_machine, Machine};
+
+use crate::audio::AudioOut;
 
 /// Horloge maître MVS en Hz (une trame = 405 504 mclk).
 const MCLK_HZ: f64 = 24_000_000.0;
@@ -59,6 +62,17 @@ pub fn spawn(cfg: Config) -> EmuHandle {
 
 fn run(cfg: Config, cmd_rx: Receiver<Cmd>, frame_tx: Sender<FrameMsg>, err_tx: Sender<String>) {
     let mut machine: Option<Machine> = None;
+    let audio = match AudioOut::new() {
+        Ok(a) => Some(a),
+        Err(e) => {
+            let _ = err_tx.send(format!("audio désactivé : {e}"));
+            None
+        }
+    };
+    let mut resampler = audio
+        .as_ref()
+        .map(|a| AudioResampler::new(55_555.56, a.rate));
+    let mut pcm: Vec<f32> = Vec::new();
     let mut paused = false;
     let mut inputs = (
         PadState::default(),
@@ -108,6 +122,15 @@ fn run(cfg: Config, cmd_rx: Receiver<Cmd>, frame_tx: Sender<FrameMsg>, err_tx: S
         m.set_inputs(inputs.0, inputs.1, inputs.2);
         m.run_frame();
         frames_since_t0 += 1;
+        let samples = m.take_audio();
+        if let (Some(a), Some(r)) = (audio.as_ref(), resampler.as_mut()) {
+            for s in samples {
+                r.push(s);
+            }
+            pcm.clear();
+            r.pop_into(&mut pcm);
+            a.push(&pcm);
+        }
         let frame = m.frame_count();
         if fps_mark.0.elapsed() >= Duration::from_millis(500) {
             fps = (frame - fps_mark.1) as f32 / fps_mark.0.elapsed().as_secs_f32();
@@ -157,10 +180,16 @@ mod tests {
             game: "inconnu".into(),
         })
         .unwrap();
-        let msg = h
-            .err_rx
-            .recv_timeout(Duration::from_secs(1))
-            .expect("message d'erreur");
+        // un éventuel message « audio désactivé » peut précéder l'erreur de chargement
+        let msg = loop {
+            let m = h
+                .err_rx
+                .recv_timeout(Duration::from_secs(1))
+                .expect("message d'erreur");
+            if m.contains("inconnu") {
+                break m;
+            }
+        };
         assert!(msg.contains("inconnu"));
         h.tx.send(Cmd::Quit).unwrap();
         h.join.join().expect("le thread se termine");

@@ -2,6 +2,7 @@
 #![allow(dead_code)]
 
 mod app;
+mod audio;
 mod emu_thread;
 mod menu;
 mod settings;

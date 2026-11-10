@@ -423,3 +423,6 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 ### Fait - T800b ng-gui : menus, liste des jeux, capture (Claude)
 - `settings.rs` (chemin config = argument 1 ou `./neogeo.toml`, formulaire 3 dossiers via rfd, `config_to_toml`), `menu.rs` (`available_games`, `shot_name`, `MenuAction`, `Scale`), `app.rs` refondu (l'émulateur démarre seulement si la config est lue). egui 0.37 : `egui::MenuBar::new().ui`, `ui.close()`, `CentralPanel::show(ui, ..)`.
 - Écart : le jeu n'est plus un argument de la ligne de commande (l'argument 1 est la config) ; capture PPM écrite par l'application depuis la dernière trame (pas de `fb.write_ppm`).
+
+### Fait - T801a ng-gui : sortie audio cpal (Claude)
+- `audio.rs` : `AudioOut` (cpal 0.18 : `build_output_stream(config.into(), ..)` par valeur), `fill_buffer`, `push_capped` (plafond rate/2 valeurs). Le flux est créé DANS le thread d'émulation (cpal::Stream n'est pas Send). Pas de périphérique : message « audio désactivé » sur `err_rx`, l'émulation continue.
