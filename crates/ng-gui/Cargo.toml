@@ -4,5 +4,8 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+crossbeam-channel = "0.5.17"
+eframe = "0.37.0"
+ng-cart = { version = "0.1.0", path = "../ng-cart" }
 ng-common = { path = "../ng-common" }
 ng-core = { path = "../ng-core" }
