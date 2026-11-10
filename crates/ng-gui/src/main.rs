@@ -3,6 +3,7 @@
 
 mod app;
 mod audio;
+mod debugger;
 mod emu_thread;
 mod input;
 mod menu;

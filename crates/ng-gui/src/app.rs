@@ -6,6 +6,7 @@ use std::path::PathBuf;
 
 use ng_cart::Config;
 
+use crate::debugger::Debugger;
 use crate::emu_thread::{self, Cmd, EmuHandle, FrameMsg};
 use crate::input::InputState;
 use crate::menu::{self, MenuAction, Scale};
@@ -45,6 +46,7 @@ pub struct App {
     scale: Scale,
     game: Option<String>,
     input: InputState,
+    debugger: Debugger,
 }
 
 impl App {
@@ -63,6 +65,7 @@ impl App {
             scale: Scale::Auto,
             game: None,
             input: InputState::new(),
+            debugger: Debugger::default(),
         }
     }
 
@@ -87,6 +90,9 @@ impl App {
         }
         while let Ok(e) = emu.err_rx.try_recv() {
             self.error = Some(e);
+        }
+        while let Ok(s) = emu.dbg_rx.try_recv() {
+            self.debugger.snap = Some(s);
         }
         if let Some(f) = &self.last {
             let img = to_color_image(&f.pixels);
@@ -123,6 +129,10 @@ impl App {
             MenuAction::Reset => self.send(Cmd::Reset),
             MenuAction::Scale(s) => self.scale = s,
             MenuAction::Screenshot => self.screenshot(),
+            MenuAction::Debugger => {
+                self.debugger.open = !self.debugger.open;
+                self.send(Cmd::Debug(self.debugger.open));
+            }
         }
     }
 
@@ -163,6 +173,9 @@ impl App {
             });
         } else {
             ui.label("Fichier > Ouvrir pour lancer un jeu");
+        }
+        if self.debugger.open {
+            self.debugger.show(ctx);
         }
         ctx.request_repaint();
     }

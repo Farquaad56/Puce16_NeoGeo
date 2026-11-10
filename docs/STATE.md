@@ -430,3 +430,7 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 ## T801b — Entrées clavier + manettes (ng-gui)
 - `input.rs` : `InputState` (clavier egui + gilrs), table de touches par défaut (P1 flèches/Z/X/A/S, P2 IJKL/G/H/T/Y, Entrée=Start1, P=Start2, 5/6=Coin, 9=Service, F2=Test, Maj=Select1), stick analogique seuil 0.5, bits actifs-bas.
 - `App` envoie `Cmd::Inputs` à chaque frame. 5 tests unitaires.
+
+## T802a — Débogueur registres + mémoire
+- `ng-core::debug` : `DebugSnapshot`, `Machine::debug_snapshot()` (termine l'instruction), `peek68k()` sans effet de bord (vecteurs/BIOS/P/RAM, 0xFF ailleurs). `Cmd::Debug(bool)` + 3e canal `dbg_rx` (bounded 2). `debugger.rs` : fenêtre registres 68000/Z80 + RAM 0x100000 (show_rows), `hex_line`. Menu « Débogueur ».
+- Écart : la visionneuse lit la copie `work_ram` du snapshot (pas `peek68k`, réservé aux outils).

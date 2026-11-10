@@ -20,6 +20,7 @@ pub enum MenuAction {
     Reset,
     Scale(Scale),
     Screenshot,
+    Debugger,
 }
 
 /// Jeux connus et présence de leur zip dans `roms_dir`, dans l'ordre de `ALL_CARTS`.
@@ -92,6 +93,9 @@ pub fn show(
         });
         if ui.button("Capture").clicked() {
             action = Some(MenuAction::Screenshot);
+        }
+        if ui.button("Débogueur").clicked() {
+            action = Some(MenuAction::Debugger);
         }
     });
     action

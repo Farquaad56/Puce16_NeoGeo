@@ -7,7 +7,7 @@ use crossbeam_channel::{bounded, unbounded, Receiver, Sender, TryRecvError};
 use ng_cart::Config;
 use ng_common::{PadState, SystemButtons};
 use ng_core::audio_mix::AudioResampler;
-use ng_core::{load_machine, Machine};
+use ng_core::{load_machine, DebugSnapshot, Machine};
 
 use crate::audio::AudioOut;
 
@@ -22,6 +22,8 @@ pub enum Cmd {
     },
     Reset,
     Pause(bool),
+    /// Active/désactive l'envoi d'un `DebugSnapshot` par trame.
+    Debug(bool),
     Inputs {
         p1: PadState,
         p2: PadState,
@@ -43,6 +45,7 @@ pub struct EmuHandle {
     pub tx: Sender<Cmd>,
     pub rx: Receiver<FrameMsg>,
     pub err_rx: Receiver<String>,
+    pub dbg_rx: Receiver<DebugSnapshot>,
     pub join: JoinHandle<()>,
 }
 
@@ -51,16 +54,24 @@ pub fn spawn(cfg: Config) -> EmuHandle {
     let (tx, cmd_rx) = unbounded::<Cmd>();
     let (frame_tx, rx) = bounded::<FrameMsg>(2);
     let (err_tx, err_rx) = unbounded::<String>();
-    let join = thread::spawn(move || run(cfg, cmd_rx, frame_tx, err_tx));
+    let (dbg_tx, dbg_rx) = bounded::<DebugSnapshot>(2);
+    let join = thread::spawn(move || run(cfg, cmd_rx, frame_tx, err_tx, dbg_tx));
     EmuHandle {
         tx,
         rx,
         err_rx,
+        dbg_rx,
         join,
     }
 }
 
-fn run(cfg: Config, cmd_rx: Receiver<Cmd>, frame_tx: Sender<FrameMsg>, err_tx: Sender<String>) {
+fn run(
+    cfg: Config,
+    cmd_rx: Receiver<Cmd>,
+    frame_tx: Sender<FrameMsg>,
+    err_tx: Sender<String>,
+    dbg_tx: Sender<DebugSnapshot>,
+) {
     let mut machine: Option<Machine> = None;
     let audio = match AudioOut::new() {
         Ok(a) => Some(a),
@@ -74,6 +85,7 @@ fn run(cfg: Config, cmd_rx: Receiver<Cmd>, frame_tx: Sender<FrameMsg>, err_tx: S
         .map(|a| AudioResampler::new(55_555.56, a.rate));
     let mut pcm: Vec<f32> = Vec::new();
     let mut paused = false;
+    let mut debug = false;
     let mut inputs = (
         PadState::default(),
         PadState::default(),
@@ -110,6 +122,7 @@ fn run(cfg: Config, cmd_rx: Receiver<Cmd>, frame_tx: Sender<FrameMsg>, err_tx: S
                     t0 = Instant::now();
                     frames_since_t0 = 0;
                 }
+                Ok(Cmd::Debug(d)) => debug = d,
                 Ok(Cmd::Inputs { p1, p2, sys }) => inputs = (p1, p2, sys),
                 Err(TryRecvError::Empty) => break,
             }
@@ -130,6 +143,9 @@ fn run(cfg: Config, cmd_rx: Receiver<Cmd>, frame_tx: Sender<FrameMsg>, err_tx: S
             pcm.clear();
             r.pop_into(&mut pcm);
             a.push(&pcm);
+        }
+        if debug {
+            let _ = dbg_tx.try_send(m.debug_snapshot());
         }
         let frame = m.frame_count();
         if fps_mark.0.elapsed() >= Duration::from_millis(500) {
