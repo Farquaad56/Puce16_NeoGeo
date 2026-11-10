@@ -10,6 +10,12 @@ P5 Audio YM2610 terminée jusqu'à T506 ; P6 Intégration terminée (T600a à T6
 - 7 tests cmc + 3 tests bitswap passent (oracles MAME réels : CRC des ROMs déchiffrées).
 - Piège : clippy `too_many_arguments` sur decrypt() (10 args) — `#[allow(clippy::too_many_arguments)]` requis.
 
+### Fait — T701 ng-cart sfix_decrypt + cmc50_m1_decrypt
+- `crates/ng-cart/src/cmc.rs` : port 1:1 de MAME prot_cmc.cpp l.604-737 — `sfix_decrypt()` (déchiffrement S-FIX Metal Slug), `m1_address_scramble()` (brouillage d'adresse CMC50), `cmc50_m1_decrypt()` (déchiffrement ROM M1 complet).
+- Tables M1_ADDRESS_8_15_XOR et M1_ADDRESS_0_7_XOR copiées du C++ (256 octets chacune).
+- 5 tests T701 passent dont 2 oracles CRC MAME réels (sfix_decrypt, cmc50_m1_decrypt) + test de permutation m1_address_scramble sur tout l'espace 0x80000.
+- Piège : la tentative précédente a crashé à l'écriture mais le fichier était déjà complet — vérification par tests avant de réécrire.
+
 ### Fait — T602 ng-core test d'intégration BIOS boot
 - `crates/ng-core/tests/bios_boot.rs` : 5 tests dont le jalon BIOS seul 180 trames (PC ∈ [0xC00000,0xC1FFFF] ∪ RAM, ≥ 2 couleurs).
 - Test marqué `#[ignore = "requires local BIOS files from neogeo.toml"]` ; passe avec `--include-ignored` si `neogeo.toml` pointe vers des fichiers réels.
