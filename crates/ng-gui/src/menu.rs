@@ -100,7 +100,7 @@ pub fn show(ui: &mut egui::Ui, st: &MenuState) -> Option<MenuAction> {
                 ui.close();
             }
             ui.separator();
-            if ui.button("Contrôles…").clicked() {
+            if ui.button("Contrôles… (F1)").clicked() {
                 action = Some(MenuAction::Controls);
                 ui.close();
             }

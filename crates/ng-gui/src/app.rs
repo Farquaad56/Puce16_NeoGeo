@@ -25,6 +25,8 @@ pub const FB_H: usize = display::FB_H as usize;
 /// haut et reste tant qu'elle est sur la barre.
 const MENU_REVEAL: f32 = 8.0;
 const MENU_KEEP: f32 = 32.0;
+/// Largeur initiale (points) du panneau de débogage : tient une ligne de mémoire et l'image fix x2.
+const DEBUG_PANEL_W: f32 = 660.0;
 /// Délai d'inactivité (s) avant de masquer le curseur en plein écran.
 const CURSOR_HIDE_AFTER: f32 = 2.0;
 
@@ -90,7 +92,8 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(cfg_path: PathBuf) -> Self {
+    /// `game` : jeu à lancer tout de suite (si la configuration est lisible).
+    pub fn new(cfg_path: PathBuf, game: Option<String>) -> Self {
         let cfg = ng_cart::load_config(&cfg_path).ok();
         let emu = cfg.clone().map(emu_thread::spawn);
         let prefs_path = prefs::prefs_path(&cfg_path);
@@ -106,7 +109,7 @@ impl App {
             .map(bios_menu::available_bios)
             .unwrap_or_default();
         let error = cfg.as_ref().and_then(|c| missing_bios_message(c, &bios));
-        Self {
+        let mut app = Self {
             cfg,
             cfg_path,
             form: ConfigForm::default(),
@@ -127,7 +130,11 @@ impl App {
             fullscreen_applied: None,
             menu_shown: false,
             shown: None,
+        };
+        if let (Some(g), true) = (game, app.cfg.is_some()) {
+            app.load_game(&g);
         }
+        app
     }
 
     pub fn send(&self, cmd: Cmd) {
@@ -245,7 +252,8 @@ impl App {
                 ng_cart::Model::Aes => "AES",
             }),
             frame: self.last.as_ref().map(|f| f.frame),
-            fps: self.last.as_ref().map(|f| f.fps),
+            // en pause la dernière mesure n'a plus de sens
+            fps: self.last.as_ref().filter(|_| !self.paused).map(|f| f.fps),
             scale: self.shown.is_some().then_some(scale.as_str()),
             paused: self.paused,
         })
@@ -290,6 +298,9 @@ impl App {
         }
         if pressed(Key::Escape) && self.prefs.display.fullscreen {
             self.prefs.display.fullscreen = false;
+        }
+        if pressed(Key::F1) {
+            self.controls.open = !self.controls.open;
         }
         if pressed(Key::F5) {
             self.set_paused(!self.paused);
@@ -440,17 +451,23 @@ impl eframe::App for App {
                 ui.monospace(text);
             });
         }
-        egui::CentralPanel::default()
-            .frame(egui::Frame::NONE.fill(egui::Color32::BLACK))
-            .show(ui, |ui| self.draw_frame(ui));
-
         if self.debugger.open {
-            match self.debugger.show(&ctx, self.paused) {
+            // panneau ancré à droite : l'image du jeu reste entièrement visible à côté
+            let action = egui::Panel::right("debugger")
+                .resizable(true)
+                .default_size(DEBUG_PANEL_W)
+                .show(ui, |ui| self.debugger.ui(ui, self.paused))
+                .inner;
+            match action {
                 Some(DebugAction::Pause(p)) => self.set_paused(p),
                 Some(DebugAction::Step) => self.step_frame(),
                 None => {}
             }
         }
+        egui::CentralPanel::default()
+            .frame(egui::Frame::NONE.fill(egui::Color32::BLACK))
+            .show(ui, |ui| self.draw_frame(ui));
+
         self.sync_debug_level();
         self.prefs.debug.open = self.debugger.open;
         self.prefs.debug.tab = self.debugger.tab.name().to_string();

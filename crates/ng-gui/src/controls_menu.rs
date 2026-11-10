@@ -20,13 +20,26 @@ pub struct ControlsWindow {
 const WAIT_KEY: &str = "Appuyez sur une touche…";
 const WAIT_BUTTON: &str = "Appuyez sur un bouton…";
 
+/// Nom affiché d'une touche (les flèches n'ont pas de glyphe dans la police par défaut).
+pub fn key_label(k: Key) -> &'static str {
+    match k {
+        Key::ArrowUp => "Flèche haut",
+        Key::ArrowDown => "Flèche bas",
+        Key::ArrowLeft => "Flèche gauche",
+        Key::ArrowRight => "Flèche droite",
+        Key::Enter => "Entrée",
+        Key::Space => "Espace",
+        other => other.name(),
+    }
+}
+
 /// Texte de la case « clavier » d'une action.
 pub fn key_cell(b: &Bindings, a: Action, capturing: bool) -> String {
     if capturing {
         return WAIT_KEY.into();
     }
     match b.key(a) {
-        Some(k) => k.symbol_or_name().to_string(),
+        Some(k) => key_label(k).to_string(),
         None if a == Action::Select1 => "Maj".into(),
         None => "—".into(),
     }
@@ -163,6 +176,8 @@ mod tests {
         let mut b = Bindings::default();
         assert_eq!(key_cell(&b, Action::P1A, false), "Z");
         assert_eq!(key_cell(&b, Action::P1A, true), WAIT_KEY);
+        assert_eq!(key_cell(&b, Action::P1Up, false), "Flèche haut");
+        assert_eq!(key_cell(&b, Action::Coin1, false), "5");
         assert_eq!(key_cell(&b, Action::Select1, false), "Maj");
         assert_eq!(button_cell(&b, Action::P1A, false), "South");
         assert_eq!(button_cell(&b, Action::Coin1, false), "—");

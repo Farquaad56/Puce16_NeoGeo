@@ -487,3 +487,12 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 - `debugger.rs` : une fenêtre, onglets CPU / Mémoire / Vidéo / Palette / Sprites, boutons Pause et Trame suivante. CPU : PC (adresse de l'instruction), IR, SR + drapeaux, D0-D7/A0-A7, USP/SSP ; Z80 complet + drapeaux ; niveau d'IRQ. Mémoire : RAM 68000, RAM Z80, RAM palette, VRAM ; « Aller à » ; colonne ASCII. Valeurs modifiées surlignées.
 - `statusbar.rs` : `format_status` (jeu · BIOS · modèle · trame · fps · échelle · MARCHE/PAUSE). Menu Débogage ; raccourcis F5 pause, F6 trame suivante, F9 capture, F12 débogueur. Onglet, région et état de la fenêtre dans `gui.toml`.
 - Écart : `DebugLevel::Memory` copie les quatre régions (150 Ko) plutôt que la seule région choisie. Dépendance `puce-m68k` ajoutée à ng-gui (type `CpuState`).
+
+## T805c - Débogueur vidéo
+- `video_debug.rs` réécrit en trois onglets. Vidéo : registres LSPC en clair (ligne, IRQ, adresse/pas VRAM, timer décodé, auto-animation, banque de palette, source du fix), couche fix x2 avec grille 8x8, cadre de la zone visible, survol d'une tuile (adresse VRAM, code, palette). Palette : banque (active signalée), page de 16 palettes, survol/clic (copie `#RRGGBB`), couleur de fond. Sprites : liste des sprites actifs avec X/Y/hauteur effectifs (chaînes suivies comme MAME), filtre par ligne, tri, compteurs.
+- Fonctions pures testées : `decode_scb2/3/4`, `sprite_list`, `on_line`, `sprite_row`, `sort_sprites`, `tile_at`, `fix_tile_addr/label`, `pen_label`, `irq2_text`.
+- Écart : tri par liste déroulante (pas par clic sur l'en-tête) ; seule la première tuile de chaque sprite est décodée.
+
+## Retouches après essai réel du GUI (captures de la fenêtre)
+- Le débogueur est un panneau ancré à droite (plus une fenêtre flottante qui cachait le jeu) ; surlignage des changements seulement en pause ; lignes mémoire sans retour à la ligne ; fix x2 seulement si le panneau est assez large.
+- `ng-gui <config> <jeu>` : le 2e argument lance un jeu au démarrage. F1 ouvre Contrôles. Noms de touches lisibles (« Flèche haut »).

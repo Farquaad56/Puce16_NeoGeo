@@ -1,4 +1,4 @@
-//! Débogueur : une fenêtre à onglets (CPU, Mémoire, Vidéo, Palette, Sprites).
+//! Débogueur : un panneau à onglets (CPU, Mémoire, Vidéo, Palette, Sprites) ancré à droite de l'image.
 //!
 //! Le cœur ne copie que ce que l'onglet visible demande (`Tab::level`). Les valeurs qui ont
 //! changé depuis l'instantané précédent sont surlignées.
@@ -11,6 +11,9 @@ use crate::video_debug::VideoDebug;
 
 /// Couleur des valeurs modifiées depuis l'instantané précédent.
 const CHANGED: Color32 = Color32::from_rgb(255, 200, 60);
+/// Espacement des tableaux de registres et largeur minimale d'une colonne.
+const GRID_SPACING: [f32; 2] = [18.0, 4.0];
+const REG_NAME_W: f32 = 30.0;
 /// Couleur d'un drapeau à 1.
 const FLAG_ON: Color32 = Color32::from_rgb(110, 220, 120);
 
@@ -323,61 +326,66 @@ impl Debugger {
         self.prev = self.snap.replace(s);
     }
 
-    /// Affiche la fenêtre ; renvoie l'action demandée (pause, pas à pas).
-    pub fn show(&mut self, ctx: &egui::Context, paused: bool) -> Option<DebugAction> {
+    /// Dessine le panneau ; renvoie l'action demandée (pause, pas à pas).
+    pub fn ui(&mut self, ui: &mut egui::Ui, paused: bool) -> Option<DebugAction> {
         let mut action = None;
-        let mut open = self.open;
-        egui::Window::new("Débogueur")
-            .open(&mut open)
-            .default_size([700.0, 560.0])
-            .show(ctx, |ui| {
-                ui.horizontal(|ui| {
-                    for t in Tab::ALL {
-                        ui.selectable_value(&mut self.tab, t, t.label());
-                    }
-                    ui.separator();
-                    let label = if paused {
-                        "▶ Reprendre (F5)"
-                    } else {
-                        "⏸ Pause (F5)"
-                    };
-                    if ui.button(label).clicked() {
-                        action = Some(DebugAction::Pause(!paused));
-                    }
-                    if ui.button("⏭ Trame suivante (F6)").clicked() {
-                        action = Some(DebugAction::Step);
-                    }
-                });
-                ui.separator();
-                let Some(s) = self.snap.as_ref() else {
-                    ui.label("En attente d'un jeu…");
-                    return;
-                };
-                ui.label(mono(format!(
-                    "trame {}   ligne {:3}   t = {} mclk   {}",
-                    s.frame,
-                    s.vpos,
-                    s.now,
-                    if paused { "PAUSE" } else { "MARCHE" }
-                )));
-                ui.separator();
-                match self.tab {
-                    Tab::Cpu => cpu_tab(ui, s, self.prev.as_ref()),
-                    Tab::Memory => self.memory_tab(ui),
-                    Tab::Video | Tab::Palette | Tab::Sprites => {
-                        if s.vram.is_empty() {
-                            ui.label("Chargement…");
-                        } else {
-                            self.video.ui(ui, s);
-                        }
-                    }
+        ui.horizontal(|ui| {
+            for t in Tab::ALL {
+                ui.selectable_value(&mut self.tab, t, t.label());
+            }
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                if ui.button("×").on_hover_text("Fermer (F12)").clicked() {
+                    self.open = false;
                 }
             });
-        self.open = open;
+        });
+        ui.separator();
+        // « wrapped » : une ligne trop longue passe à la ligne au lieu d'élargir le panneau
+        ui.horizontal_wrapped(|ui| {
+            let label = if paused {
+                "Reprendre (F5)"
+            } else {
+                "Pause (F5)"
+            };
+            if ui.button(label).clicked() {
+                action = Some(DebugAction::Pause(!paused));
+            }
+            if ui.button("Trame suivante (F6)").clicked() {
+                action = Some(DebugAction::Step);
+            }
+            if let Some(s) = self.snap.as_ref() {
+                ui.separator();
+                ui.label(mono(format!("trame {}   t = {} mclk", s.frame, s.now)));
+                let state = mono(if paused { "PAUSE" } else { "MARCHE" });
+                ui.label(if paused {
+                    state.strong().color(CHANGED)
+                } else {
+                    state
+                });
+            }
+        });
+        ui.separator();
+        let Some(s) = self.snap.as_ref() else {
+            ui.label("En attente d'un jeu…");
+            return action;
+        };
+        // le surlignage n'a de sens qu'à l'arrêt : en marche, tout change à chaque trame
+        let prev = self.prev.as_ref().filter(|_| paused);
+        match self.tab {
+            Tab::Cpu => cpu_tab(ui, s, prev),
+            Tab::Memory => self.memory_tab(ui, paused),
+            Tab::Video | Tab::Palette | Tab::Sprites => {
+                if s.vram.is_empty() {
+                    ui.label("Chargement…");
+                } else {
+                    self.video.ui(ui, s, self.tab);
+                }
+            }
+        }
         action
     }
 
-    fn memory_tab(&mut self, ui: &mut egui::Ui) {
+    fn memory_tab(&mut self, ui: &mut egui::Ui, paused: bool) {
         let Some(s) = self.snap.as_ref() else { return };
         ui.horizontal(|ui| {
             for r in Region::ALL {
@@ -414,14 +422,15 @@ impl Debugger {
         }
         let per = region.per_line();
         let row_h = ui.text_style_height(&egui::TextStyle::Monospace);
-        let mut area = egui::ScrollArea::vertical().auto_shrink([false, false]);
+        // défilement horizontal si le panneau est plus étroit qu'une ligne
+        let mut area = egui::ScrollArea::both().auto_shrink([false, false]);
         if let Some(row) = self.scroll_to.take() {
             area = area.vertical_scroll_offset(row as f32 * (row_h + ui.spacing().item_spacing.y));
         }
         let font = egui::TextStyle::Monospace.resolve(ui.style());
         let normal = ui.visuals().text_color();
         let weak = ui.visuals().weak_text_color();
-        let prev = self.prev.as_ref();
+        let prev = self.prev.as_ref().filter(|_| paused);
         area.show_rows(ui, row_h, len.div_ceil(per), |ui, rows| {
             for row in rows {
                 let start = row * per;
@@ -463,7 +472,7 @@ impl Debugger {
                 if !region.words() {
                     put(format!("  {}", ascii_col(&bytes)), weak);
                 }
-                ui.label(job);
+                ui.add(egui::Label::new(job).wrap_mode(egui::TextWrapMode::Extend));
             }
         });
     }
@@ -482,34 +491,40 @@ fn cpu_tab(ui: &mut egui::Ui, s: &DebugSnapshot, prev: Option<&DebugSnapshot>) {
             "68000"
         });
         let (flags, int) = sr_flags(c.sr);
-        egui::Grid::new("m68k_top").num_columns(2).show(ui, |ui| {
-            ui.label(mono("PC"));
-            // `pc` est l'adresse du prochain mot à précharger : instruction courante + 4
-            value(
-                ui,
-                format!("{:06X}", c.pc.wrapping_sub(4) & 0xFF_FFFF),
-                is_changed("PC"),
-            );
-            ui.end_row();
-            ui.label(mono("IR"));
-            ui.label(mono(format!(
-                "{:04X}  {:04X}",
-                c.prefetch[0], c.prefetch[1]
-            )));
-            ui.end_row();
-            ui.label(mono("SR"));
-            value(ui, format!("{:04X}", c.sr), is_changed("SR"));
-            ui.end_row();
-            ui.label("");
-            ui.horizontal(|ui| {
-                flags_row(ui, &flags);
-                ui.label(mono(format!("INT={int}")));
+        egui::Grid::new("m68k_top")
+            .num_columns(2)
+            .spacing(GRID_SPACING)
+            .min_col_width(REG_NAME_W)
+            .show(ui, |ui| {
+                ui.label(mono("PC"));
+                // `pc` est l'adresse du prochain mot à précharger : instruction courante + 4
+                value(
+                    ui,
+                    format!("{:06X}", c.pc.wrapping_sub(4) & 0xFF_FFFF),
+                    is_changed("PC"),
+                );
+                ui.end_row();
+                ui.label(mono("IR"));
+                ui.label(mono(format!(
+                    "{:04X}  {:04X}",
+                    c.prefetch[0], c.prefetch[1]
+                )));
+                ui.end_row();
+                ui.label(mono("SR"));
+                value(ui, format!("{:04X}", c.sr), is_changed("SR"));
+                ui.end_row();
+                ui.label("");
+                ui.horizontal(|ui| {
+                    flags_row(ui, &flags);
+                    ui.label(mono(format!("INT={int}")));
+                });
+                ui.end_row();
             });
-            ui.end_row();
-        });
         ui.add_space(4.0);
         egui::Grid::new("m68k_regs")
             .num_columns(4)
+            .spacing(GRID_SPACING)
+            .min_col_width(REG_NAME_W)
             .striped(true)
             .show(ui, |ui| {
                 for i in 0..8 {
@@ -542,6 +557,8 @@ fn cpu_tab(ui: &mut egui::Ui, s: &DebugSnapshot, prev: Option<&DebugSnapshot>) {
         ui.strong(if z.halted { "Z80 (HALT)" } else { "Z80" });
         egui::Grid::new("z80_regs")
             .num_columns(4)
+            .spacing(GRID_SPACING)
+            .min_col_width(REG_NAME_W)
             .striped(true)
             .show(ui, |ui| {
                 let pair = |ui: &mut egui::Ui, name: &str, v: u16, old: Option<u16>| {

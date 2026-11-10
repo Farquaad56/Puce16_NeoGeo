@@ -14,9 +14,11 @@ mod video_debug;
 
 fn main() -> eframe::Result {
     let path = settings::config_path();
+    // argument 2 (facultatif) : jeu à lancer au démarrage, ex. `ng-gui neogeo.toml mslug`
+    let game = std::env::args().nth(2);
     eframe::run_native(
         "Puce16 NeoGeo",
         eframe::NativeOptions::default(),
-        Box::new(|_cc| Ok(Box::new(app::App::new(path)))),
+        Box::new(|_cc| Ok(Box::new(app::App::new(path, game)))),
     )
 }
