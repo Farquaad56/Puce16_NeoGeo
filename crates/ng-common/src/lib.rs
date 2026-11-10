@@ -2,6 +2,7 @@
 //! ng-common : types et constantes partagées par tous les crates de l'émulateur Neo Geo.
 //! Interfaces GELÉES — toute modification exige un ADR dans docs/adr/.
 
+pub mod bitswap;
 pub mod clock;
 pub mod crc;
 pub mod input;
