@@ -1,7 +1,14 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P7 Protections Metal Slug en cours (T703a). Prochaine : T704.
+P7 Protections Metal Slug en cours (T703b). Prochaine : T704.
+
+### Fait — T703b ng-bus SMA Metal Slug 3 registres runtime
+- `crates/ng-bus/src/prot_sma.rs` : port de MAME prot_sma.cpp l.250-275 (mslug3_bank_base) et l.326-330 (prot_9a37_r). Structure `Sma3 { bank }` implémente `CartPort`.
+- Écriture $2FFFE4 → calcul banque via bitswap<6>(sel, [11,12,6,1,3,15]) + table BANKOFFSET[64] (portée de MAME). Lecture $2FE446 → 0x9A37.
+- `take_bank()` retourne l'adresse de base calculée pour le bankswitch du bus.
+- 7 tests unitaires passent (lecture protection, bitswap sel=0x8000→0x120000, sel=0x0800→0x420000, write/take_bank, hors plage, reset).
+- Gate OK.
 
 ### Fait — T703a ng-cart SMA Metal Slug 3 P-ROM decryption
 - `crates/ng-cart/src/sma.rs` : port 1:1 de MAME prot_sma.cpp l.428-451 — `mslug3_decrypt_68k()` (déchiffrement ROM P Metal Slug 3). Trois étapes : swap data lines bitswap<16> sur toute la ROM banquée, relocation fixe avec bitswap<19>, permutation par blocs de 0x10000 octets avec bitswap<15>.
