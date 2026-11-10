@@ -4,6 +4,7 @@ pub mod cmc;
 #[rustfmt::skip]
 pub mod cmc_tables;
 pub mod pcm2;
+pub mod pvc;
 pub mod sma;
 #[rustfmt::skip]
 pub mod defs;
