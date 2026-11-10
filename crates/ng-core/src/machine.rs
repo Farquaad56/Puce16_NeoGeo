@@ -245,6 +245,7 @@ mod tests {
             m: vec![0x34; 0x2000],
             m_crypt: Vec::new(),
             v: vec![0x56; 0x400],
+            vb: Vec::new(),
             c: vec![0; 0x100],
         }
     }
@@ -345,6 +346,7 @@ pub(crate) mod tests_support {
             m: vec![0; z.m as usize],
             m_crypt: vec![0; z.m_crypt as usize],
             v: vec![0; 16],
+            vb: Vec::new(),
             c: vec![0; 16],
         }
     }
@@ -358,6 +360,7 @@ pub(crate) mod tests_support {
             m: vec![fill; 0x2000],
             m_crypt: Vec::new(),
             v: vec![0x56; 0x400],
+            vb: Vec::new(),
             c: vec![0; 0x100],
         };
         Machine::new(cart, bios, Model::Mvs)

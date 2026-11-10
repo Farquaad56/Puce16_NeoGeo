@@ -33,6 +33,7 @@ pub struct Cart {
     pub m: Vec<u8>,
     pub m_crypt: Vec<u8>,
     pub v: Vec<u8>,
+    pub vb: Vec<u8>,
     pub c: Vec<u8>,
 }
 
@@ -114,6 +115,7 @@ pub fn load_cart(path: &Path, def: &'static CartDef, check_crc: bool) -> Result<
     let mut p = vec![0u8; sizes.p as usize];
     let mut s = vec![0u8; sizes.s as usize];
     let mut v = vec![0u8; sizes.v as usize];
+    let mut vb = vec![0u8; sizes.vb as usize];
     let mut c = vec![0u8; sizes.c as usize];
     let m_fill = if sizes.m_crypt > 0 { 0xFF } else { 0 };
     let mut m = vec![m_fill; sizes.m as usize];
@@ -151,6 +153,7 @@ pub fn load_cart(path: &Path, def: &'static CartDef, check_crc: bool) -> Result<
             Region::M => write_region(&mut m, dest, slice, part.load)?,
             Region::MCrypt => write_region(&mut m_crypt, dest, slice, part.load)?,
             Region::V => write_region(&mut v, dest, slice, part.load)?,
+            Region::VB => write_region(&mut vb, dest, slice, part.load)?,
             Region::C => write_region(&mut c, dest, slice, part.load)?,
         }
     }
@@ -167,6 +170,7 @@ pub fn load_cart(path: &Path, def: &'static CartDef, check_crc: bool) -> Result<
         m,
         m_crypt,
         v,
+        vb,
         c,
     })
 }
@@ -273,6 +277,7 @@ mod tests {
             m: 0,
             m_crypt: 0,
             v: 0,
+            vb: 0,
             c: 0,
         };
         let def = make_test_def("test", parts, sizes, None);
@@ -314,6 +319,7 @@ mod tests {
             m: 0,
             m_crypt: 0,
             v: 0,
+            vb: 0,
             c: 8,
         };
         let def = make_test_def("test", parts, sizes, None);
@@ -356,6 +362,7 @@ mod tests {
             m: 0,
             m_crypt: 0,
             v: 0,
+            vb: 0,
             c: 0,
         };
         let def = make_test_def("test", parts, sizes, None);
@@ -400,6 +407,7 @@ mod tests {
             m: 0,
             m_crypt: 0,
             v: 0,
+            vb: 0,
             c: 0,
         };
         let def = make_test_def("test", parts, sizes, None);
@@ -432,6 +440,7 @@ mod tests {
             m: 16,
             m_crypt: 0,
             v: 0,
+            vb: 0,
             c: 0,
         };
         let def = make_test_def("test", parts, sizes, Some((8, 4)));
@@ -462,6 +471,7 @@ mod tests {
             m: 0,
             m_crypt: 0,
             v: 0,
+            vb: 0,
             c: 0,
         };
         let def = make_test_def("test", parts, sizes, None);
@@ -494,6 +504,7 @@ mod tests {
             m: 0,
             m_crypt: 0,
             v: 0,
+            vb: 0,
             c: 0,
         };
         let def = make_test_def("test", parts, sizes, None);
@@ -523,8 +534,8 @@ mod tests {
 
     #[test]
     fn test_find_def() {
-        // find_def("mslug3").unwrap().sizes.c == 0x4000000 ; ALL_CARTS.len()==6
-        assert_eq!(crate::defs::ALL_CARTS.len(), 6);
+        // find_def("mslug3").unwrap().sizes.c == 0x4000000 ; ALL_CARTS.len()==134 (T1001 : 6 Metal Slug + 128 jeux)
+        assert_eq!(crate::defs::ALL_CARTS.len(), 134);
         let mslug3 = find_def("mslug3").expect("mslug3 should exist");
         assert_eq!(mslug3.sizes.c, 0x4000000);
     }

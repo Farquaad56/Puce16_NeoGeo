@@ -62,6 +62,7 @@ fn bios_boot_milestone() {
         m: vec![0x34; 0x2000],
         m_crypt: Vec::new(),
         v: vec![0x56; 0x400],
+        vb: Vec::new(),
         c: vec![0; 0x100],
     };
 
@@ -122,6 +123,7 @@ fn bios_boot_synthetic() {
         m: vec![0x34; 0x2000],
         m_crypt: Vec::new(),
         v: vec![0x56; 0x400],
+        vb: Vec::new(),
         c: vec![0; 0x100],
     };
 

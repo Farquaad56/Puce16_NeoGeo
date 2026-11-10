@@ -13,6 +13,8 @@ pub mod defs;
 pub mod types;
 
 mod bios;
+#[cfg(test)]
+mod catalogue_tests;
 mod config;
 mod romset;
 pub use bios::{load_bios, Bios, BiosError};

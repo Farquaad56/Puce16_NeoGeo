@@ -55,6 +55,7 @@ mod tests {
             m: vec![0; s.m as usize],
             m_crypt: vec![0; s.m_crypt as usize],
             v: vec![0; s.v as usize],
+            vb: Vec::new(),
             c: vec![0; s.c as usize],
         }
     }

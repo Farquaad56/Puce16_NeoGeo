@@ -496,3 +496,10 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 ## Retouches après essai réel du GUI (captures de la fenêtre)
 - Le débogueur est un panneau ancré à droite (plus une fenêtre flottante qui cachait le jeu) ; surlignage des changements seulement en pause ; lignes mémoire sans retour à la ligne ; fix x2 seulement si le panneau est assez large.
 - `ng-gui <config> <jeu>` : le 2e argument lance un jeu au démarrage. F1 ouvre Contrôles. Noms de touches lisibles (« Flèche haut »).
+
+## T1001 - Catalogue : romsets MAME et défs générées (128 jeux sans protection)
+- `tools/catalogue.py` (liste PLAIN, PROTECTED, TO_EXTRACT, TITLES) partagé par `tools/extract_romsets.py` (-> `docs/spec/data/romsets_all.txt`, 158 `ROM_START`, aucune donnée de ROM) et `tools/gen_tables.py` (défs Rust). `ALL_CARTS` = 134 définitions ; les 6 Metal Slug sont identiques à avant (vérifié par diff, hors champ `vb`).
+- Nouveautés générateur : `NEO_BIOS_AUDIO_64K/256K`, `NEO_SFIX_64K`, `ROM_RELOAD` (irrmaze), région ADPCM-B `Region::VB` + `RegionSizes.vb` + `Cart.vb`, régions inconnues ignorées (mainbios, mcu...), regex insensibles à la casse. Identifiants Rust des jeux commençant par un chiffre : préfixe `N_` (`N_2020BB`).
+- Écart : liste des jeux dans `tools/catalogue.py` (et non dans gen_tables.py) pour la partager avec l'extracteur.
+- GUI : le menu Fichier > Ouvrir ne liste plus que les jeux dont le zip est présent, triés par titre, dans une zone défilante (`installed_games`).
+- Suite : T1002 (ADPCM-B dans le YM), T1003 (CRC réels), T1004 (banc).

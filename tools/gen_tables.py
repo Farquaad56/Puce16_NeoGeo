@@ -39,77 +39,90 @@ assert n == 20, n
 w("crates/ng-cart/src/cmc_tables.rs", s)
 
 # ---------- ROM defs ----------
-txt = open(ROOT+"/docs/spec/data/romsets_metalslug.txt", encoding="utf-8", errors="replace").read()
-GAMES = ["mslug","mslug2","mslugx","mslug3","mslug4","mslug5"]
-TITLES = {"mslug":"Metal Slug - Super Vehicle-001","mslug2":"Metal Slug 2 - Super Vehicle-001/II","mslugx":"Metal Slug X - Super Vehicle-001","mslug3":"Metal Slug 3","mslug4":"Metal Slug 4","mslug5":"Metal Slug 5"}
-PROT = {
- "mslug": "NONE", "mslug2": "NONE", "mslugx": "MSX",
- "mslug3": "MS3", "mslug4": "MS4", "mslug5": "MS5",
-}
-RMAP = {"maincpu":"P","fixed":"S","audiocpu":"M","audiocrypt":"MCrypt","ymsnd:adpcma":"V","sprites":"C"}
+import sys
+sys.path.insert(0, os.path.join(ROOT, "tools"))
+import catalogue
+CATALOGUE = catalogue.catalogue()   # [(nom, clé de protection)]
+def ID(n): return ("N_" + n.upper()) if n[0].isdigit() else n.upper()
+txt = open(ROOT+"/docs/spec/data/romsets_all.txt", encoding="utf-8", errors="replace").read()
+neogeo_src = open(ROOT+"/ref/mame-neogeo/neogeo.cpp", encoding="utf-8", errors="replace").read()
+RMAP = {"maincpu":"P","fixed":"S","audiocpu":"M","audiocrypt":"MCrypt","ymsnd:adpcma":"V","ymsnd:adpcmb":"VB","sprites":"C"}
 def num(x): return int(x.strip(), 0)
+def title_of(name):
+    m = re.search(r'^GAMEL?\(\s*\d+,\s*%s,.*?ROT\d+,\s*"[^"]*",\s*"((?:[^"\\]|\\.)*)"' % re.escape(name), neogeo_src, re.M)
+    return m.group(1).replace('\\"', "'") if m else name
 def parse(name):
     m = re.search(r"ROM_START\(\s*%s\s*\)(.*?)ROM_END" % name, txt, re.S)
     body = m.group(1)
     parts = []; sizes = {}; region = None; last = None; extra = {"m1_reload": None}
+    I = re.I
     def add(file, off, size, crc, load, src_off=0):
         parts.append(dict(file=file, region=region, dest=off, size=size, src_off=src_off, crc=crc, load=load))
     for line in body.split("\n"):
-        line = line.split("/*")[0].strip()
+        line = line.split("/*")[0].split("//")[0].strip()
         if not line: continue
-        mm = re.match(r'ROM_REGION(?:16_BE|16_LE)?\(\s*(0x[0-9a-f]+)\s*,\s*"([^"]+)"', line)
+        mm = re.match(r'ROM_REGION(?:16_BE|16_LE)?\(\s*(0x[0-9a-f]+)\s*,\s*"([^"]+)"', line, I)
         if mm:
             tag = mm.group(2).replace("cslot1:", "")
-            region = RMAP.get(tag)
+            region = RMAP.get(tag); last = None
             if region: sizes[region] = num(mm.group(1))
             continue
-        mm = re.match(r'ROM_LOAD(16_WORD_SWAP|32_WORD_SWAP|16_BYTE)?\(\s*"([^"]+)"\s*,\s*(0x[0-9a-f]+)\s*,\s*(0x[0-9a-f]+)\s*,\s*CRC\(([0-9a-f]+)\)', line)
-        if mm and region:
-            kind = {None:"Plain","16_WORD_SWAP":"WordSwap","32_WORD_SWAP":"Word32Swap","16_BYTE":"Byte"}[mm.group(1)]
-            last = (mm.group(2), kind, mm.group(5), num(mm.group(3)), num(mm.group(4)))
-            add(mm.group(2), num(mm.group(3)), num(mm.group(4)), int(mm.group(5),16), kind)
+        mm = re.match(r'ROM_LOAD(16_WORD_SWAP|32_WORD_SWAP|16_BYTE)?\(\s*"([^"]+)"\s*,\s*(0x[0-9a-f]+)\s*,\s*(0x[0-9a-f]+)\s*,\s*CRC\(([0-9a-f]+)\)', line, I)
+        if mm:
+            if region:
+                kind = {None:"Plain","16_WORD_SWAP":"WordSwap","32_WORD_SWAP":"Word32Swap","16_BYTE":"Byte"}[mm.group(1)]
+                last = (mm.group(2), kind, mm.group(5), num(mm.group(3)), num(mm.group(4)))
+                add(mm.group(2), num(mm.group(3)), num(mm.group(4)), int(mm.group(5),16), kind)
             continue
-        mm = re.match(r'ROM_CONTINUE\(\s*(0x[0-9a-f]+)\s*,\s*(0x[0-9a-f]+)\s*\)', line)
+        mm = re.match(r'ROM_CONTINUE\(\s*(0x[0-9a-f]+)\s*,\s*(0x[0-9a-f]+)\s*\)', line, I)
         if mm:
-            f, kind, crc, doff, dsize = last
-            add(f, num(mm.group(1)), num(mm.group(2)), int(crc,16), kind, src_off=dsize)
+            if region and last:
+                f, kind, crc, doff, dsize = last
+                add(f, num(mm.group(1)), num(mm.group(2)), int(crc,16), kind, src_off=dsize)
+                last = (f, kind, crc, doff, dsize + num(mm.group(2)))
             continue
-        mm = re.match(r'NEO_SFIX_128K\(\s*"([^"]+)"\s*,\s*CRC\(([0-9a-f]+)\)', line)
+        mm = re.match(r'ROM_RELOAD\(\s*(0x[0-9a-f]+)\s*,\s*(0x[0-9a-f]+)\s*\)', line, I)
         if mm:
-            sizes["S"] = 0x20000; region = "S"
-            add(mm.group(1), 0, 0x20000, int(mm.group(2),16), "Plain"); continue
-        mm = re.match(r'NEO_BIOS_AUDIO_(128K|512K)\(\s*"([^"]+)"\s*,\s*CRC\(([0-9a-f]+)\)', line)
+            if region == "M": extra["m1_reload"] = (num(mm.group(1)), num(mm.group(2)))
+            continue
+        mm = re.match(r'NEO_SFIX_(64K|128K)\(\s*"([^"]+)"\s*,\s*CRC\(([0-9a-f]+)\)', line, I)
         if mm:
-            sz = 0x20000 if mm.group(1)=="128K" else 0x80000
-            sizes["M"] = 0x30000 if mm.group(1)=="128K" else 0x90000; region = "M"
+            sz = 0x10000 if mm.group(1)=="64K" else 0x20000
+            sizes["S"] = 0x20000; region = "S"; last = None
+            add(mm.group(2), 0, sz, int(mm.group(3),16), "Plain"); continue
+        mm = re.match(r'NEO_BIOS_AUDIO_(64K|128K|256K|512K)\(\s*"([^"]+)"\s*,\s*CRC\(([0-9a-f]+)\)', line, I)
+        if mm:
+            sz = {"64K":0x10000,"128K":0x20000,"256K":0x40000,"512K":0x80000}[mm.group(1)]
+            sizes["M"] = {"64K":0x20000,"128K":0x30000,"256K":0x50000,"512K":0x90000}[mm.group(1)]; region = "M"; last = None
             add(mm.group(2), 0, sz, int(mm.group(3),16), "Plain")
             extra["m1_reload"] = (0x10000, sz); continue
-        mm = re.match(r'NEO_BIOS_AUDIO_ENCRYPTED_(128K|256K|512K)\(\s*"([^"]+)"\s*,\s*CRC\(([0-9a-f]+)\)', line)
+        mm = re.match(r'NEO_BIOS_AUDIO_ENCRYPTED_(128K|256K|512K)\(\s*"([^"]+)"\s*,\s*CRC\(([0-9a-f]+)\)', line, I)
         if mm:
             sz = {"128K":0x20000,"256K":0x40000,"512K":0x80000}[mm.group(1)]
-            sizes["M"] = 0x90000; sizes["MCrypt"] = 0x80000; region = "MCrypt"
+            sizes["M"] = 0x90000; sizes["MCrypt"] = 0x80000; region = "MCrypt"; last = None
             add(mm.group(2), 0, sz, int(mm.group(3),16), "Plain"); continue
     return parts, sizes, extra
 
-out = HDR.format(src="docs/spec/data/romsets_metalslug.txt (MAME neogeo.cpp, BSD-3)")
+out = HDR.format(src="docs/spec/data/romsets_all.txt (MAME neogeo.cpp, BSD-3)")
 out += "use crate::types::*;\n\n"
-for g in GAMES:
+for g, prot in CATALOGUE:
     parts, sizes, extra = parse(g)
-    out += "pub static %s_PARTS: &[RomPart] = &[\n" % g.upper()
+    title = catalogue.TITLES.get(g) or title_of(g)
+    out += "pub static %s_PARTS: &[RomPart] = &[\n" % ID(g)
     for p in parts:
         out += '    RomPart { file: "%s", region: Region::%s, dest: 0x%X, size: 0x%X, src_off: 0x%X, crc: 0x%08X, load: Load::%s },\n' % (p["file"], p["region"], p["dest"], p["size"], p["src_off"], p["crc"], p["load"])
     out += "];\n"
     sz = lambda k: sizes.get(k, 0)
-    out += "pub static %s: CartDef = CartDef {\n    name: \"%s\", title: \"%s\", parts: %s_PARTS,\n" % (g.upper(), g, TITLES[g], g.upper())
-    out += "    sizes: RegionSizes { p: 0x%X, s: 0x%X, m: 0x%X, m_crypt: 0x%X, v: 0x%X, c: 0x%X },\n" % tuple(sz(k) for k in ["P","S","M","MCrypt","V","C"])
+    out += "pub static %s: CartDef = CartDef {\n    name: \"%s\", title: \"%s\", parts: %s_PARTS,\n" % (ID(g), g, title.replace('"', "'"), ID(g))
+    out += "    sizes: RegionSizes { p: 0x%X, s: 0x%X, m: 0x%X, m_crypt: 0x%X, v: 0x%X, vb: 0x%X, c: 0x%X },\n" % tuple(sz(k) for k in ["P","S","M","MCrypt","V","VB","C"])
     mr = extra["m1_reload"]
     out += "    m1_reload: %s,\n" % ("Some((0x%X, 0x%X))" % mr if mr else "None")
-    out += "    prot: PROT_%s,\n};\n\n" % PROT[g]
-out += "pub static ALL_CARTS: &[&CartDef] = &[%s];\n" % ", ".join("&"+g.upper() for g in GAMES)
+    out += "    prot: PROT_%s,\n};\n\n" % prot
+out += "pub static ALL_CARTS: &[&CartDef] = &[%s];\n" % ", ".join("&"+ID(g) for g, _ in CATALOGUE)
 w("crates/ng-cart/src/defs.rs", out)
 
 types = HDR.format(src="tools/gen_tables.py") + '''#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Region { P, S, M, MCrypt, V, C }
+pub enum Region { P, S, M, MCrypt, V, VB, C }
 /// Plain : octets contigus. WordSwap : échanger les 2 octets de chaque mot 16 bits (ROM_LOAD16_WORD_SWAP).
 /// Byte : octet i du fichier -> dest + 2*i (ROM_LOAD16_BYTE ; dest pair = octets pairs, dest impair = octets impairs).
 /// Word32Swap : mot 16 bits k du fichier (octets échangés) -> dest + 4*k (ROM_LOAD32_WORD_SWAP ; dest 0 ou 2).
@@ -119,7 +132,7 @@ pub enum Load { Plain, WordSwap, Byte, Word32Swap }
 #[derive(Clone, Copy, Debug)]
 pub struct RomPart { pub file: &'static str, pub region: Region, pub dest: u32, pub size: u32, pub src_off: u32, pub crc: u32, pub load: Load }
 #[derive(Clone, Copy, Debug)]
-pub struct RegionSizes { pub p: u32, pub s: u32, pub m: u32, pub m_crypt: u32, pub v: u32, pub c: u32 }
+pub struct RegionSizes { pub p: u32, pub s: u32, pub m: u32, pub m_crypt: u32, pub v: u32, pub vb: u32, pub c: u32 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum PDecrypt { None, Sma3, Pvc5 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum Cmc { None, C42, C50 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum Pcm2 { None, Decrypt(u8), Swap(u8) }

@@ -31,16 +31,12 @@ pub enum MenuAction {
     StatusBar(bool),
 }
 
-/// Jeux connus et présence de leur zip dans `roms_dir`, dans l'ordre de `ALL_CARTS`.
-pub fn available_games(cfg: &Config) -> Vec<(&'static str, bool)> {
+/// (nom, titre) des jeux du catalogue dont le zip est présent dans `roms_dir`.
+pub fn installed_games(cfg: &Config) -> Vec<(&'static str, &'static str)> {
     ALL_CARTS
         .iter()
-        .map(|d| {
-            (
-                d.name,
-                cfg.roms_dir.join(format!("{}.zip", d.name)).exists(),
-            )
-        })
+        .filter(|d| cfg.roms_dir.join(format!("{}.zip", d.name)).exists())
+        .map(|d| (d.name, d.title))
         .collect()
 }
 
@@ -68,16 +64,22 @@ pub fn show(ui: &mut egui::Ui, st: &MenuState) -> Option<MenuAction> {
     egui::MenuBar::new().ui(ui, |ui| {
         ui.menu_button("Fichier", |ui| {
             ui.menu_button("Ouvrir", |ui| {
-                for (name, ok) in available_games(st.cfg) {
-                    let title = ALL_CARTS
-                        .iter()
-                        .find(|d| d.name == name)
-                        .map_or(name, |d| d.title);
-                    if ui.add_enabled(ok, egui::Button::new(title)).clicked() {
-                        action = Some(MenuAction::Load(name.to_string()));
-                        ui.close();
-                    }
+                // Seuls les jeux dont le zip est présent, triés par titre (le catalogue en compte des centaines).
+                let mut present: Vec<(&str, &str)> = installed_games(st.cfg);
+                present.sort_by_key(|(_, title)| title.to_lowercase());
+                if present.is_empty() {
+                    ui.label("Aucun jeu trouvé dans le dossier roms");
                 }
+                egui::ScrollArea::vertical()
+                    .max_height(480.0)
+                    .show(ui, |ui| {
+                        for (name, title) in present {
+                            if ui.button(title).clicked() {
+                                action = Some(MenuAction::Load(name.to_string()));
+                                ui.close();
+                            }
+                        }
+                    });
             });
             if ui.button("Capture d'écran (F9)").clicked() {
                 action = Some(MenuAction::Screenshot);
@@ -219,7 +221,7 @@ mod tests {
     use std::path::PathBuf;
 
     #[test]
-    fn games_list_flags_present_zip() {
+    fn installed_games_lists_present_zips_only() {
         let dir = std::env::temp_dir().join(format!("ng_gui_games_{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
@@ -231,11 +233,9 @@ mod tests {
             model: ng_cart::Model::Mvs,
             bios: "sp-s2.sp1".into(),
         };
-        let games = available_games(&cfg);
+        let installed = installed_games(&cfg);
         let _ = std::fs::remove_dir_all(&dir);
-        assert_eq!(games[0], ("mslug", true));
-        assert_eq!(games[1], ("mslug2", false));
-        assert_eq!(games.len(), 6);
+        assert_eq!(installed, vec![("mslug", "Metal Slug - Super Vehicle-001")]);
     }
 
     #[test]
