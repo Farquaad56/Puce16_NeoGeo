@@ -4,6 +4,7 @@
 mod app;
 mod audio;
 mod emu_thread;
+mod input;
 mod menu;
 mod settings;
 

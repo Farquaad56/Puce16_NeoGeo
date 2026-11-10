@@ -426,3 +426,7 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 
 ### Fait - T801a ng-gui : sortie audio cpal (Claude)
 - `audio.rs` : `AudioOut` (cpal 0.18 : `build_output_stream(config.into(), ..)` par valeur), `fill_buffer`, `push_capped` (plafond rate/2 valeurs). Le flux est créé DANS le thread d'émulation (cpal::Stream n'est pas Send). Pas de périphérique : message « audio désactivé » sur `err_rx`, l'émulation continue.
+
+## T801b — Entrées clavier + manettes (ng-gui)
+- `input.rs` : `InputState` (clavier egui + gilrs), table de touches par défaut (P1 flèches/Z/X/A/S, P2 IJKL/G/H/T/Y, Entrée=Start1, P=Start2, 5/6=Coin, 9=Service, F2=Test, Maj=Select1), stick analogique seuil 0.5, bits actifs-bas.
+- `App` envoie `Cmd::Inputs` à chaque frame. 5 tests unitaires.

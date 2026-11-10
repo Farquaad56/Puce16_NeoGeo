@@ -7,6 +7,7 @@ edition.workspace = true
 cpal = "0.18.2"
 crossbeam-channel = "0.5.17"
 eframe = "0.37.0"
+gilrs = "0.11.2"
 ng-cart = { version = "0.1.0", path = "../ng-cart" }
 ng-common = { path = "../ng-common" }
 ng-core = { path = "../ng-core" }

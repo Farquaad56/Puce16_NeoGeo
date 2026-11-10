@@ -7,6 +7,7 @@ use std::path::PathBuf;
 use ng_cart::Config;
 
 use crate::emu_thread::{self, Cmd, EmuHandle, FrameMsg};
+use crate::input::InputState;
 use crate::menu::{self, MenuAction, Scale};
 use crate::settings::ConfigForm;
 
@@ -43,6 +44,7 @@ pub struct App {
     paused: bool,
     scale: Scale,
     game: Option<String>,
+    input: InputState,
 }
 
 impl App {
@@ -60,6 +62,7 @@ impl App {
             paused: false,
             scale: Scale::Auto,
             game: None,
+            input: InputState::new(),
         }
     }
 
@@ -132,6 +135,14 @@ impl App {
             return;
         };
         self.poll(ctx);
+        self.input.update_keys(ctx);
+        self.input.poll_gamepads();
+        let (p1, p2) = self.input.pads();
+        self.send(Cmd::Inputs {
+            p1,
+            p2,
+            sys: self.input.system(),
+        });
         let mut paused = self.paused;
         let action = menu::show(ui, &cfg, &mut paused, self.scale);
         self.paused = paused;
