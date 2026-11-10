@@ -12,7 +12,7 @@ const ADPCM_B: [&str; 13] = [
 
 #[test]
 fn catalogue_has_expected_size_and_unique_names() {
-    assert_eq!(ALL_CARTS.len(), 134);
+    assert_eq!(ALL_CARTS.len(), 141);
     let names: HashSet<_> = ALL_CARTS.iter().map(|d| d.name).collect();
     assert_eq!(names.len(), ALL_CARTS.len());
 }
@@ -116,4 +116,60 @@ fn nam1975_synthetic_load_fills_vb() {
     let cart = load_cart(dir.path(), d, false).unwrap();
     assert_eq!(cart.vb.len(), 0x180000);
     assert_eq!(cart.v.len(), 0x80000);
+}
+
+// ---- T1005 : jeux à puce CMC42 ----
+#[cfg(test)]
+mod cmc42_tests {
+    use crate::romset::{find_def, Cart};
+    use crate::types::{Cmc, FixBank, PDecrypt, Pcm2, RuntimeProt};
+
+    const GAMES: [(&str, u8); 7] = [
+        ("zupapa", 0xBD),
+        ("ganryu", 0x07),
+        ("s1945p", 0x05),
+        ("preisle2", 0x9F),
+        ("bangbead", 0xF8),
+        ("nitd", 0xFF),
+        ("sengoku3", 0xFE),
+    ];
+
+    #[test]
+    fn cmc42_protection_tables() {
+        for (name, key) in GAMES {
+            let p = find_def(name).expect(name).prot;
+            assert_eq!(p.cmc, Cmc::C42, "{name}");
+            assert_eq!(p.gfx_key, key, "{name}");
+            assert!(p.sfix_decrypt, "{name}");
+            assert_eq!(p.fix_bank, FixBank::Garou, "{name}");
+            assert_eq!(p.runtime, RuntimeProt::None, "{name}");
+            assert_eq!(p.p_decrypt, PDecrypt::None, "{name}");
+            assert!(!p.m1_decrypt, "{name}");
+            assert_eq!(p.pcm2, Pcm2::None, "{name}");
+        }
+    }
+
+    #[test]
+    fn cmc42_decrypt_chain_keeps_sizes() {
+        for (name, _) in GAMES {
+            let def = find_def(name).expect(name);
+            let s = def.sizes;
+            // MAME : région « fixed » de 0x20000 octets (les ROM S viennent des C).
+            assert_eq!(s.s, 0x20000, "{name}");
+            let mut c = Cart {
+                def,
+                p: vec![0; s.p as usize],
+                s: vec![0; s.s as usize],
+                m: vec![0; s.m as usize],
+                m_crypt: vec![0; s.m_crypt as usize],
+                v: vec![0; s.v as usize],
+                vb: Vec::new(),
+                c: vec![0; s.c as usize],
+            };
+            c.decrypt_all();
+            assert_eq!(c.p.len(), s.p as usize, "{name}");
+            assert_eq!(c.s.len(), s.s as usize, "{name}");
+            assert_eq!(c.c.len(), s.c as usize, "{name}");
+        }
+    }
 }

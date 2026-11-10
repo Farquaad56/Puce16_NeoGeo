@@ -32,3 +32,4 @@ tests-data/hwtests/
 cfg/
 nvram/
 tests-data/golden/
+__pycache__/

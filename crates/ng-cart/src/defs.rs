@@ -128,6 +128,129 @@ pub static MSLUG5: CartDef = CartDef {
     prot: PROT_MS5,
 };
 
+pub static ZUPAPA_PARTS: &[RomPart] = &[
+    RomPart { file: "070-p1.p1", region: Region::P, dest: 0x0, size: 0x100000, src_off: 0x0, crc: 0x5A96203E, load: Load::WordSwap },
+    RomPart { file: "070-epr.m1", region: Region::M, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0x5A3B3191, load: Load::Plain },
+    RomPart { file: "070-v1.v1", region: Region::V, dest: 0x0, size: 0x200000, src_off: 0x0, crc: 0xD3A7E1FF, load: Load::Plain },
+    RomPart { file: "070-c1.c1", region: Region::C, dest: 0x0, size: 0x800000, src_off: 0x0, crc: 0xF8AD02D8, load: Load::Byte },
+    RomPart { file: "070-c2.c2", region: Region::C, dest: 0x1, size: 0x800000, src_off: 0x0, crc: 0x70156DDE, load: Load::Byte },
+];
+pub static ZUPAPA: CartDef = CartDef {
+    name: "zupapa", title: "Zupapa!", parts: ZUPAPA_PARTS,
+    sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x1000000 },
+    m1_reload: Some((0x10000, 0x20000)),
+    prot: PROT_C42_ZUPAPA,
+};
+
+pub static GANRYU_PARTS: &[RomPart] = &[
+    RomPart { file: "252-p1.p1", region: Region::P, dest: 0x100000, size: 0x100000, src_off: 0x0, crc: 0x4B8AC4FB, load: Load::WordSwap },
+    RomPart { file: "252-p1.p1", region: Region::P, dest: 0x0, size: 0x100000, src_off: 0x100000, crc: 0x4B8AC4FB, load: Load::WordSwap },
+    RomPart { file: "252-m1.m1", region: Region::M, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0x30CC4099, load: Load::Plain },
+    RomPart { file: "252-v1.v1", region: Region::V, dest: 0x0, size: 0x400000, src_off: 0x0, crc: 0xE5946733, load: Load::Plain },
+    RomPart { file: "252-c1.c1", region: Region::C, dest: 0x0, size: 0x800000, src_off: 0x0, crc: 0x50EE7882, load: Load::Byte },
+    RomPart { file: "252-c2.c2", region: Region::C, dest: 0x1, size: 0x800000, src_off: 0x0, crc: 0x62585474, load: Load::Byte },
+];
+pub static GANRYU: CartDef = CartDef {
+    name: "ganryu", title: "Ganryu / Musashi Ganryuki", parts: GANRYU_PARTS,
+    sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x400000, vb: 0x0, c: 0x1000000 },
+    m1_reload: Some((0x10000, 0x20000)),
+    prot: PROT_C42_GANRYU,
+};
+
+pub static S1945P_PARTS: &[RomPart] = &[
+    RomPart { file: "254-p1.p1", region: Region::P, dest: 0x0, size: 0x100000, src_off: 0x0, crc: 0xFF8EFCFF, load: Load::WordSwap },
+    RomPart { file: "254-p2.sp2", region: Region::P, dest: 0x100000, size: 0x400000, src_off: 0x0, crc: 0xEFDFD4DD, load: Load::WordSwap },
+    RomPart { file: "254-m1.m1", region: Region::M, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0x994B4487, load: Load::Plain },
+    RomPart { file: "254-v1.v1", region: Region::V, dest: 0x0, size: 0x400000, src_off: 0x0, crc: 0x844F58FB, load: Load::Plain },
+    RomPart { file: "254-v2.v2", region: Region::V, dest: 0x400000, size: 0x400000, src_off: 0x0, crc: 0xD9A248F0, load: Load::Plain },
+    RomPart { file: "254-v3.v3", region: Region::V, dest: 0x800000, size: 0x400000, src_off: 0x0, crc: 0x0B0D2D33, load: Load::Plain },
+    RomPart { file: "254-v4.v4", region: Region::V, dest: 0xC00000, size: 0x400000, src_off: 0x0, crc: 0x6D13DC91, load: Load::Plain },
+    RomPart { file: "254-c1.c1", region: Region::C, dest: 0x0, size: 0x800000, src_off: 0x0, crc: 0xAE6FC8EF, load: Load::Byte },
+    RomPart { file: "254-c2.c2", region: Region::C, dest: 0x1, size: 0x800000, src_off: 0x0, crc: 0x436FA176, load: Load::Byte },
+    RomPart { file: "254-c3.c3", region: Region::C, dest: 0x1000000, size: 0x800000, src_off: 0x0, crc: 0xE53FF2DC, load: Load::Byte },
+    RomPart { file: "254-c4.c4", region: Region::C, dest: 0x1000001, size: 0x800000, src_off: 0x0, crc: 0x818672F0, load: Load::Byte },
+    RomPart { file: "254-c5.c5", region: Region::C, dest: 0x2000000, size: 0x800000, src_off: 0x0, crc: 0x4580EACD, load: Load::Byte },
+    RomPart { file: "254-c6.c6", region: Region::C, dest: 0x2000001, size: 0x800000, src_off: 0x0, crc: 0xE34970FC, load: Load::Byte },
+    RomPart { file: "254-c7.c7", region: Region::C, dest: 0x3000000, size: 0x800000, src_off: 0x0, crc: 0xF2323239, load: Load::Byte },
+    RomPart { file: "254-c8.c8", region: Region::C, dest: 0x3000001, size: 0x800000, src_off: 0x0, crc: 0x66848C7D, load: Load::Byte },
+];
+pub static S1945P: CartDef = CartDef {
+    name: "s1945p", title: "Strikers 1945 Plus", parts: S1945P_PARTS,
+    sizes: RegionSizes { p: 0x500000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x1000000, vb: 0x0, c: 0x4000000 },
+    m1_reload: Some((0x10000, 0x20000)),
+    prot: PROT_C42_S1945P,
+};
+
+pub static PREISLE2_PARTS: &[RomPart] = &[
+    RomPart { file: "255-p1.p1", region: Region::P, dest: 0x0, size: 0x100000, src_off: 0x0, crc: 0xDFA3C0F3, load: Load::WordSwap },
+    RomPart { file: "255-p2.sp2", region: Region::P, dest: 0x100000, size: 0x400000, src_off: 0x0, crc: 0x42050B80, load: Load::WordSwap },
+    RomPart { file: "255-m1.m1", region: Region::M, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0x8EFD4014, load: Load::Plain },
+    RomPart { file: "255-v1.v1", region: Region::V, dest: 0x0, size: 0x400000, src_off: 0x0, crc: 0x5A14543D, load: Load::Plain },
+    RomPart { file: "255-v2.v2", region: Region::V, dest: 0x400000, size: 0x200000, src_off: 0x0, crc: 0x6610D91A, load: Load::Plain },
+    RomPart { file: "255-c1.c1", region: Region::C, dest: 0x0, size: 0x800000, src_off: 0x0, crc: 0xEA06000B, load: Load::Byte },
+    RomPart { file: "255-c2.c2", region: Region::C, dest: 0x1, size: 0x800000, src_off: 0x0, crc: 0x04E67D79, load: Load::Byte },
+    RomPart { file: "255-c3.c3", region: Region::C, dest: 0x1000000, size: 0x800000, src_off: 0x0, crc: 0x60E31E08, load: Load::Byte },
+    RomPart { file: "255-c4.c4", region: Region::C, dest: 0x1000001, size: 0x800000, src_off: 0x0, crc: 0x40371D69, load: Load::Byte },
+    RomPart { file: "255-c5.c5", region: Region::C, dest: 0x2000000, size: 0x800000, src_off: 0x0, crc: 0x0B2E6ADF, load: Load::Byte },
+    RomPart { file: "255-c6.c6", region: Region::C, dest: 0x2000001, size: 0x800000, src_off: 0x0, crc: 0xB001BDD3, load: Load::Byte },
+];
+pub static PREISLE2: CartDef = CartDef {
+    name: "preisle2", title: "Prehistoric Isle 2", parts: PREISLE2_PARTS,
+    sizes: RegionSizes { p: 0x500000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x600000, vb: 0x0, c: 0x3000000 },
+    m1_reload: Some((0x10000, 0x20000)),
+    prot: PROT_C42_PREISLE2,
+};
+
+pub static BANGBEAD_PARTS: &[RomPart] = &[
+    RomPart { file: "259-p1.p1", region: Region::P, dest: 0x100000, size: 0x100000, src_off: 0x0, crc: 0x88A37F8B, load: Load::WordSwap },
+    RomPart { file: "259-p1.p1", region: Region::P, dest: 0x0, size: 0x100000, src_off: 0x100000, crc: 0x88A37F8B, load: Load::WordSwap },
+    RomPart { file: "259-m1.m1", region: Region::M, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0x85668EE9, load: Load::Plain },
+    RomPart { file: "259-v1.v1", region: Region::V, dest: 0x0, size: 0x400000, src_off: 0x0, crc: 0x088EB8AB, load: Load::Plain },
+    RomPart { file: "259-v2.v2", region: Region::V, dest: 0x400000, size: 0x100000, src_off: 0x0, crc: 0x97528FE9, load: Load::Plain },
+    RomPart { file: "259-c1.c1", region: Region::C, dest: 0x0, size: 0x800000, src_off: 0x0, crc: 0x1F537F74, load: Load::Byte },
+    RomPart { file: "259-c2.c2", region: Region::C, dest: 0x1, size: 0x800000, src_off: 0x0, crc: 0x0EFD98FF, load: Load::Byte },
+];
+pub static BANGBEAD: CartDef = CartDef {
+    name: "bangbead", title: "Bang Bead", parts: BANGBEAD_PARTS,
+    sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x500000, vb: 0x0, c: 0x1000000 },
+    m1_reload: Some((0x10000, 0x20000)),
+    prot: PROT_C42_BANGBEAD,
+};
+
+pub static NITD_PARTS: &[RomPart] = &[
+    RomPart { file: "260-p1.p1", region: Region::P, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0x61361082, load: Load::WordSwap },
+    RomPart { file: "260-m1.m1", region: Region::M, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0x6407C5E5, load: Load::Plain },
+    RomPart { file: "260-v1.v1", region: Region::V, dest: 0x0, size: 0x400000, src_off: 0x0, crc: 0x24B0480C, load: Load::Plain },
+    RomPart { file: "260-c1.c1", region: Region::C, dest: 0x0, size: 0x800000, src_off: 0x0, crc: 0x147B0C7F, load: Load::Byte },
+    RomPart { file: "260-c2.c2", region: Region::C, dest: 0x1, size: 0x800000, src_off: 0x0, crc: 0xD2B04B0D, load: Load::Byte },
+];
+pub static NITD: CartDef = CartDef {
+    name: "nitd", title: "Nightmare in the Dark", parts: NITD_PARTS,
+    sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x90000, m_crypt: 0x0, v: 0x400000, vb: 0x0, c: 0x1000000 },
+    m1_reload: Some((0x10000, 0x80000)),
+    prot: PROT_C42_NITD,
+};
+
+pub static SENGOKU3_PARTS: &[RomPart] = &[
+    RomPart { file: "261-ph1.p1", region: Region::P, dest: 0x100000, size: 0x100000, src_off: 0x0, crc: 0xE0D4BC0A, load: Load::WordSwap },
+    RomPart { file: "261-ph1.p1", region: Region::P, dest: 0x0, size: 0x100000, src_off: 0x100000, crc: 0xE0D4BC0A, load: Load::WordSwap },
+    RomPart { file: "261-m1.m1", region: Region::M, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0x7D501C39, load: Load::Plain },
+    RomPart { file: "261-v1.v1", region: Region::V, dest: 0x0, size: 0x400000, src_off: 0x0, crc: 0x64C30081, load: Load::Plain },
+    RomPart { file: "261-v2.v2", region: Region::V, dest: 0x400000, size: 0x400000, src_off: 0x0, crc: 0x392A9C47, load: Load::Plain },
+    RomPart { file: "261-v3.v3", region: Region::V, dest: 0x800000, size: 0x400000, src_off: 0x0, crc: 0xC1A7EBE3, load: Load::Plain },
+    RomPart { file: "261-v4.v4", region: Region::V, dest: 0xC00000, size: 0x200000, src_off: 0x0, crc: 0x9000D085, load: Load::Plain },
+    RomPart { file: "261-c1.c1", region: Region::C, dest: 0x0, size: 0x800000, src_off: 0x0, crc: 0xDED84D9C, load: Load::Byte },
+    RomPart { file: "261-c2.c2", region: Region::C, dest: 0x1, size: 0x800000, src_off: 0x0, crc: 0xB8EB4348, load: Load::Byte },
+    RomPart { file: "261-c3.c3", region: Region::C, dest: 0x1000000, size: 0x800000, src_off: 0x0, crc: 0x84E2034A, load: Load::Byte },
+    RomPart { file: "261-c4.c4", region: Region::C, dest: 0x1000001, size: 0x800000, src_off: 0x0, crc: 0x0B45AE53, load: Load::Byte },
+];
+pub static SENGOKU3: CartDef = CartDef {
+    name: "sengoku3", title: "Sengoku 3 / Sengoku Densho 2001 (set 1)", parts: SENGOKU3_PARTS,
+    sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x90000, m_crypt: 0x0, v: 0xE00000, vb: 0x0, c: 0x2000000 },
+    m1_reload: Some((0x10000, 0x80000)),
+    prot: PROT_C42_SENGOKU3,
+};
+
 pub static N_2020BB_PARTS: &[RomPart] = &[
     RomPart { file: "030-p1.p1", region: Region::P, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0xD396C9CB, load: Load::WordSwap },
     RomPart { file: "030-s1.s1", region: Region::S, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0x7015B8FC, load: Load::Plain },
@@ -2651,4 +2774,4 @@ pub static ZINTRCKB: CartDef = CartDef {
     prot: PROT_NONE,
 };
 
-pub static ALL_CARTS: &[&CartDef] = &[&MSLUG, &MSLUG2, &MSLUGX, &MSLUG3, &MSLUG4, &MSLUG5, &N_2020BB, &N_3COUNTB, &ALPHAM2, &ANDRODUN, &AODK, &AOF, &AOF2, &AOF3, &B2B, &BAKATONO, &BJOURNEY, &BLAZSTAR, &BREAKERS, &BREAKREV, &BSTARS, &BSTARS2, &BURNINGF, &CRSWD2BL, &CRSWORD, &CTOMADAY, &CYBERLIP, &DIGGERMA, &DOUBLEDR, &EIGHTMAN, &FATFURSP, &FATFURY1, &FATFURY3, &FBFRENZY, &FIGHTFEV, &FLIPSHOT, &FROMAN2B, &GALAXYFG, &GHOSTLOP, &GOALX3, &GOWCAIZR, &GPILOTS, &GURURIN, &IRONCLAD, &IRRMAZE, &JANSHIN, &JOYJOY, &KABUKIKL, &KARNOVR, &KIZUNA, &KOF94, &KOF95, &KOF96, &KOF97, &KOTM, &KOTM2, &LASTBLAD, &LASTBLD2, &LASTHOPE, &LBOWLING, &LEGENDOS, &LRESORT, &MAGDROP2, &MAGDROP3, &MAGLORD, &MAHRETSU, &MARUKODQ, &MIEXCHNG, &MINASAN, &MOSHOUGI, &MUTNAT, &NAM1975, &NCOMBAT, &NCOMMAND, &NEOBOMBE, &NEOCUP98, &NEODRIFT, &NEOMRDO, &NINJAMAS, &OVERTOP, &PANICBOM, &PBOBBL2N, &PBOBBLEN, &PGOAL, &POPBOUNC, &PSPIKES2, &PULSTAR, &PUZZLDPR, &PUZZLEDP, &QUIZDAI2, &QUIZDAIS, &QUIZKOF, &RAGNAGRD, &RBFF1, &RBFF2, &RBFFSPEC, &RIDHERO, &ROBOARMY, &SAMSHO, &SAMSHO2, &SAMSHO3, &SAMSHO4, &SAVAGERE, &SDODGEB, &SENGOKU, &SENGOKU2, &SHOCKTR2, &SHOCKTRO, &SOCBRAWL, &SONICWI2, &SONICWI3, &SPINMAST, &SSIDEKI2, &SSIDEKI3, &SSIDEKI4, &STAKWIN, &STAKWIN2, &STRHOOP, &SUPERSPY, &TOPHUNTR, &TPGOLF, &TRALLY, &TURFMAST, &TWINSPRI, &TWSOC96, &VIEWPOIN, &WAKUWAK7, &WH1, &WH2, &WH2J, &WHP, &WJAMMERS, &ZEDBLADE, &ZINTRCKB];
+pub static ALL_CARTS: &[&CartDef] = &[&MSLUG, &MSLUG2, &MSLUGX, &MSLUG3, &MSLUG4, &MSLUG5, &ZUPAPA, &GANRYU, &S1945P, &PREISLE2, &BANGBEAD, &NITD, &SENGOKU3, &N_2020BB, &N_3COUNTB, &ALPHAM2, &ANDRODUN, &AODK, &AOF, &AOF2, &AOF3, &B2B, &BAKATONO, &BJOURNEY, &BLAZSTAR, &BREAKERS, &BREAKREV, &BSTARS, &BSTARS2, &BURNINGF, &CRSWD2BL, &CRSWORD, &CTOMADAY, &CYBERLIP, &DIGGERMA, &DOUBLEDR, &EIGHTMAN, &FATFURSP, &FATFURY1, &FATFURY3, &FBFRENZY, &FIGHTFEV, &FLIPSHOT, &FROMAN2B, &GALAXYFG, &GHOSTLOP, &GOALX3, &GOWCAIZR, &GPILOTS, &GURURIN, &IRONCLAD, &IRRMAZE, &JANSHIN, &JOYJOY, &KABUKIKL, &KARNOVR, &KIZUNA, &KOF94, &KOF95, &KOF96, &KOF97, &KOTM, &KOTM2, &LASTBLAD, &LASTBLD2, &LASTHOPE, &LBOWLING, &LEGENDOS, &LRESORT, &MAGDROP2, &MAGDROP3, &MAGLORD, &MAHRETSU, &MARUKODQ, &MIEXCHNG, &MINASAN, &MOSHOUGI, &MUTNAT, &NAM1975, &NCOMBAT, &NCOMMAND, &NEOBOMBE, &NEOCUP98, &NEODRIFT, &NEOMRDO, &NINJAMAS, &OVERTOP, &PANICBOM, &PBOBBL2N, &PBOBBLEN, &PGOAL, &POPBOUNC, &PSPIKES2, &PULSTAR, &PUZZLDPR, &PUZZLEDP, &QUIZDAI2, &QUIZDAIS, &QUIZKOF, &RAGNAGRD, &RBFF1, &RBFF2, &RBFFSPEC, &RIDHERO, &ROBOARMY, &SAMSHO, &SAMSHO2, &SAMSHO3, &SAMSHO4, &SAVAGERE, &SDODGEB, &SENGOKU, &SENGOKU2, &SHOCKTR2, &SHOCKTRO, &SOCBRAWL, &SONICWI2, &SONICWI3, &SPINMAST, &SSIDEKI2, &SSIDEKI3, &SSIDEKI4, &STAKWIN, &STAKWIN2, &STRHOOP, &SUPERSPY, &TOPHUNTR, &TPGOLF, &TRALLY, &TURFMAST, &TWINSPRI, &TWSOC96, &VIEWPOIN, &WAKUWAK7, &WH1, &WH2, &WH2J, &WHP, &WJAMMERS, &ZEDBLADE, &ZINTRCKB];

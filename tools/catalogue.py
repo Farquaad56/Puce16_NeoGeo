@@ -5,6 +5,9 @@ PLAIN = ['2020bb', '3countb', 'alpham2', 'androdun', 'aodk', 'aof', 'aof2', 'aof
 PROTECTED = {
     "mslug": "NONE", "mslug2": "NONE", "mslugx": "MSX",
     "mslug3": "MS3", "mslug4": "MS4", "mslug5": "MS5",
+    # T1005 : puce CMC42 seule (GFX + fixe chiffrés), pas de protection au runtime
+    "zupapa": "C42_ZUPAPA", "ganryu": "C42_GANRYU", "s1945p": "C42_S1945P", "preisle2": "C42_PREISLE2",
+    "bangbead": "C42_BANGBEAD", "nitd": "C42_NITD", "sengoku3": "C42_SENGOKU3",
 }
 # Jeux protégés extraits dès maintenant (ROM_START dans romsets_all.txt) mais définis par les cartes T1005+.
 TO_EXTRACT = "kof98 fatfury2 ssideki sbp vliner kof99 garou kof2000 kof2001 jockeygp kof2002 kof2003 svc samsho5 samsh5sp rotd pnyaa zupapa ganryu s1945p preisle2 bangbead nitd sengoku3".split()

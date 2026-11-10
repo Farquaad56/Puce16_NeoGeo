@@ -152,5 +152,13 @@ pub const PROT_MS3: Protection = Protection { p_decrypt: PDecrypt::Sma3, cmc: Cm
 pub const PROT_MS4: Protection = Protection { cmc: Cmc::C50, gfx_key: 0x31, sfix_decrypt: true, m1_decrypt: true, pcm2: Pcm2::Decrypt(8), fix_bank: FixBank::Garou, ..N };
 // MS5 : pvc.cpp mslug5 : mslug5_decrypt_68k + pcm2.swap(V,2) + cmc50_m1_decrypt + cmc50_gfx_decrypt(0x19) + sfix_decrypt ; pvc.h fixed bank type 1
 pub const PROT_MS5: Protection = Protection { p_decrypt: PDecrypt::Pvc5, cmc: Cmc::C50, gfx_key: 0x19, sfix_decrypt: true, m1_decrypt: true, pcm2: Pcm2::Swap(2), runtime: RuntimeProt::Pvc, fix_bank: FixBank::Garou };
+// T1005 : puce CMC42 (cmc.cpp) : cmc42_gfx_decrypt(clé) + sfix_decrypt ; banc fixe Garou (type 1)
+pub const PROT_C42_ZUPAPA: Protection = Protection { cmc: Cmc::C42, gfx_key: 0xBD, sfix_decrypt: true, fix_bank: FixBank::Garou, ..N };
+pub const PROT_C42_GANRYU: Protection = Protection { cmc: Cmc::C42, gfx_key: 0x07, sfix_decrypt: true, fix_bank: FixBank::Garou, ..N };
+pub const PROT_C42_S1945P: Protection = Protection { cmc: Cmc::C42, gfx_key: 0x05, sfix_decrypt: true, fix_bank: FixBank::Garou, ..N };
+pub const PROT_C42_PREISLE2: Protection = Protection { cmc: Cmc::C42, gfx_key: 0x9F, sfix_decrypt: true, fix_bank: FixBank::Garou, ..N };
+pub const PROT_C42_BANGBEAD: Protection = Protection { cmc: Cmc::C42, gfx_key: 0xF8, sfix_decrypt: true, fix_bank: FixBank::Garou, ..N };
+pub const PROT_C42_NITD: Protection = Protection { cmc: Cmc::C42, gfx_key: 0xFF, sfix_decrypt: true, fix_bank: FixBank::Garou, ..N };
+pub const PROT_C42_SENGOKU3: Protection = Protection { cmc: Cmc::C42, gfx_key: 0xFE, sfix_decrypt: true, fix_bank: FixBank::Garou, ..N };
 '''
 w("crates/ng-cart/src/types.rs", types)

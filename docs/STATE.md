@@ -523,3 +523,9 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 - diff : `mslug3` 82,8 % à 1500 (écart déjà documenté en T707-T710 : scène de démo).
 - Les 18 « noir » (peu de couleurs, pas de golden) ont reçu une golden MAME à 600 : 14 conformes à 0,00 % (aodk doubledr galaxyfg kof95 mahretsu moshougi nam1975 quizdais rbff2 samsho samsho3 socbrawl whp zintrckb ; kof94 aussi), 3 en `diff` ≈ 95 % : kof96, lastblad, samsho4 (cause supposée : fondu du fond gris du BIOS, niveaux 44/52 contre les nôtres, décalage de quelques trames à ce moment précis ; à vérifier avec goldens 540/580/620 si utile).
 - Suite : T1005 (CMC42).
+
+## T1005 - Jeux à puce CMC42 (zupapa ganryu s1945p preisle2 bangbead nitd sengoku3)
+- `tools/catalogue.py` : 7 entrées PROTECTED (`C42_<JEU>`) ; `tools/gen_tables.py` : `PROT_C42_<JEU>` (cmc C42, clé, sfix_decrypt, banc Garou). `ALL_CARTS` = 141. Tests `cmc42_tests` (table + chaîne de déchiffrement sur zéros).
+- Écart de carte : la région fixe de ces jeux est de 0x20000 (et non 0x80000) dans MAME ; le test fixe `sizes.s == 0x20000`. `cmc.rs` n'a pas eu besoin de modification (toutes les tailles C passent).
+- Banc réel (BIOS sp-s2, trames 120 et 600) : les 7 jeux à 0,00 % de différence avec MAME.
+- Suite : T1006 (CMC50).

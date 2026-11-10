@@ -833,7 +833,7 @@
     ],
     "file": "tasks/T1005.md",
     "assignee": "rust-dev",
-    "status": "todo"
+    "status": "done"
   },
   {
     "id": "T1006",
