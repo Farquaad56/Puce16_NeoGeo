@@ -99,6 +99,7 @@ impl InputState {
     }
 
     /// Simule l'état d'une touche (tests).
+    #[cfg(test)]
     pub fn set_key(&mut self, key: Key, down: bool) {
         if down {
             self.keys.insert(key);
@@ -151,11 +152,6 @@ impl InputState {
         }
     }
 
-    /// Injecte l'état « pressé » d'une manette (tests).
-    pub fn set_pad_pressed(&mut self, n: usize, bits: u8) {
-        self.pad_pressed[n] = bits;
-    }
-
     pub fn pads(&self) -> (PadState, PadState) {
         let mk = |n: usize| {
             let mut pressed = self.pad_pressed[n];
@@ -183,6 +179,7 @@ impl InputState {
     }
 
     /// Vrai si la touche Test est enfoncée.
+    #[cfg(test)]
     pub fn test(&self) -> bool {
         self.system().bits & TEST == 0
     }

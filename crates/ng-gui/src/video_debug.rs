@@ -9,6 +9,7 @@ use ng_lspc::palette::Palette;
 pub const SPRITES: usize = 381;
 
 /// Couleur DAC d'un mot de palette (0x0000 = noir).
+#[cfg(test)]
 pub fn word_color(word: u16) -> Color32 {
     let mut p = Palette::new();
     p.write16(0, word);

@@ -159,6 +159,9 @@ impl App {
         if let Some(a) = action {
             self.handle(ctx, a);
         }
+        if let Some(f) = &self.last {
+            ui.label(format!("{:.1} fps", f.fps));
+        }
         if let Some(e) = &self.error {
             ui.colored_label(egui::Color32::RED, e);
         }

@@ -1,6 +1,3 @@
-// Les commandes Inputs sont branchées par T801b : dead_code toléré d'ici là.
-#![allow(dead_code)]
-
 mod app;
 mod audio;
 mod debugger;

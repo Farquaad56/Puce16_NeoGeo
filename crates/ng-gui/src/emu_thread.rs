@@ -46,6 +46,7 @@ pub struct EmuHandle {
     pub rx: Receiver<FrameMsg>,
     pub err_rx: Receiver<String>,
     pub dbg_rx: Receiver<DebugSnapshot>,
+    #[allow(dead_code)] // conservé pour joindre le thread dans les tests et un futur arrêt propre
     pub join: JoinHandle<()>,
 }
 
