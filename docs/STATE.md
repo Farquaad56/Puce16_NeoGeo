@@ -453,3 +453,8 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 - (1) Bus ouvert : mécanisme `Machine::open_bus_follows_prefetch` (dernier mot lu par le 68000), test `sched::open_bus_returns_last_word_only_when_enabled`. **Désactivé par défaut** : MAME renvoie $FFFF (non confirmé par la comparaison MAME ; la carte n'autorise que les points confirmés). Les goldens sont donc inchangés.
 - (2) Ordre à égalité de tick (LSPC -> YM -> Z80 -> 68k) : non modifié, aucune différence MAME observée ; depuis T900b le YM est avancé à l'instant du Z80.
 - (3) Wait states : en attente d'une ROM de test matérielle (T902), aucune table modifiée.
+
+## T902 - ROMs de test matérielles
+- `crates/ng-core/tests/hwtests.rs` : parcourt `tests-data/hwtests/<nom>/hw.toml` (game, frames, max_diff_percent), exécute N trames, compare à `golden/f<N>.png` (320x224 exigé), écrit `target/hw-report.md` et les diffs PPM. Dossier vide ou fichiers manquants : ignoré sans échec. 5 tests ; vérifié à la main avec un cas mslug (0 pixel de différence).
+- `docs/spec/data/test-roms.md` : gabarit, procédure, écarts MAME/matériel. `tools/mame_golden.ps1` : exemple d'usage hwtests dans l'en-tête.
+- Écart : aucune ROM de test matérielle n'est encore déposée (liste vide) ; format `hw.toml` simple (pas de crate toml).

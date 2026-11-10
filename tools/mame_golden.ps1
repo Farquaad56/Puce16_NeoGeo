@@ -1,5 +1,6 @@
 # Génère les captures de référence (golden frames) avec MAME.
 # Exemple : powershell tools/mame_golden.ps1 -Game mslug -Frames 120,600,1500 -Out tests-data/golden/mslug
+# ROM de test matérielle (T902) : powershell tools/mame_golden.ps1 -Game <set> -Frames 60,120 -Out tests-data/hwtests/<nom>/golden
 param(
   [Parameter(Mandatory=$true)][string]$Game,
   [Parameter(Mandatory=$true)][int[]]$Frames,
