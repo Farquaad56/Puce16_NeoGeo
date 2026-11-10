@@ -1,7 +1,13 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P7 Protections Metal Slug en cours (T702). Prochaine : T703a.
+P7 Protections Metal Slug en cours (T703a). Prochaine : T704.
+
+### Fait — T703a ng-cart SMA Metal Slug 3 P-ROM decryption
+- `crates/ng-cart/src/sma.rs` : port 1:1 de MAME prot_sma.cpp l.428-451 — `mslug3_decrypt_68k()` (déchiffrement ROM P Metal Slug 3). Trois étapes : swap data lines bitswap<16> sur toute la ROM banquée, relocation fixe avec bitswap<19>, permutation par blocs de 0x10000 octets avec bitswap<15>.
+- Helpers get16/set16 pour accès mots big-endian 68000.
+- 4 tests passent dont oracle CRC MAME réel (mslug3_p_900000.crc).
+- Piège : clippy needless_range_loop sur les boucles d'indexation — `#[allow(clippy::needless_range_loop)]` requis car l'index est nécessaire pour le calcul d'adresse.
 
 ### Fait — T700 ng-cart bitswap + déchiffrement ROM C (CMC42 / CMC50)
 - `crates/ng-common/src/bitswap.rs` : fonction générique `bitswap::<N>(v, bits)` (sortie bit k = entrée bit args[N-1-k]).
