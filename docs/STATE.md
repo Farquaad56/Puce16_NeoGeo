@@ -467,3 +467,7 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 ## T804a - Préférences persistantes
 - `ng-gui/src/prefs.rs` : `Prefs { display, input, debug }` dans `gui.toml` (même dossier que `neogeo.toml`), `to_toml`/`from_toml` (lignes invalides ignorées), `load` (absent = défauts), `save` atomique (`write_atomic` : `.tmp` + renommage). `App` sauvegarde quand les préférences changent et à la fermeture. L'échelle et l'ouverture du débogueur sont déjà restaurées.
 - Ajout par rapport à la carte : `DebugPrefs::region` (région de l'onglet Mémoire, T805b).
+
+## T804b - Menu BIOS et modèle
+- `bios_menu.rs` : `KNOWN_BIOS` (BIOS MVS 128 Kio de MAME, Universe BIOS 4.0, BIOS AES), `available_bios` (présence dans `neogeo.zip` ou le dossier, ROM communes exigées), `updated_toml` (ne remplace que `bios =` et `model =`, garde le reste du fichier). Menu Système > BIOS / Modèle ; `Cmd::Config` ; le jeu courant est relancé. Message d'erreur si le BIOS configuré est absent.
+- Écarts : présence testée par lecture directe (une ouverture de l'archive au lieu d'un `load_bios` par BIOS) ; noms Universe BIOS/AES ajoutés hors fichier de référence ; le menu BIOS n'est pas ouvert automatiquement (message seulement).

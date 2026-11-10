@@ -22,6 +22,8 @@ pub enum Cmd {
     },
     Reset,
     Pause(bool),
+    /// Remplace la configuration (BIOS, modèle) utilisée par les prochains `Load`.
+    Config(Config),
     /// Active/désactive l'envoi d'un `DebugSnapshot` par trame.
     Debug(bool),
     Inputs {
@@ -67,7 +69,7 @@ pub fn spawn(cfg: Config) -> EmuHandle {
 }
 
 fn run(
-    cfg: Config,
+    mut cfg: Config,
     cmd_rx: Receiver<Cmd>,
     frame_tx: Sender<FrameMsg>,
     err_tx: Sender<String>,
@@ -123,6 +125,7 @@ fn run(
                     t0 = Instant::now();
                     frames_since_t0 = 0;
                 }
+                Ok(Cmd::Config(c)) => cfg = c,
                 Ok(Cmd::Debug(d)) => debug = d,
                 Ok(Cmd::Inputs { p1, p2, sys }) => inputs = (p1, p2, sys),
                 Err(TryRecvError::Empty) => break,

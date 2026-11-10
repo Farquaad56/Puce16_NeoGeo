@@ -1,8 +1,10 @@
-//! Barre de menus : Fichier, Émulation, Vidéo, Capture.
+//! Barre de menus : Fichier, Émulation, Système, Vidéo, Débogueur.
 
 use eframe::egui;
 use ng_cart::defs::ALL_CARTS;
-use ng_cart::Config;
+use ng_cart::{Config, Model};
+
+use crate::bios_menu::{bios_label, BiosEntry};
 
 pub use crate::prefs::ScaleMode as Scale;
 
@@ -16,6 +18,8 @@ pub enum MenuAction {
     Scale(Scale),
     Screenshot,
     Debugger,
+    SetBios(String),
+    SetModel(Model),
 }
 
 /// Jeux connus et présence de leur zip dans `roms_dir`, dans l'ordre de `ALL_CARTS`.
@@ -36,18 +40,21 @@ pub fn shot_name(game: &str, frame: u64) -> String {
     format!("{game}_{frame:06}.ppm")
 }
 
+/// Ce que la barre de menus doit refléter.
+pub struct MenuState<'a> {
+    pub cfg: &'a Config,
+    pub paused: bool,
+    pub scale: Scale,
+    pub bios: &'a [BiosEntry],
+}
+
 /// Dessine la barre de menus et renvoie l'action choisie.
-pub fn show(
-    ui: &mut egui::Ui,
-    cfg: &Config,
-    paused: &mut bool,
-    scale: Scale,
-) -> Option<MenuAction> {
+pub fn show(ui: &mut egui::Ui, st: &MenuState) -> Option<MenuAction> {
     let mut action = None;
     egui::MenuBar::new().ui(ui, |ui| {
         ui.menu_button("Fichier", |ui| {
             ui.menu_button("Ouvrir", |ui| {
-                for (name, ok) in available_games(cfg) {
+                for (name, ok) in available_games(st.cfg) {
                     let title = ALL_CARTS
                         .iter()
                         .find(|d| d.name == name)
@@ -58,19 +65,54 @@ pub fn show(
                     }
                 }
             });
+            if ui.button("Capture d'écran").clicked() {
+                action = Some(MenuAction::Screenshot);
+                ui.close();
+            }
+            ui.separator();
             if ui.button("Quitter").clicked() {
                 action = Some(MenuAction::Quit);
                 ui.close();
             }
         });
         ui.menu_button("Émulation", |ui| {
-            if ui.checkbox(paused, "Pause").changed() {
-                action = Some(MenuAction::Pause(*paused));
+            let mut paused = st.paused;
+            if ui.checkbox(&mut paused, "Pause").changed() {
+                action = Some(MenuAction::Pause(paused));
+                ui.close();
             }
             if ui.button("Reset").clicked() {
                 action = Some(MenuAction::Reset);
                 ui.close();
             }
+        });
+        ui.menu_button("Système", |ui| {
+            ui.menu_button(format!("BIOS : {}", bios_label(&st.cfg.bios)), |ui| {
+                for b in st.bios {
+                    let text = format!("{}  ({})", b.label, b.file);
+                    let r = ui
+                        .add_enabled(
+                            b.present,
+                            egui::RadioButton::new(st.cfg.bios == b.file, text),
+                        )
+                        .on_disabled_hover_text(format!(
+                            "fichier introuvable dans {}",
+                            st.cfg.bios_dir.display()
+                        ));
+                    if r.clicked() && st.cfg.bios != b.file {
+                        action = Some(MenuAction::SetBios(b.file.to_string()));
+                        ui.close();
+                    }
+                }
+            });
+            ui.menu_button("Modèle", |ui| {
+                for (label, m) in [("MVS (arcade)", Model::Mvs), ("AES (console)", Model::Aes)] {
+                    if ui.radio(st.cfg.model == m, label).clicked() && st.cfg.model != m {
+                        action = Some(MenuAction::SetModel(m));
+                        ui.close();
+                    }
+                }
+            });
         });
         ui.menu_button("Vidéo", |ui| {
             for (label, s) in [
@@ -80,15 +122,12 @@ pub fn show(
                 ("3x", Scale::Fixed(3)),
                 ("4x", Scale::Fixed(4)),
             ] {
-                if ui.radio(scale == s, label).clicked() {
+                if ui.radio(st.scale == s, label).clicked() {
                     action = Some(MenuAction::Scale(s));
                     ui.close();
                 }
             }
         });
-        if ui.button("Capture").clicked() {
-            action = Some(MenuAction::Screenshot);
-        }
         if ui.button("Débogueur").clicked() {
             action = Some(MenuAction::Debugger);
         }

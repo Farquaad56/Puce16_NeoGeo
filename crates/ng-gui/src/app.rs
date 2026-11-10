@@ -6,10 +6,11 @@ use std::path::PathBuf;
 
 use ng_cart::Config;
 
+use crate::bios_menu::{self, BiosEntry};
 use crate::debugger::Debugger;
 use crate::emu_thread::{self, Cmd, EmuHandle, FrameMsg};
 use crate::input::InputState;
-use crate::menu::{self, MenuAction, Scale};
+use crate::menu::{self, MenuAction, MenuState, Scale};
 use crate::prefs::{self, Prefs};
 use crate::settings::ConfigForm;
 
@@ -35,6 +36,21 @@ pub fn integer_scale(avail_w: f32, avail_h: f32) -> u32 {
     (s as u32).max(1)
 }
 
+/// Message affiché quand le BIOS configuré n'est pas utilisable.
+pub fn missing_bios_message(cfg: &Config, bios: &[BiosEntry]) -> Option<String> {
+    let known = bios.iter().find(|b| b.file == cfg.bios);
+    match known {
+        Some(b) if b.present => None,
+        // BIOS hors liste : on ne sait pas, le chargement du jeu le dira
+        None => None,
+        Some(_) => Some(format!(
+            "BIOS « {} » introuvable dans {} : choisissez-en un dans Système > BIOS",
+            cfg.bios,
+            cfg.bios_dir.display()
+        )),
+    }
+}
+
 pub struct App {
     cfg: Option<Config>,
     cfg_path: PathBuf,
@@ -48,6 +64,8 @@ pub struct App {
     /// Dernières préférences écrites sur disque (évite d'écrire à chaque trame).
     saved: Prefs,
     prefs_path: PathBuf,
+    /// BIOS connus et leur présence (recalculé quand la configuration change).
+    bios: Vec<BiosEntry>,
     game: Option<String>,
     input: InputState,
     debugger: Debugger,
@@ -64,6 +82,11 @@ impl App {
         if let (Some(e), true) = (&emu, debugger.open) {
             let _ = e.tx.send(Cmd::Debug(true));
         }
+        let bios = cfg
+            .as_ref()
+            .map(bios_menu::available_bios)
+            .unwrap_or_default();
+        let error = cfg.as_ref().and_then(|c| missing_bios_message(c, &bios));
         Self {
             cfg,
             cfg_path,
@@ -71,7 +94,8 @@ impl App {
             emu,
             texture: None,
             last: None,
-            error: None,
+            error,
+            bios,
             paused: false,
             saved: prefs.clone(),
             prefs,
@@ -94,6 +118,24 @@ impl App {
         self.send(Cmd::Load {
             game: name.to_string(),
         });
+    }
+
+    /// Modifie BIOS ou modèle : écrit `neogeo.toml`, informe le thread d'émulation et relance le
+    /// jeu courant avec la nouvelle configuration.
+    fn change_system(&mut self, edit: impl FnOnce(&mut Config)) {
+        let Some(cfg) = self.cfg.as_mut() else { return };
+        edit(cfg);
+        let cfg = cfg.clone();
+        let old = std::fs::read_to_string(&self.cfg_path).unwrap_or_default();
+        let text = bios_menu::updated_toml(&old, &cfg);
+        self.error = prefs::write_atomic(&self.cfg_path, &text)
+            .err()
+            .map(|e| format!("configuration non sauvegardée : {e}"));
+        self.bios = bios_menu::available_bios(&cfg);
+        self.send(Cmd::Config(cfg));
+        if let Some(game) = self.game.clone() {
+            self.send(Cmd::Load { game });
+        }
     }
 
     fn poll(&mut self, ctx: &egui::Context) {
@@ -138,10 +180,15 @@ impl App {
         match action {
             MenuAction::Load(g) => self.load_game(&g),
             MenuAction::Quit => ctx.send_viewport_cmd(egui::ViewportCommand::Close),
-            MenuAction::Pause(p) => self.send(Cmd::Pause(p)),
+            MenuAction::Pause(p) => {
+                self.paused = p;
+                self.send(Cmd::Pause(p));
+            }
             MenuAction::Reset => self.send(Cmd::Reset),
             MenuAction::Scale(s) => self.prefs.display.scale = s,
             MenuAction::Screenshot => self.screenshot(),
+            MenuAction::SetBios(file) => self.change_system(|c| c.bios = file),
+            MenuAction::SetModel(m) => self.change_system(|c| c.model = m),
             MenuAction::Debugger => {
                 self.debugger.open = !self.debugger.open;
                 self.send(Cmd::Debug(self.debugger.open));
@@ -153,6 +200,11 @@ impl App {
         let Some(cfg) = self.cfg.clone() else {
             if let Some(cfg) = self.form.ui(ui, &self.cfg_path) {
                 self.emu = Some(emu_thread::spawn(cfg.clone()));
+                self.bios = bios_menu::available_bios(&cfg);
+                self.error = missing_bios_message(&cfg, &self.bios);
+                if self.debugger.open {
+                    self.send(Cmd::Debug(true));
+                }
                 self.cfg = Some(cfg);
             }
             return;
@@ -166,9 +218,15 @@ impl App {
             p2,
             sys: self.input.system(),
         });
-        let mut paused = self.paused;
-        let action = menu::show(ui, &cfg, &mut paused, self.prefs.display.scale);
-        self.paused = paused;
+        let action = menu::show(
+            ui,
+            &MenuState {
+                cfg: &cfg,
+                paused: self.paused,
+                scale: self.prefs.display.scale,
+                bios: &self.bios,
+            },
+        );
         if let Some(a) = action {
             self.handle(ctx, a);
         }

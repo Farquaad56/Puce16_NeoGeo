@@ -1,5 +1,6 @@
 mod app;
 mod audio;
+mod bios_menu;
 mod debugger;
 mod emu_thread;
 mod input;
