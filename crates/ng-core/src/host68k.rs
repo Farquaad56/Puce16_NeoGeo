@@ -21,7 +21,7 @@ use puce_m68k::bus::Bus;
 use puce_m68k::cpu::Cpu;
 use puce_m68k::pins::Pins;
 
-use crate::machine::Machine;
+use crate::machine::{Machine, Stats};
 use crate::waits::bus_wait;
 use crate::ym_adapter::YmAdapter;
 
@@ -43,6 +43,7 @@ pub struct Host68k<'a> {
     pub now: &'a mut u64,
     pub synced: &'a mut u64,
     pub reset_request: &'a mut bool,
+    pub stats: &'a mut Stats,
     /// Override pour les tests : si Some(f), wait_clocks appelle f(addr) au lieu de bus_wait.
     #[cfg(test)]
     pub wait_override: Option<Box<dyn Fn(u32) -> u8>>,
@@ -70,6 +71,7 @@ impl Machine {
                 now: &mut self.now,
                 synced: &mut self.synced,
                 reset_request: &mut self.reset_request,
+                stats: &mut self.stats,
                 #[cfg(test)]
                 wait_override: None,
             },
@@ -104,11 +106,13 @@ impl Host68k<'_> {
     pub fn z80_run_until(&mut self, t: u64) {
         while self.sound.time + 6 <= t {
             self.sound.tick(self.z80);
+            self.stats.z80_ticks += 1;
         }
     }
 
     /// Rattrape LSPC, Z80, YM2610, RTC et watchdog jusqu'à `now`.
     pub fn catch_up(&mut self) {
+        self.stats.catch_ups += 1;
         let now = *self.now;
         self.lspc_advance();
         self.z80_run_until(now);

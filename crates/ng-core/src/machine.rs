@@ -24,6 +24,15 @@ use crate::ym_adapter::YmAdapter;
 /// Nombre maximal d'horloges pour terminer un reset (garde contre une boucle infinie).
 const RESET_CLOCK_LIMIT: u32 = 1000;
 
+/// Compteurs de profil (T900) : coût relatif des composants rattrapés par `catch_up`.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Stats {
+    /// Appels à `catch_up`.
+    pub catch_ups: u64,
+    /// T-states Z80 exécutés.
+    pub z80_ticks: u64,
+}
+
 pub struct Machine {
     pub cpu: Cpu,
     pub z80: puce_z80::Cpu,
@@ -55,6 +64,7 @@ pub struct Machine {
     pub synced: u64,
     /// Le watchdog a expiré : reset demandé à la fin de l'horloge courante.
     pub reset_request: bool,
+    pub stats: Stats,
 }
 
 impl Machine {
@@ -104,6 +114,7 @@ impl Machine {
             audio: Vec::new(),
             synced: 0,
             reset_request: false,
+            stats: Stats::default(),
         };
         machine.reset();
         machine

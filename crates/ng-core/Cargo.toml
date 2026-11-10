@@ -15,4 +15,9 @@ serde = { version = "1", features = ["derive"] }
 bincode = "1.3"
 
 [dev-dependencies]
+criterion = "0.8.2"
 ng-testkit = { path = "../ng-testkit" }
+
+[[bench]]
+name = "frame"
+harness = false

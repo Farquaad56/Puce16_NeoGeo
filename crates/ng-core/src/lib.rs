@@ -14,4 +14,4 @@ pub mod ym_adapter;
 
 pub use boot::{load_machine, save_machine};
 pub use debug::{DebugSnapshot, LspcDebug};
-pub use machine::Machine;
+pub use machine::{Machine, Stats};

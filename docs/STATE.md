@@ -438,3 +438,7 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 ## T802b — Débogueur vidéo
 - `DebugSnapshot` étendu : `vram` (0x8800), `palette` (0x2000), `lspc: LspcDebug`, `fix_image` (320x256). `video_debug.rs` : palette 16x16 par page (32 pages, tooltip index+mot), table des sprites actifs (SCB1-4, chaînage), image fix, registres LSPC. 4 tests.
 - Écarts : (1) l'image fix est rendue côté ng-core (la ROM S/BIOS y est accessible) puis affichée par le GUI ; (2) ajout de `Vram::get_offset()` dans ng-lspc et de la dépendance ng-lspc dans ng-gui (pour `Palette`).
+
+## T900 — Banc criterion
+- `crates/ng-core/benches/frame.rs` (300 trames mslug) ; `Machine::stats` (`catch_ups`, `z80_ticks`) ; `docs/PERF.md` : 5.91 ms/trame, ~35 % du budget (~2,9x temps réel).
+- Suite : T900b (catch-up paresseux) doit conserver les goldens identiques.
