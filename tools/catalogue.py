@@ -18,6 +18,8 @@ PROTECTED = {
     "kof2002": "K2K2_KOF2002", "samsho5": "K2K2_SAMSHO5", "samsh5sp": "K2K2_SAMSH5SP",
     # T1010 : puce PVC (P déchiffrée, C50, PCM2 swap, port runtime PVC)
     "kof2003": "PVC_KOF2003", "svc": "PVC_SVC",
+    # T1011 : kof98 (P chiffrée, recouvrement de ROM par la puce Altera)
+    "kof98": "KOF98",
 }
 # Jeux protégés extraits dès maintenant (ROM_START dans romsets_all.txt) mais définis par les cartes T1005+.
 TO_EXTRACT = "kof98 fatfury2 ssideki sbp vliner kof99 garou kof2000 kof2001 jockeygp kof2002 kof2003 svc samsho5 samsh5sp rotd pnyaa zupapa ganryu s1945p preisle2 bangbead nitd sengoku3".split()

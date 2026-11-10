@@ -12,7 +12,7 @@ const ADPCM_B: [&str; 13] = [
 
 #[test]
 fn catalogue_has_expected_size_and_unique_names() {
-    assert_eq!(ALL_CARTS.len(), 153);
+    assert_eq!(ALL_CARTS.len(), 154);
     let names: HashSet<_> = ALL_CARTS.iter().map(|d| d.name).collect();
     assert_eq!(names.len(), ALL_CARTS.len());
 }
@@ -422,5 +422,25 @@ mod pvc_game_tests {
             assert_eq!(c.p.len(), s.p as usize, "{name}");
             assert_ne!(c.p, before, "{name}");
         }
+    }
+}
+
+// ---- T1011 : kof98 ----
+#[cfg(test)]
+mod kof98_tests {
+    use crate::romset::find_def;
+    use crate::types::{Cmc, FixBank, PDecrypt, Pcm2, RuntimeProt};
+
+    #[test]
+    fn kof98_protection_table() {
+        let d = find_def("kof98").unwrap();
+        let p = d.prot;
+        assert_eq!(p.p_decrypt, PDecrypt::Kof98);
+        assert_eq!(p.runtime, RuntimeProt::Kof98);
+        assert_eq!(p.cmc, Cmc::None);
+        assert_eq!(p.pcm2, Pcm2::None);
+        assert_eq!(p.fix_bank, FixBank::Std);
+        assert!(!p.sfix_decrypt && !p.m1_decrypt);
+        assert_eq!(d.sizes.p, 0x600000);
     }
 }

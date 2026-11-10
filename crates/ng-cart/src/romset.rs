@@ -569,8 +569,8 @@ mod tests {
 
     #[test]
     fn test_find_def() {
-        // find_def("mslug3").unwrap().sizes.c == 0x4000000 ; ALL_CARTS.len()==153 (… + 2 PVC)
-        assert_eq!(crate::defs::ALL_CARTS.len(), 153);
+        // find_def("mslug3").unwrap().sizes.c == 0x4000000 ; ALL_CARTS.len()==154 (… + 2 PVC + kof98)
+        assert_eq!(crate::defs::ALL_CARTS.len(), 154);
         let mslug3 = find_def("mslug3").expect("mslug3 should exist");
         assert_eq!(mslug3.sizes.c, 0x4000000);
     }

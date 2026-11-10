@@ -70,6 +70,14 @@ impl Bus68k {
                         read_word_be(&self.bios, a)
                     }
                 } else {
+                    // Puce de protection sur l'en-tête ($100-$103, kof98).
+                    if (0x100..0x104).contains(&a) {
+                        if let Some(ref mut port) = self.port {
+                            if let Some(v) = port.read(a, &self.cart_p, &self.work_ram[..]) {
+                                return v;
+                            }
+                        }
+                    }
                     // Cart P-ROM fixed bank
                     let end = a + 2;
                     if end <= self.cart_p.len() as u32 && end <= 0x100000 {
@@ -228,6 +236,22 @@ mod tests {
         let bios = vec![0u8; 0x20000];
         let cart_p = vec![0u8; 0x100000];
         Bus68k::new(bios, cart_p)
+    }
+
+    #[test]
+    fn kof98_port_overlays_the_header_at_0x100() {
+        let mut cart_p = vec![0u8; 0x100000];
+        cart_p[0x100..0x104].copy_from_slice(&[0xAB, 0xCD, 0x12, 0x34]);
+        let mut bus = Bus68k::new(vec![0u8; 0x20000], cart_p);
+        // Sans puce : ROM telle quelle.
+        assert_eq!(bus.read16(0x100), 0xABCD);
+        bus.port = Some(Box::new(crate::prot_kof98::Kof98::new()));
+        assert_eq!(bus.read16(0x100), 0xABCD);
+        bus.write16(0x20AAAA, 0x0090, true, true);
+        assert_eq!(bus.read16(0x100), 0x00C2);
+        assert_eq!(bus.read16(0x102), 0x00FD);
+        // hors de $100-$103 : la ROM n'est pas recouverte
+        assert_eq!(bus.read16(0x104), 0x0000);
     }
 
     #[test]

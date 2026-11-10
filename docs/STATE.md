@@ -554,3 +554,10 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 - Tests : tables, taille P (kof2003 0x900000, svc 0x800000), chaîne `decrypt_all`, octets connus d'une ROM nulle après svc (xor1), `make_port` pour les deux.
 - Banc réel (sp-s2, trames 120 et 600) : kof2003 et svc à 0,00 % de différence avec MAME (le port PVC runtime est donc correct pour ces deux jeux).
 - Suite : T1011 (kof98).
+
+## T1011 - kof98
+- `ng-cart/src/kof98.rs` : `kof98_decrypt_68k` (port exact : permutations par blocs de 0x200 sur le 1er Mo puis `memmove` 0x200000 -> 0x100000 sur 0x400000 octets) ; `PDecrypt::Kof98`. `ng-bus/src/prot_kof98.rs` : port `Kof98` (écriture 0x0090 en $20AAAA -> lecture 0x00C2/0x00FD en $100/$102 ; 0x00F0 -> 0x4E45/0x4F2D ; sinon mots déchiffrés de la ROM ; l'état survit au reset comme dans MAME). `RuntimeProt::Kof98` ; `make_port` branché. `PROT_KOF98` : pas de CMC, banc Std. `ALL_CARTS` = 154.
+- Écart de carte : le recouvrement lit la ROM P au moment de la lecture (mots de `p[0x100..0x104]`) au lieu de mémoriser `default_rom` au déchiffrement : résultat identique (P n'est plus modifiée). Pour que le port voie les lectures en $100-$103, `Bus68k::read16` consulte désormais le port dans cette plage (région 0) ; les autres puces répondent `None` hors de leur plage.
+- Tests : permutation (premiers 0x800 octets intacts, memmove, premier bloc recalculé à la main), automate du port, lecture au niveau du bus, table.
+- Banc réel (sp-s2) : kof98 à 0,00 % (trame 120) et 0,47 % (trame 600) de différence avec MAME.
+- Suite : T1012 (fatfury2, ssideki).

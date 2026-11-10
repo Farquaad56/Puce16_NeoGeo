@@ -512,6 +512,31 @@ pub static SVC: CartDef = CartDef {
     prot: PROT_PVC_SVC,
 };
 
+pub static KOF98_PARTS: &[RomPart] = &[
+    RomPart { file: "242-p1.p1", region: Region::P, dest: 0x0, size: 0x200000, src_off: 0x0, crc: 0x8893DF89, load: Load::WordSwap },
+    RomPart { file: "242-p2.sp2", region: Region::P, dest: 0x200000, size: 0x400000, src_off: 0x0, crc: 0x980ABA4C, load: Load::WordSwap },
+    RomPart { file: "242-s1.s1", region: Region::S, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0x7F7B4805, load: Load::Plain },
+    RomPart { file: "242-m1.m1", region: Region::M, dest: 0x0, size: 0x40000, src_off: 0x0, crc: 0x4EF7016B, load: Load::Plain },
+    RomPart { file: "242-v1.v1", region: Region::V, dest: 0x0, size: 0x400000, src_off: 0x0, crc: 0xB9EA8051, load: Load::Plain },
+    RomPart { file: "242-v2.v2", region: Region::V, dest: 0x400000, size: 0x400000, src_off: 0x0, crc: 0xCC11106E, load: Load::Plain },
+    RomPart { file: "242-v3.v3", region: Region::V, dest: 0x800000, size: 0x400000, src_off: 0x0, crc: 0x044EA4E1, load: Load::Plain },
+    RomPart { file: "242-v4.v4", region: Region::V, dest: 0xC00000, size: 0x400000, src_off: 0x0, crc: 0x7985EA30, load: Load::Plain },
+    RomPart { file: "242-c1.c1", region: Region::C, dest: 0x0, size: 0x800000, src_off: 0x0, crc: 0xE564ECD6, load: Load::Byte },
+    RomPart { file: "242-c2.c2", region: Region::C, dest: 0x1, size: 0x800000, src_off: 0x0, crc: 0xBD959B60, load: Load::Byte },
+    RomPart { file: "242-c3.c3", region: Region::C, dest: 0x1000000, size: 0x800000, src_off: 0x0, crc: 0x22127B4F, load: Load::Byte },
+    RomPart { file: "242-c4.c4", region: Region::C, dest: 0x1000001, size: 0x800000, src_off: 0x0, crc: 0x0B4FA044, load: Load::Byte },
+    RomPart { file: "242-c5.c5", region: Region::C, dest: 0x2000000, size: 0x800000, src_off: 0x0, crc: 0x9D10BED3, load: Load::Byte },
+    RomPart { file: "242-c6.c6", region: Region::C, dest: 0x2000001, size: 0x800000, src_off: 0x0, crc: 0xDA07B6A2, load: Load::Byte },
+    RomPart { file: "242-c7.c7", region: Region::C, dest: 0x3000000, size: 0x800000, src_off: 0x0, crc: 0xF6D7A38A, load: Load::Byte },
+    RomPart { file: "242-c8.c8", region: Region::C, dest: 0x3000001, size: 0x800000, src_off: 0x0, crc: 0xC823E045, load: Load::Byte },
+];
+pub static KOF98: CartDef = CartDef {
+    name: "kof98", title: "The King of Fighters '98 - The Slugfest / King of Fighters '98 - Dream Match Never Ends (NGM-2420)", parts: KOF98_PARTS,
+    sizes: RegionSizes { p: 0x600000, s: 0x20000, m: 0x50000, m_crypt: 0x0, v: 0x1000000, vb: 0x0, c: 0x4000000 },
+    m1_reload: Some((0x10000, 0x40000)),
+    prot: PROT_KOF98,
+};
+
 pub static N_2020BB_PARTS: &[RomPart] = &[
     RomPart { file: "030-p1.p1", region: Region::P, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0xD396C9CB, load: Load::WordSwap },
     RomPart { file: "030-s1.s1", region: Region::S, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0x7015B8FC, load: Load::Plain },
@@ -3035,4 +3060,4 @@ pub static ZINTRCKB: CartDef = CartDef {
     prot: PROT_NONE,
 };
 
-pub static ALL_CARTS: &[&CartDef] = &[&MSLUG, &MSLUG2, &MSLUGX, &MSLUG3, &MSLUG4, &MSLUG5, &ZUPAPA, &GANRYU, &S1945P, &PREISLE2, &BANGBEAD, &NITD, &SENGOKU3, &KOF2001, &JOCKEYGP, &KOF99, &GAROU, &KOF2000, &ROTD, &PNYAA, &KOF2002, &SAMSHO5, &SAMSH5SP, &KOF2003, &SVC, &N_2020BB, &N_3COUNTB, &ALPHAM2, &ANDRODUN, &AODK, &AOF, &AOF2, &AOF3, &B2B, &BAKATONO, &BJOURNEY, &BLAZSTAR, &BREAKERS, &BREAKREV, &BSTARS, &BSTARS2, &BURNINGF, &CRSWD2BL, &CRSWORD, &CTOMADAY, &CYBERLIP, &DIGGERMA, &DOUBLEDR, &EIGHTMAN, &FATFURSP, &FATFURY1, &FATFURY3, &FBFRENZY, &FIGHTFEV, &FLIPSHOT, &FROMAN2B, &GALAXYFG, &GHOSTLOP, &GOALX3, &GOWCAIZR, &GPILOTS, &GURURIN, &IRONCLAD, &IRRMAZE, &JANSHIN, &JOYJOY, &KABUKIKL, &KARNOVR, &KIZUNA, &KOF94, &KOF95, &KOF96, &KOF97, &KOTM, &KOTM2, &LASTBLAD, &LASTBLD2, &LASTHOPE, &LBOWLING, &LEGENDOS, &LRESORT, &MAGDROP2, &MAGDROP3, &MAGLORD, &MAHRETSU, &MARUKODQ, &MIEXCHNG, &MINASAN, &MOSHOUGI, &MUTNAT, &NAM1975, &NCOMBAT, &NCOMMAND, &NEOBOMBE, &NEOCUP98, &NEODRIFT, &NEOMRDO, &NINJAMAS, &OVERTOP, &PANICBOM, &PBOBBL2N, &PBOBBLEN, &PGOAL, &POPBOUNC, &PSPIKES2, &PULSTAR, &PUZZLDPR, &PUZZLEDP, &QUIZDAI2, &QUIZDAIS, &QUIZKOF, &RAGNAGRD, &RBFF1, &RBFF2, &RBFFSPEC, &RIDHERO, &ROBOARMY, &SAMSHO, &SAMSHO2, &SAMSHO3, &SAMSHO4, &SAVAGERE, &SDODGEB, &SENGOKU, &SENGOKU2, &SHOCKTR2, &SHOCKTRO, &SOCBRAWL, &SONICWI2, &SONICWI3, &SPINMAST, &SSIDEKI2, &SSIDEKI3, &SSIDEKI4, &STAKWIN, &STAKWIN2, &STRHOOP, &SUPERSPY, &TOPHUNTR, &TPGOLF, &TRALLY, &TURFMAST, &TWINSPRI, &TWSOC96, &VIEWPOIN, &WAKUWAK7, &WH1, &WH2, &WH2J, &WHP, &WJAMMERS, &ZEDBLADE, &ZINTRCKB];
+pub static ALL_CARTS: &[&CartDef] = &[&MSLUG, &MSLUG2, &MSLUGX, &MSLUG3, &MSLUG4, &MSLUG5, &ZUPAPA, &GANRYU, &S1945P, &PREISLE2, &BANGBEAD, &NITD, &SENGOKU3, &KOF2001, &JOCKEYGP, &KOF99, &GAROU, &KOF2000, &ROTD, &PNYAA, &KOF2002, &SAMSHO5, &SAMSH5SP, &KOF2003, &SVC, &KOF98, &N_2020BB, &N_3COUNTB, &ALPHAM2, &ANDRODUN, &AODK, &AOF, &AOF2, &AOF3, &B2B, &BAKATONO, &BJOURNEY, &BLAZSTAR, &BREAKERS, &BREAKREV, &BSTARS, &BSTARS2, &BURNINGF, &CRSWD2BL, &CRSWORD, &CTOMADAY, &CYBERLIP, &DIGGERMA, &DOUBLEDR, &EIGHTMAN, &FATFURSP, &FATFURY1, &FATFURY3, &FBFRENZY, &FIGHTFEV, &FLIPSHOT, &FROMAN2B, &GALAXYFG, &GHOSTLOP, &GOALX3, &GOWCAIZR, &GPILOTS, &GURURIN, &IRONCLAD, &IRRMAZE, &JANSHIN, &JOYJOY, &KABUKIKL, &KARNOVR, &KIZUNA, &KOF94, &KOF95, &KOF96, &KOF97, &KOTM, &KOTM2, &LASTBLAD, &LASTBLD2, &LASTHOPE, &LBOWLING, &LEGENDOS, &LRESORT, &MAGDROP2, &MAGDROP3, &MAGLORD, &MAHRETSU, &MARUKODQ, &MIEXCHNG, &MINASAN, &MOSHOUGI, &MUTNAT, &NAM1975, &NCOMBAT, &NCOMMAND, &NEOBOMBE, &NEOCUP98, &NEODRIFT, &NEOMRDO, &NINJAMAS, &OVERTOP, &PANICBOM, &PBOBBL2N, &PBOBBLEN, &PGOAL, &POPBOUNC, &PSPIKES2, &PULSTAR, &PUZZLDPR, &PUZZLEDP, &QUIZDAI2, &QUIZDAIS, &QUIZKOF, &RAGNAGRD, &RBFF1, &RBFF2, &RBFFSPEC, &RIDHERO, &ROBOARMY, &SAMSHO, &SAMSHO2, &SAMSHO3, &SAMSHO4, &SAVAGERE, &SDODGEB, &SENGOKU, &SENGOKU2, &SHOCKTR2, &SHOCKTRO, &SOCBRAWL, &SONICWI2, &SONICWI3, &SPINMAST, &SSIDEKI2, &SSIDEKI3, &SSIDEKI4, &STAKWIN, &STAKWIN2, &STRHOOP, &SUPERSPY, &TOPHUNTR, &TPGOLF, &TRALLY, &TURFMAST, &TWINSPRI, &TWSOC96, &VIEWPOIN, &WAKUWAK7, &WH1, &WH2, &WH2J, &WHP, &WJAMMERS, &ZEDBLADE, &ZINTRCKB];
