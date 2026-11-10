@@ -12,7 +12,7 @@ const ADPCM_B: [&str; 13] = [
 
 #[test]
 fn catalogue_has_expected_size_and_unique_names() {
-    assert_eq!(ALL_CARTS.len(), 146);
+    assert_eq!(ALL_CARTS.len(), 148);
     let names: HashSet<_> = ALL_CARTS.iter().map(|d| d.name).collect();
     assert_eq!(names.len(), ALL_CARTS.len());
 }
@@ -248,6 +248,66 @@ mod sma_tests {
 
         for n in ["kof99", "garou", "kof2000"] {
             assert_eq!(find_def(n).unwrap().prot.pcm2, Pcm2::None, "{n}");
+        }
+    }
+}
+
+// ---- T1008 : CMC50 + brouillage PCM2 (rotd, pnyaa) ----
+#[cfg(test)]
+mod pcm2_game_tests {
+    use crate::pcm2::pcm2_decrypt;
+    use crate::romset::{find_def, Cart};
+    use crate::types::{Cmc, FixBank, PDecrypt, Pcm2, RuntimeProt};
+
+    #[test]
+    fn pcm2_protection_tables() {
+        for (name, key, n) in [("rotd", 0x3Fu8, 16u8), ("pnyaa", 0x2E, 4)] {
+            let p = find_def(name).expect(name).prot;
+            assert_eq!(p.cmc, Cmc::C50, "{name}");
+            assert_eq!(p.gfx_key, key, "{name}");
+            assert_eq!(p.pcm2, Pcm2::Decrypt(n), "{name}");
+            assert!(p.m1_decrypt && p.sfix_decrypt, "{name}");
+            assert_eq!(p.fix_bank, FixBank::Garou, "{name}");
+            assert_eq!(p.p_decrypt, PDecrypt::None, "{name}");
+            assert_eq!(p.runtime, RuntimeProt::None, "{name}");
+        }
+    }
+
+    #[test]
+    fn pcm2_decrypt_values_16_and_4() {
+        for n in [16usize, 4] {
+            let mut zeros = vec![0u8; 0x1000];
+            pcm2_decrypt(&mut zeros, n);
+            assert_eq!(zeros.len(), 0x1000);
+            let original: Vec<u8> = (0..0x1000usize).map(|i| i as u8).collect();
+            let mut v = original.clone();
+            pcm2_decrypt(&mut v, n);
+            assert_ne!(v, original, "n = {n}");
+        }
+        // n = 4 : mots (a b)(c d) -> blocs de 2 mots, j ^ 1 : [0,1,2,3] -> [2,3,0,1]
+        let mut v = vec![0u8, 1, 2, 3];
+        pcm2_decrypt(&mut v, 4);
+        assert_eq!(v, vec![2, 3, 0, 1]);
+    }
+
+    #[test]
+    fn pcm2_decrypt_chain_runs() {
+        for name in ["rotd", "pnyaa"] {
+            let def = find_def(name).expect(name);
+            let s = def.sizes;
+            let mut c = Cart {
+                def,
+                p: vec![0; s.p as usize],
+                s: vec![0; s.s as usize],
+                m: vec![0; s.m as usize],
+                m_crypt: vec![0; s.m_crypt as usize],
+                v: vec![0; s.v as usize],
+                vb: Vec::new(),
+                c: vec![0; s.c as usize],
+            };
+            c.decrypt_all();
+            assert_eq!(c.v.len(), s.v as usize, "{name}");
+            assert_eq!(c.m.len(), 0x90000, "{name}");
         }
     }
 }

@@ -167,5 +167,8 @@ pub const PROT_C50_JOCKEYGP: Protection = Protection { cmc: Cmc::C50, gfx_key: 0
 pub const PROT_SMA_KOF99: Protection = Protection { p_decrypt: PDecrypt::Kof99, cmc: Cmc::C42, gfx_key: 0x00, sfix_decrypt: true, runtime: RuntimeProt::Sma99, fix_bank: FixBank::Garou, ..N };
 pub const PROT_SMA_GAROU: Protection = Protection { p_decrypt: PDecrypt::Garou, cmc: Cmc::C42, gfx_key: 0x06, sfix_decrypt: true, runtime: RuntimeProt::SmaGarou, fix_bank: FixBank::Garou, ..N };
 pub const PROT_SMA_KOF2000: Protection = Protection { p_decrypt: PDecrypt::Kof2000, cmc: Cmc::C50, gfx_key: 0x00, sfix_decrypt: true, m1_decrypt: true, runtime: RuntimeProt::Sma2000, fix_bank: FixBank::Kof2000, ..N };
+// T1008 : CMC50 + M1 chiffrée + pcm2.decrypt(V, n) (pcm2.cpp) ; banc fixe Garou
+pub const PROT_PCM2_ROTD: Protection = Protection { cmc: Cmc::C50, gfx_key: 0x3F, sfix_decrypt: true, m1_decrypt: true, pcm2: Pcm2::Decrypt(16), fix_bank: FixBank::Garou, ..N };
+pub const PROT_PCM2_PNYAA: Protection = Protection { cmc: Cmc::C50, gfx_key: 0x2E, sfix_decrypt: true, m1_decrypt: true, pcm2: Pcm2::Decrypt(4), fix_bank: FixBank::Garou, ..N };
 '''
 w("crates/ng-cart/src/types.rs", types)

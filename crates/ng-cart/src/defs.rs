@@ -366,6 +366,41 @@ pub static KOF2000: CartDef = CartDef {
     prot: PROT_SMA_KOF2000,
 };
 
+pub static ROTD_PARTS: &[RomPart] = &[
+    RomPart { file: "264-p1.p1", region: Region::P, dest: 0x0, size: 0x800000, src_off: 0x0, crc: 0xB8CC969D, load: Load::WordSwap },
+    RomPart { file: "264-m1.m1", region: Region::MCrypt, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0x4DBD7B43, load: Load::Plain },
+    RomPart { file: "264-v1.v1", region: Region::V, dest: 0x0, size: 0x800000, src_off: 0x0, crc: 0xFA005812, load: Load::Plain },
+    RomPart { file: "264-v2.v2", region: Region::V, dest: 0x800000, size: 0x800000, src_off: 0x0, crc: 0xC3DC8BF0, load: Load::Plain },
+    RomPart { file: "264-c1.c1", region: Region::C, dest: 0x0, size: 0x800000, src_off: 0x0, crc: 0x4F148FEE, load: Load::Byte },
+    RomPart { file: "264-c2.c2", region: Region::C, dest: 0x1, size: 0x800000, src_off: 0x0, crc: 0x7CF5FF72, load: Load::Byte },
+    RomPart { file: "264-c3.c3", region: Region::C, dest: 0x1000000, size: 0x800000, src_off: 0x0, crc: 0x64D84C98, load: Load::Byte },
+    RomPart { file: "264-c4.c4", region: Region::C, dest: 0x1000001, size: 0x800000, src_off: 0x0, crc: 0x2F394A95, load: Load::Byte },
+    RomPart { file: "264-c5.c5", region: Region::C, dest: 0x2000000, size: 0x800000, src_off: 0x0, crc: 0x6B99B978, load: Load::Byte },
+    RomPart { file: "264-c6.c6", region: Region::C, dest: 0x2000001, size: 0x800000, src_off: 0x0, crc: 0x847D5C7D, load: Load::Byte },
+    RomPart { file: "264-c7.c7", region: Region::C, dest: 0x3000000, size: 0x800000, src_off: 0x0, crc: 0x231D681E, load: Load::Byte },
+    RomPart { file: "264-c8.c8", region: Region::C, dest: 0x3000001, size: 0x800000, src_off: 0x0, crc: 0xC5EDB5C4, load: Load::Byte },
+];
+pub static ROTD: CartDef = CartDef {
+    name: "rotd", title: "Rage of the Dragons (NGM-2640?)", parts: ROTD_PARTS,
+    sizes: RegionSizes { p: 0x800000, s: 0x20000, m: 0x90000, m_crypt: 0x80000, v: 0x1000000, vb: 0x0, c: 0x4000000 },
+    m1_reload: None,
+    prot: PROT_PCM2_ROTD,
+};
+
+pub static PNYAA_PARTS: &[RomPart] = &[
+    RomPart { file: "pn202.p1", region: Region::P, dest: 0x0, size: 0x100000, src_off: 0x0, crc: 0xBF34E71C, load: Load::WordSwap },
+    RomPart { file: "m1.m1", region: Region::MCrypt, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0xC7853CCD, load: Load::Plain },
+    RomPart { file: "267-v1.v1", region: Region::V, dest: 0x0, size: 0x400000, src_off: 0x0, crc: 0xE2E8E917, load: Load::Plain },
+    RomPart { file: "267-c1.c1", region: Region::C, dest: 0x0, size: 0x800000, src_off: 0x0, crc: 0x5EEBEE65, load: Load::Byte },
+    RomPart { file: "267-c2.c2", region: Region::C, dest: 0x1, size: 0x800000, src_off: 0x0, crc: 0x2B67187B, load: Load::Byte },
+];
+pub static PNYAA: CartDef = CartDef {
+    name: "pnyaa", title: "Pochi and Nyaa (Ver 2.02)", parts: PNYAA_PARTS,
+    sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x90000, m_crypt: 0x80000, v: 0x400000, vb: 0x0, c: 0x1000000 },
+    m1_reload: None,
+    prot: PROT_PCM2_PNYAA,
+};
+
 pub static N_2020BB_PARTS: &[RomPart] = &[
     RomPart { file: "030-p1.p1", region: Region::P, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0xD396C9CB, load: Load::WordSwap },
     RomPart { file: "030-s1.s1", region: Region::S, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0x7015B8FC, load: Load::Plain },
@@ -2889,4 +2924,4 @@ pub static ZINTRCKB: CartDef = CartDef {
     prot: PROT_NONE,
 };
 
-pub static ALL_CARTS: &[&CartDef] = &[&MSLUG, &MSLUG2, &MSLUGX, &MSLUG3, &MSLUG4, &MSLUG5, &ZUPAPA, &GANRYU, &S1945P, &PREISLE2, &BANGBEAD, &NITD, &SENGOKU3, &KOF2001, &JOCKEYGP, &KOF99, &GAROU, &KOF2000, &N_2020BB, &N_3COUNTB, &ALPHAM2, &ANDRODUN, &AODK, &AOF, &AOF2, &AOF3, &B2B, &BAKATONO, &BJOURNEY, &BLAZSTAR, &BREAKERS, &BREAKREV, &BSTARS, &BSTARS2, &BURNINGF, &CRSWD2BL, &CRSWORD, &CTOMADAY, &CYBERLIP, &DIGGERMA, &DOUBLEDR, &EIGHTMAN, &FATFURSP, &FATFURY1, &FATFURY3, &FBFRENZY, &FIGHTFEV, &FLIPSHOT, &FROMAN2B, &GALAXYFG, &GHOSTLOP, &GOALX3, &GOWCAIZR, &GPILOTS, &GURURIN, &IRONCLAD, &IRRMAZE, &JANSHIN, &JOYJOY, &KABUKIKL, &KARNOVR, &KIZUNA, &KOF94, &KOF95, &KOF96, &KOF97, &KOTM, &KOTM2, &LASTBLAD, &LASTBLD2, &LASTHOPE, &LBOWLING, &LEGENDOS, &LRESORT, &MAGDROP2, &MAGDROP3, &MAGLORD, &MAHRETSU, &MARUKODQ, &MIEXCHNG, &MINASAN, &MOSHOUGI, &MUTNAT, &NAM1975, &NCOMBAT, &NCOMMAND, &NEOBOMBE, &NEOCUP98, &NEODRIFT, &NEOMRDO, &NINJAMAS, &OVERTOP, &PANICBOM, &PBOBBL2N, &PBOBBLEN, &PGOAL, &POPBOUNC, &PSPIKES2, &PULSTAR, &PUZZLDPR, &PUZZLEDP, &QUIZDAI2, &QUIZDAIS, &QUIZKOF, &RAGNAGRD, &RBFF1, &RBFF2, &RBFFSPEC, &RIDHERO, &ROBOARMY, &SAMSHO, &SAMSHO2, &SAMSHO3, &SAMSHO4, &SAVAGERE, &SDODGEB, &SENGOKU, &SENGOKU2, &SHOCKTR2, &SHOCKTRO, &SOCBRAWL, &SONICWI2, &SONICWI3, &SPINMAST, &SSIDEKI2, &SSIDEKI3, &SSIDEKI4, &STAKWIN, &STAKWIN2, &STRHOOP, &SUPERSPY, &TOPHUNTR, &TPGOLF, &TRALLY, &TURFMAST, &TWINSPRI, &TWSOC96, &VIEWPOIN, &WAKUWAK7, &WH1, &WH2, &WH2J, &WHP, &WJAMMERS, &ZEDBLADE, &ZINTRCKB];
+pub static ALL_CARTS: &[&CartDef] = &[&MSLUG, &MSLUG2, &MSLUGX, &MSLUG3, &MSLUG4, &MSLUG5, &ZUPAPA, &GANRYU, &S1945P, &PREISLE2, &BANGBEAD, &NITD, &SENGOKU3, &KOF2001, &JOCKEYGP, &KOF99, &GAROU, &KOF2000, &ROTD, &PNYAA, &N_2020BB, &N_3COUNTB, &ALPHAM2, &ANDRODUN, &AODK, &AOF, &AOF2, &AOF3, &B2B, &BAKATONO, &BJOURNEY, &BLAZSTAR, &BREAKERS, &BREAKREV, &BSTARS, &BSTARS2, &BURNINGF, &CRSWD2BL, &CRSWORD, &CTOMADAY, &CYBERLIP, &DIGGERMA, &DOUBLEDR, &EIGHTMAN, &FATFURSP, &FATFURY1, &FATFURY3, &FBFRENZY, &FIGHTFEV, &FLIPSHOT, &FROMAN2B, &GALAXYFG, &GHOSTLOP, &GOALX3, &GOWCAIZR, &GPILOTS, &GURURIN, &IRONCLAD, &IRRMAZE, &JANSHIN, &JOYJOY, &KABUKIKL, &KARNOVR, &KIZUNA, &KOF94, &KOF95, &KOF96, &KOF97, &KOTM, &KOTM2, &LASTBLAD, &LASTBLD2, &LASTHOPE, &LBOWLING, &LEGENDOS, &LRESORT, &MAGDROP2, &MAGDROP3, &MAGLORD, &MAHRETSU, &MARUKODQ, &MIEXCHNG, &MINASAN, &MOSHOUGI, &MUTNAT, &NAM1975, &NCOMBAT, &NCOMMAND, &NEOBOMBE, &NEOCUP98, &NEODRIFT, &NEOMRDO, &NINJAMAS, &OVERTOP, &PANICBOM, &PBOBBL2N, &PBOBBLEN, &PGOAL, &POPBOUNC, &PSPIKES2, &PULSTAR, &PUZZLDPR, &PUZZLEDP, &QUIZDAI2, &QUIZDAIS, &QUIZKOF, &RAGNAGRD, &RBFF1, &RBFF2, &RBFFSPEC, &RIDHERO, &ROBOARMY, &SAMSHO, &SAMSHO2, &SAMSHO3, &SAMSHO4, &SAVAGERE, &SDODGEB, &SENGOKU, &SENGOKU2, &SHOCKTR2, &SHOCKTRO, &SOCBRAWL, &SONICWI2, &SONICWI3, &SPINMAST, &SSIDEKI2, &SSIDEKI3, &SSIDEKI4, &STAKWIN, &STAKWIN2, &STRHOOP, &SUPERSPY, &TOPHUNTR, &TPGOLF, &TRALLY, &TURFMAST, &TWINSPRI, &TWSOC96, &VIEWPOIN, &WAKUWAK7, &WH1, &WH2, &WH2J, &WHP, &WJAMMERS, &ZEDBLADE, &ZINTRCKB];

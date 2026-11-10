@@ -536,3 +536,8 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 - jockeygp : se charge, reste noir à la trame 600 (attendu : il lui faut la RAM de cartouche, T1014).
 - Outils : le banc accepte `NG_DUMP=1` (écrit `target/catalogue-dump/<jeu>_f<N>.ppm`).
 - Suite : T1007 (SMA : kof99, garou, kof2000).
+
+## T1008 - Jeux CMC50 + PCM2 (rotd, pnyaa)
+- `PROT_PCM2_ROTD` (clé 0x3F, `pcm2.decrypt(V,16)`) et `PROT_PCM2_PNYAA` (0x2E, `decrypt(V,4)`), M1 chiffrée + C50 + sfix, banc Garou. `ALL_CARTS` = 148. `pcm2_decrypt` est générique (pas de `match`) : aucune modification de `pcm2.rs`. Tests `pcm2_game_tests` (tables, valeurs 16 et 4 dont [0,1,2,3] -> [2,3,0,1] pour n = 4, chaîne sur zéros).
+- Banc réel (sp-s2, trames 120 et 600) : rotd et pnyaa à 0,00 % de différence avec MAME.
+- Suite : T1009 (K2K2 : kof2002, samsho5, samsh5sp).

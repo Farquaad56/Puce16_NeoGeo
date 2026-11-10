@@ -12,6 +12,8 @@ PROTECTED = {
     "kof2001": "C50_KOF2001", "jockeygp": "C50_JOCKEYGP",
     # T1007 : puce SMA
     "kof99": "SMA_KOF99", "garou": "SMA_GAROU", "kof2000": "SMA_KOF2000",
+    # T1008 : CMC50 + brouillage PCM2 de la ROM V
+    "rotd": "PCM2_ROTD", "pnyaa": "PCM2_PNYAA",
 }
 # Jeux protégés extraits dès maintenant (ROM_START dans romsets_all.txt) mais définis par les cartes T1005+.
 TO_EXTRACT = "kof98 fatfury2 ssideki sbp vliner kof99 garou kof2000 kof2001 jockeygp kof2002 kof2003 svc samsho5 samsh5sp rotd pnyaa zupapa ganryu s1945p preisle2 bangbead nitd sengoku3".split()
