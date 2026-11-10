@@ -1,7 +1,14 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P7 Protections Metal Slug en cours (T705b). Prochaine : T706a.
+P7 Protections Metal Slug en cours (T706). Prochaine : T707.
+
+### Fait — T706 Validation mslug2 (démarrage + attract)
+- `crates/ng-core/tests/mslug2.rs` : 2 tests #[ignore] nécessitant mslug2.zip et BIOS locaux.
+- Test 1 : 600 trames sans double faute, SP en RAM, fb(120) != fb(600), comparaison goldens MAME frames 120/600 (seuil 2%).
+- Test 2 : 1500 trames sans double faute, comparaison golden frame 1500.
+- Piège : PC peut être dans la zone fixe cartouche $000080-$0FFFFF (pas seulement ROM bank >= 0x200000) — vérifier avec mslug1.rs comme référence.
+- Gate OK, tests passent avec --include-ignored.
 
 ### Fait — T705b ng-bus PVC Metal Slug 5 protection RAM ($2FE000-$2FFFFF)
 - `crates/ng-bus/src/prot_pvc.rs` : port de MAME prot_pvc.cpp l.28-98 (protection_r/w, unpack/pack color, get_bank_base). Structure `Pvc { ram: [u16; 0x1000], bank }` implémente `CartPort`.
