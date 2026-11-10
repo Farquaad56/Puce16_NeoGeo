@@ -45,6 +45,7 @@ pub struct Host68k<'a> {
     pub reset_request: &'a mut bool,
     pub stats: &'a mut Stats,
     pub lazy: bool,
+    pub open_bus_prefetch: bool,
     /// Override pour les tests : si Some(f), wait_clocks appelle f(addr) au lieu de bus_wait.
     #[cfg(test)]
     pub wait_override: Option<Box<dyn Fn(u32) -> u8>>,
@@ -74,6 +75,7 @@ impl Machine {
                 reset_request: &mut self.reset_request,
                 stats: &mut self.stats,
                 lazy: self.lazy_catch_up,
+                open_bus_prefetch: self.open_bus_follows_prefetch,
                 #[cfg(test)]
                 wait_override: None,
             },
@@ -188,7 +190,11 @@ impl Bus for Host68k<'_> {
         if self.needs_sync(addr) {
             self.catch_up();
         }
-        self.bus.read16(addr)
+        let v = self.bus.read16(addr);
+        if self.open_bus_prefetch {
+            self.bus.open_bus = v;
+        }
+        v
     }
 
     fn write(&mut self, addr: u32, _fc: u8, uds: bool, lds: bool, data: u16) {

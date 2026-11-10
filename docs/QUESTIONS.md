@@ -25,3 +25,6 @@
 - [OUVERT] Q-M68KSTATE : `puce_m68k::state::CpuState` ne contient pas l'état STOP/arrêt ni la phase de reset : un savestate pris pendant STOP n'est pas fidèle (T604). À traiter côté crate puce-m68k si nécessaire.
 
 - [OUVERT] ROMs de test matériel (T902) : à déposer par l'utilisateur dans tests-data/hwtests/<nom>/ et lister dans docs/spec/data/test-roms.md.
+
+- [PARTIEL T901] Bus ouvert : option `open_bus_follows_prefetch` disponible (défaut faux = $FFFF comme MAME). À activer si une ROM de test matérielle (T902) montre que le matériel renvoie le dernier mot préchargé.
+- [OUVERT T901] Ordre des événements à égalité de tick et table de wait states : aucun écart MAME constaté, rien changé.

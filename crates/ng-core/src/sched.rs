@@ -89,6 +89,22 @@ mod tests {
     }
 
     #[test]
+    fn open_bus_returns_last_word_only_when_enabled() {
+        let mut m = machine_with(program_bios(&[0x4E, 0x71]), 0x00);
+        m.bus.work_ram[0] = 0x12;
+        m.bus.work_ram[1] = 0x34;
+        {
+            let (_, mut host) = m.split();
+            host.read(0x100000, 1, true, true);
+            assert_eq!(host.read(0xE00000, 1, true, true), 0xFFFF);
+        }
+        m.open_bus_follows_prefetch = true;
+        let (_, mut host) = m.split();
+        host.read(0x100000, 1, true, true);
+        assert_eq!(host.read(0xE00000, 1, true, true), 0x1234);
+    }
+
+    #[test]
     fn sound_command_is_visible_immediately() {
         let mut m = machine_with(program_bios(&[0x4E, 0x71, 0x60, 0xFC]), 0x00);
         let (_, mut host) = m.split();

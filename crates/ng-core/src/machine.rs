@@ -67,6 +67,9 @@ pub struct Machine {
     pub stats: Stats,
     /// T900b : n'effectue pas de `catch_up` pour les accès sans périphérique (ROM P, RAM, BIOS).
     pub lazy_catch_up: bool,
+    /// T901 : le bus ouvert renvoie le dernier mot lu par le 68000 (prefetch) au lieu de $FFFF.
+    /// Désactivé par défaut : MAME renvoie $FFFF (non confirmé par la comparaison MAME).
+    pub open_bus_follows_prefetch: bool,
 }
 
 impl Machine {
@@ -118,6 +121,7 @@ impl Machine {
             reset_request: false,
             stats: Stats::default(),
             lazy_catch_up: true,
+            open_bus_follows_prefetch: false,
         };
         machine.reset();
         machine
