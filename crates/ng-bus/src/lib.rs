@@ -9,6 +9,7 @@ pub mod latch;
 pub mod map68k;
 pub mod memcard;
 pub mod pbank;
+pub mod prot_mslugx;
 pub mod rtc;
 pub mod sound;
 pub mod watchdog;
