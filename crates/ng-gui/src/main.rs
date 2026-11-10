@@ -8,6 +8,7 @@ mod emu_thread;
 mod input;
 mod menu;
 mod settings;
+mod video_debug;
 
 fn main() -> eframe::Result {
     let path = settings::config_path();

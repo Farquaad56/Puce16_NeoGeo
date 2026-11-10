@@ -434,3 +434,7 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 ## T802a — Débogueur registres + mémoire
 - `ng-core::debug` : `DebugSnapshot`, `Machine::debug_snapshot()` (termine l'instruction), `peek68k()` sans effet de bord (vecteurs/BIOS/P/RAM, 0xFF ailleurs). `Cmd::Debug(bool)` + 3e canal `dbg_rx` (bounded 2). `debugger.rs` : fenêtre registres 68000/Z80 + RAM 0x100000 (show_rows), `hex_line`. Menu « Débogueur ».
 - Écart : la visionneuse lit la copie `work_ram` du snapshot (pas `peek68k`, réservé aux outils).
+
+## T802b — Débogueur vidéo
+- `DebugSnapshot` étendu : `vram` (0x8800), `palette` (0x2000), `lspc: LspcDebug`, `fix_image` (320x256). `video_debug.rs` : palette 16x16 par page (32 pages, tooltip index+mot), table des sprites actifs (SCB1-4, chaînage), image fix, registres LSPC. 4 tests.
+- Écarts : (1) l'image fix est rendue côté ng-core (la ROM S/BIOS y est accessible) puis affichée par le GUI ; (2) ajout de `Vram::get_offset()` dans ng-lspc et de la dépendance ng-lspc dans ng-gui (pour `Palette`).

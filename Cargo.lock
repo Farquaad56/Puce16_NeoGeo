@@ -2119,6 +2119,7 @@ dependencies = [
  "ng-cart",
  "ng-common",
  "ng-core",
+ "ng-lspc",
  "rfd",
 ]
 

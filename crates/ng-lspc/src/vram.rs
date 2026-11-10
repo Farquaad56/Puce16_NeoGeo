@@ -49,6 +49,10 @@ impl Vram {
         self.modulo = data;
     }
 
+    pub fn get_offset(&self) -> u16 {
+        self.offset
+    }
+
     pub fn get_modulo(&self) -> u16 {
         self.modulo
     }

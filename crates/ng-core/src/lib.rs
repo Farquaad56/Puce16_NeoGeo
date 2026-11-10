@@ -13,5 +13,5 @@ pub mod waits;
 pub mod ym_adapter;
 
 pub use boot::{load_machine, save_machine};
-pub use debug::DebugSnapshot;
+pub use debug::{DebugSnapshot, LspcDebug};
 pub use machine::Machine;

@@ -3,6 +3,8 @@
 use eframe::egui;
 use ng_core::DebugSnapshot;
 
+use crate::video_debug::VideoDebug;
+
 /// Adresse de base de la RAM de travail.
 pub const WORK_RAM_BASE: u32 = 0x100000;
 
@@ -19,6 +21,7 @@ pub fn hex_line(addr: u32, bytes: &[u8]) -> String {
 pub struct Debugger {
     pub open: bool,
     pub snap: Option<DebugSnapshot>,
+    video: VideoDebug,
 }
 
 impl Debugger {
@@ -66,6 +69,9 @@ impl Debugger {
                 );
             });
         self.open = open;
+        if let Some(s) = self.snap.as_ref().filter(|_| self.open) {
+            self.video.show(ctx, s);
+        }
     }
 }
 

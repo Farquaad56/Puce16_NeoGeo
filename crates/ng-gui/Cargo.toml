@@ -11,4 +11,5 @@ gilrs = "0.11.2"
 ng-cart = { version = "0.1.0", path = "../ng-cart" }
 ng-common = { path = "../ng-common" }
 ng-core = { path = "../ng-core" }
+ng-lspc = { path = "../ng-lspc" }
 rfd = "0.18.0"
