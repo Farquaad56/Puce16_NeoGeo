@@ -7,9 +7,10 @@ use std::path::PathBuf;
 use ng_cart::Config;
 
 use crate::bios_menu::{self, BiosEntry};
+use crate::controls_menu::ControlsWindow;
 use crate::debugger::Debugger;
 use crate::emu_thread::{self, Cmd, EmuHandle, FrameMsg};
-use crate::input::InputState;
+use crate::input::{Bindings, InputState};
 use crate::menu::{self, MenuAction, MenuState, Scale};
 use crate::prefs::{self, Prefs};
 use crate::settings::ConfigForm;
@@ -68,6 +69,7 @@ pub struct App {
     bios: Vec<BiosEntry>,
     game: Option<String>,
     input: InputState,
+    controls: ControlsWindow,
     debugger: Debugger,
 }
 
@@ -77,6 +79,7 @@ impl App {
         let emu = cfg.clone().map(emu_thread::spawn);
         let prefs_path = prefs::prefs_path(&cfg_path);
         let prefs = Prefs::load(&prefs_path);
+        let bindings = Bindings::from_prefs(&prefs.input);
         let mut debugger = Debugger::default();
         debugger.open = prefs.debug.open;
         if let (Some(e), true) = (&emu, debugger.open) {
@@ -101,7 +104,8 @@ impl App {
             prefs,
             prefs_path,
             game: None,
-            input: InputState::new(),
+            input: InputState::with_bindings(bindings),
+            controls: ControlsWindow::default(),
             debugger,
         }
     }
@@ -189,6 +193,7 @@ impl App {
             MenuAction::Screenshot => self.screenshot(),
             MenuAction::SetBios(file) => self.change_system(|c| c.bios = file),
             MenuAction::SetModel(m) => self.change_system(|c| c.model = m),
+            MenuAction::Controls => self.controls.open = true,
             MenuAction::Debugger => {
                 self.debugger.open = !self.debugger.open;
                 self.send(Cmd::Debug(self.debugger.open));
@@ -212,12 +217,18 @@ impl App {
         self.poll(ctx);
         self.input.update_keys(ctx);
         self.input.poll_gamepads();
-        let (p1, p2) = self.input.pads();
-        self.send(Cmd::Inputs {
-            p1,
-            p2,
-            sys: self.input.system(),
-        });
+        if self.controls.show(ctx, &mut self.input) {
+            self.prefs.input = self.input.bindings.to_prefs();
+        }
+        // pendant une capture de touche, rien n'est envoyé au jeu
+        if !self.controls.capturing() {
+            let (p1, p2) = self.input.pads();
+            self.send(Cmd::Inputs {
+                p1,
+                p2,
+                sys: self.input.system(),
+            });
+        }
         let action = menu::show(
             ui,
             &MenuState {

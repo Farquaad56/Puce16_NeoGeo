@@ -20,6 +20,7 @@ pub enum MenuAction {
     Debugger,
     SetBios(String),
     SetModel(Model),
+    Controls,
 }
 
 /// Jeux connus et présence de leur zip dans `roms_dir`, dans l'ordre de `ALL_CARTS`.
@@ -83,6 +84,11 @@ pub fn show(ui: &mut egui::Ui, st: &MenuState) -> Option<MenuAction> {
             }
             if ui.button("Reset").clicked() {
                 action = Some(MenuAction::Reset);
+                ui.close();
+            }
+            ui.separator();
+            if ui.button("Contrôles…").clicked() {
+                action = Some(MenuAction::Controls);
                 ui.close();
             }
         });

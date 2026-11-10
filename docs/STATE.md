@@ -471,3 +471,7 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 ## T804b - Menu BIOS et modèle
 - `bios_menu.rs` : `KNOWN_BIOS` (BIOS MVS 128 Kio de MAME, Universe BIOS 4.0, BIOS AES), `available_bios` (présence dans `neogeo.zip` ou le dossier, ROM communes exigées), `updated_toml` (ne remplace que `bios =` et `model =`, garde le reste du fichier). Menu Système > BIOS / Modèle ; `Cmd::Config` ; le jeu courant est relancé. Message d'erreur si le BIOS configuré est absent.
 - Écarts : présence testée par lecture directe (une ouverture de l'archive au lieu d'un `load_bios` par BIOS) ; noms Universe BIOS/AES ajoutés hors fichier de référence ; le menu BIOS n'est pas ouvert automatiquement (message seulement).
+
+## T804c - Configuration des touches
+- `input.rs` : `Action` (24 actions, `TABLE` = nom, libellé, cible, défauts), `Bindings` (clavier + manette, `set_key`/`set_button` avec échange, `reset`, `from_prefs`/`to_prefs`), `InputState::with_bindings`. `controls_menu.rs` : fenêtre Contrôles (Émulation > Contrôles…), capture par clic, Échap annule, défauts par joueur ou globaux. Sauvegarde dans `gui.toml` ([input.keys], [input.pad]).
+- Détails : `none` = action sans touche ; Maj reste Select J1 tant qu'aucune touche ne lui est assignée ; l'échange de boutons ne concerne que la même manette ; pendant une capture les entrées ne sont pas envoyées au jeu. Échap ne peut pas être assignée.
