@@ -515,3 +515,11 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 - `crates/ng-core/tests/catalogue.rs` : banc générique 600 trames/jeu, vérifications santé (pas de double faute, SP en RAM), détection noir (<16 couleurs), comparaison goldens MAME (seuil 2%), rapport target/catalogue-report.md. Test unitaire `classify_rules` valide les règles de classification.
 - `tools/mame_golden_batch.ps1` : génération par lot des goldens MAME (trames 120/600) pour une liste de jeux, aucune ROM copiée.
 - Vérifié : NG_GAMES=mslug,kof94 -> rapport 2 lignes ok avec diff 0% aux goldens. Gate OK.
+
+## T1004 - Banc de démarrage du catalogue + goldens MAME par lot
+- `crates/ng-core/tests/catalogue.rs` (#[ignore]) : `NG_GAMES`, `NG_FRAMES` (600 par défaut), `NG_BIOS` (défaut `sp-s2.sp1` = Europe MVS v2, le BIOS de MAME ; `neogeo.toml` pointe sur UniBIOS 4.0 dont le démarrage diffère des goldens), `NG_STRICT=1` ; rapport `target/catalogue-report.md` ; `classify` testé. Une image conforme à la golden est `ok` même avec peu de couleurs (démarrage à froid : le BIOS peut être encore à l'écran de test à la trame 600).
+- `tools/mame_golden_batch.ps1 -Games a,b [-Frames 120,600] [-Out ...]`. Piège : MAME se bloque sur la trame 1500 de kof94 (non résolu, non utilisé).
+- Écart de spec : le bilan complet a été lancé à 1500 trames (600 laisse beaucoup de jeux au BIOS) : **134 jeux : 115 ok, 18 noir, 1 diff, 0 échec** (28 min).
+- diff : `mslug3` 82,8 % à 1500 (écart déjà documenté en T707-T710 : scène de démo).
+- Les 18 « noir » (peu de couleurs, pas de golden) ont reçu une golden MAME à 600 : 14 conformes à 0,00 % (aodk doubledr galaxyfg kof95 mahretsu moshougi nam1975 quizdais rbff2 samsho samsho3 socbrawl whp zintrckb ; kof94 aussi), 3 en `diff` ≈ 95 % : kof96, lastblad, samsho4 (cause supposée : fondu du fond gris du BIOS, niveaux 44/52 contre les nôtres, décalage de quelques trames à ce moment précis ; à vérifier avec goldens 540/580/620 si utile).
+- Suite : T1005 (CMC42).
