@@ -31,6 +31,8 @@ pub struct Io {
     pub rtc_data_out: bool,
     /// Memory card bank select.
     pub card_bank: u8,
+    /// Une carte mémoire est insérée (bits 12-14 de $380000 à 0).
+    pub card_present: bool,
 }
 
 impl Default for Io {
@@ -47,6 +49,18 @@ impl Default for Io {
             rtc_tp: false,
             rtc_data_out: false,
             card_bank: 0,
+            card_present: false,
+        }
+    }
+}
+
+impl Io {
+    /// Bits 12-14 de $380000 : 0x7000 = pas de carte, 0 = carte présente.
+    fn card_bits(&self) -> u16 {
+        if self.card_present {
+            0
+        } else {
+            0x7000
         }
     }
 }
@@ -124,11 +138,14 @@ impl Device for Io {
                 if self.model == Model::Aes {
                     // AES: bit 15 = 0, start/select in bits 8-11
                     let sys_bits = (self.system.bits & 0x0F) as u16;
-                    0x00FF | ((sys_bits & 0x03) << 8) | (((sys_bits >> 2) & 0x03) << 10) | 0x7000
+                    0x00FF
+                        | ((sys_bits & 0x03) << 8)
+                        | (((sys_bits >> 2) & 0x03) << 10)
+                        | self.card_bits()
                 } else {
                     // MVS: bit 15 = 1
                     let sys_bits = (self.system.bits & 0x0F) as u16;
-                    0x00FF | (sys_bits << 8) | 0x7000 | 0x8000
+                    0x00FF | (sys_bits << 8) | self.card_bits() | 0x8000
                 }
             }
             _ => {
@@ -299,6 +316,14 @@ mod tests {
         // Even address $320000 uses lower byte of word
         io.write(0x320000, 0x0077, true, true);
         assert_eq!(io.pending_sound_cmd, Some(0x77));
+    }
+
+    #[test]
+    fn card_detect_bits() {
+        let mut io = Io::default();
+        assert_eq!(io.read(0x380000) & 0x7000, 0x7000);
+        io.card_present = true;
+        assert_eq!(io.read(0x380000) & 0x7000, 0);
     }
 
     #[test]

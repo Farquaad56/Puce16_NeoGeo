@@ -20,6 +20,28 @@ fn backup_path(cfg: &Config, game: &str) -> PathBuf {
     cfg.saves_dir.join(format!("{game}.sram"))
 }
 
+/// Fichier de la carte mémoire du profil (nom du BIOS choisi), partagée par tous les jeux.
+pub fn memcard_path(cfg: &Config) -> PathBuf {
+    let profile: String = cfg
+        .bios
+        .chars()
+        .map(|c| if c.is_ascii_alphanumeric() { c } else { '_' })
+        .collect();
+    cfg.saves_dir.join(format!("{profile}.memcard"))
+}
+
+/// Crée une carte mémoire vierge (2048 octets à 0xFF) si elle n'existe pas ; renvoie son chemin.
+/// La carte est insérée au prochain `load_machine` (présente = le fichier existe).
+pub fn insert_memcard(cfg: &Config) -> Result<PathBuf, String> {
+    std::fs::create_dir_all(&cfg.saves_dir).map_err(|e| e.to_string())?;
+    let path = memcard_path(cfg);
+    if !path.exists() {
+        std::fs::write(&path, vec![0xFFu8; ng_bus::memcard::MEMCARD_SIZE])
+            .map_err(|e| e.to_string())?;
+    }
+    Ok(path)
+}
+
 /// Port de protection runtime de la cartouche (`$200000-$2FFFFF`), s'il y en a un.
 pub fn make_port(cart: &Cart) -> Option<Box<dyn CartPort>> {
     match cart.def.prot.runtime {
@@ -53,6 +75,7 @@ pub fn load_machine(cfg: &Config, game: &str) -> Result<Machine, String> {
     if sram.exists() {
         machine.load_backup(&sram);
     }
+    machine.load_memcard(&memcard_path(cfg));
     Ok(machine)
 }
 
@@ -61,6 +84,9 @@ pub fn save_machine(machine: &Machine, cfg: &Config, game: &str) -> Result<(), S
     std::fs::create_dir_all(&cfg.saves_dir).map_err(|e| e.to_string())?;
     let path: &Path = &backup_path(cfg, game);
     machine.save_backup(path);
+    machine
+        .save_memcard(&memcard_path(cfg))
+        .map_err(|e| e.to_string())?;
     Ok(())
 }
 
@@ -68,6 +94,7 @@ pub fn save_machine(machine: &Machine, cfg: &Config, game: &str) -> Result<(), S
 mod tests {
     use super::*;
     use crate::machine::tests_support::{machine_with, program_bios};
+    use ng_bus::Device;
     use ng_cart::Model;
     use ng_common::{PadState, SystemButtons};
 
@@ -147,6 +174,30 @@ mod tests {
         *host.now += 24_000_000 / 128; // demi-période de 64 Hz
         let tp1 = host.read(0x320000, 5, true, true) & 0x40;
         assert_ne!(tp0, tp1);
+    }
+
+    #[test]
+    fn memcard_is_inserted_from_its_file_and_saved() {
+        let dir = std::env::temp_dir().join(format!("ng_core_card_{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let c = cfg(&dir);
+        assert!(memcard_path(&c).ends_with("sp_s2_sp1.memcard"));
+        let mut m = running();
+        assert!(
+            !m.load_memcard(&memcard_path(&c)),
+            "pas de fichier : pas de carte"
+        );
+        assert_eq!(m.io.borrow_mut().read(0x380000) & 0x7000, 0x7000);
+
+        let path = insert_memcard(&c).expect("création");
+        assert_eq!(std::fs::metadata(&path).unwrap().len(), 2048);
+        assert!(m.load_memcard(&path));
+        assert_eq!(m.io.borrow_mut().read(0x380000) & 0x7000, 0);
+        m.bus.write16(0x800006, 0x00A5, false, true);
+        assert_eq!(m.bus.read16(0x800006), 0xFFA5);
+        m.save_memcard(&path).unwrap();
+        assert_eq!(std::fs::read(&path).unwrap()[3], 0xA5);
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]

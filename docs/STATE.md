@@ -458,3 +458,8 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 - `crates/ng-core/tests/hwtests.rs` : parcourt `tests-data/hwtests/<nom>/hw.toml` (game, frames, max_diff_percent), exécute N trames, compare à `golden/f<N>.png` (320x224 exigé), écrit `target/hw-report.md` et les diffs PPM. Dossier vide ou fichiers manquants : ignoré sans échec. 5 tests ; vérifié à la main avec un cas mslug (0 pixel de différence).
 - `docs/spec/data/test-roms.md` : gabarit, procédure, écarts MAME/matériel. `tools/mame_golden.ps1` : exemple d'usage hwtests dans l'en-tête.
 - Écart : aucune ROM de test matérielle n'est encore déposée (liste vide) ; format `hw.toml` simple (pas de crate toml).
+
+## T903 - Memory card
+- `ng-bus::memcard::MemCard` (2 Kio, octets impairs, `present`/`protected`, load/save) remplace `MemCardStub` ; `Io::card_present` pilote les bits 12-14 de $380000 (0x7000 absente, 0 présente) ; `Machine::memcard` partagée avec le bus ; `load_memcard`/`save_memcard`.
+- Persistance : `saves_dir/<profil>.memcard` (profil = nom du BIOS de neogeo.toml, caractères non alphanumériques -> `_`), 2048 octets. La carte est présente si ce fichier existe au `load_machine` ; `insert_memcard(cfg)` crée une carte vierge ; `save_machine` la réécrit.
+- Écarts : pas de verrous `REG_CRDLOCK` ni du bit de protection en lecture de $380000 (seulement `protected` côté carte) ; la carte n'est pas dans les savestates ; pas de menu GUI pour insérer la carte ; test de boot AES non ajouté (BIOS AES non disponible ici).

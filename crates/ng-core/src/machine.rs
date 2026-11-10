@@ -8,7 +8,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use ng_bus::backup::BackupRam;
-use ng_bus::memcard::MemCardStub;
+use ng_bus::memcard::MemCard;
 use ng_bus::rtc::Upd4990a;
 use ng_bus::{Bus68k, Io, SoundBoard, SystemLatch, Watchdog};
 use ng_cart::{Bios, Cart, Model};
@@ -45,6 +45,8 @@ pub struct Machine {
     pub pal: Rc<RefCell<Palette>>,
     pub io: Rc<RefCell<Io>>,
     pub backup: Rc<RefCell<BackupRam>>,
+    /// Carte mémoire ($800000-$BFFFFF), partagée avec le bus.
+    pub memcard: Rc<RefCell<MemCard>>,
     /// Verrou système $3A0000.
     pub latch: SystemLatch,
     pub rtc: Upd4990a,
@@ -91,7 +93,8 @@ impl Machine {
         bus.lspc = Box::new(SharedLspc(lspc.clone()));
         bus.palette = Box::new(SharedPalette(pal.clone()));
         bus.backup = Box::new(Shared(backup.clone()));
-        bus.memcard = Box::new(MemCardStub);
+        let memcard = Rc::new(RefCell::new(MemCard::default()));
+        bus.memcard = Box::new(Shared(memcard.clone()));
 
         // carte son : sm1 du BIOS, M1 de la cartouche, V ROM pour l'ADPCM (A et B)
         let mut sound = SoundBoard::new(YmAdapter::new(std::mem::take(&mut cart.v)));
@@ -107,6 +110,7 @@ impl Machine {
             pal,
             io,
             backup,
+            memcard,
             latch: SystemLatch::default(),
             rtc: Upd4990a::new(),
             cart,
@@ -197,6 +201,18 @@ impl Machine {
     }
 
     /// Charge la backup RAM depuis un fichier.
+    /// Insère la carte mémoire contenue dans `path` (si le fichier est valide) ; vrai si insérée.
+    pub fn load_memcard(&mut self, path: &std::path::Path) -> bool {
+        let ok = self.memcard.borrow_mut().load(path);
+        self.io.borrow_mut().card_present = self.memcard.borrow().present;
+        ok
+    }
+
+    /// Écrit la carte mémoire dans `path` (rien si aucune carte).
+    pub fn save_memcard(&self, path: &std::path::Path) -> std::io::Result<()> {
+        self.memcard.borrow().save(path)
+    }
+
     pub fn load_backup(&mut self, path: &std::path::Path) {
         let mut backup = self.backup.borrow_mut();
         backup.load(path);
