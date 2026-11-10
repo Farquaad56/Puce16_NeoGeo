@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 //! ng-cart : cartouches (chargeur, déchiffrement). Voir tasks/T300.
+pub mod cmc;
 #[rustfmt::skip]
 pub mod cmc_tables;
 #[rustfmt::skip]
