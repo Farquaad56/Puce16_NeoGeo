@@ -109,6 +109,37 @@ impl Source {
     }
 }
 
+/// Jeux de type « split set » (ex. `puzzldpr` qui réutilise les ROM de `puzzledp`) :
+/// quand une ROM manque dans le zip, on la cherche par CRC32 dans les autres zips du
+/// même dossier (comme le fait MAME avec les jeux parents).
+fn read_from_sibling_zip(path: &Path, crc: u32) -> Option<Vec<u8>> {
+    let dir = path.parent()?;
+    for entry in fs::read_dir(dir).ok()?.flatten() {
+        let p = entry.path();
+        if p == path || !p.extension().is_some_and(|e| e.eq_ignore_ascii_case("zip")) {
+            continue;
+        }
+        let Ok(file) = fs::File::open(&p) else {
+            continue;
+        };
+        let Ok(mut archive) = zip::ZipArchive::new(file) else {
+            continue;
+        };
+        for i in 0..archive.len() {
+            let Ok(mut f) = archive.by_index(i) else {
+                continue;
+            };
+            if f.crc32() == crc {
+                let mut data = Vec::with_capacity(f.size() as usize);
+                if f.read_to_end(&mut data).is_ok() {
+                    return Some(data);
+                }
+            }
+        }
+    }
+    None
+}
+
 pub fn load_cart(path: &Path, def: &'static CartDef, check_crc: bool) -> Result<Cart, CartError> {
     let sizes = def.sizes;
     // Step 1: Allocate regions
@@ -124,7 +155,11 @@ pub fn load_cart(path: &Path, def: &'static CartDef, check_crc: bool) -> Result<
     // Step 2: Load each part
     let mut source = Source::open(path)?;
     for part in def.parts {
-        let data = source.read_or_crc(part.file, part.crc)?;
+        let data = match source.read_or_crc(part.file, part.crc) {
+            Err(CartError::MissingFile(_)) => read_from_sibling_zip(path, part.crc)
+                .ok_or_else(|| CartError::MissingFile(part.file.to_string()))?,
+            other => other?,
+        };
 
         if check_crc {
             let got = ng_common::crc::crc32_bytes(&data);

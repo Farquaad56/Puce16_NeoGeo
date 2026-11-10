@@ -506,3 +506,7 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 
 ## T1002 - ADPCM-B sur sa propre ROM
 - `YmIntf.adpcm_b_rom` ; `YmAdapter::new(a, b)` ; `external_read(AdpcmB)` lit B si non vide, sinon A (comportement MAME). `Machine::new` déplace `cart.vb`. Tests : `adpcm_b_reads_its_own_rom_with_fallback_to_a`, `regions_are_moved_to_their_owners`.
+
+## T1003 - Intégrité du catalogue
+- `crates/ng-cart/tests/catalogue.rs` (#[ignore], `NG_ROMS`, `NG_GAMES`; jeu inconnu => compté ABSENT). Bilan réel : OK 134 / ABSENT 0 / ECHEC 0.
+- Piège : `puzzldpr` est un split set (zip sans c1/c2/m1/v1) -> `load_cart` cherche désormais par CRC dans les zips voisins (repli parent, `read_from_sibling_zip`).
