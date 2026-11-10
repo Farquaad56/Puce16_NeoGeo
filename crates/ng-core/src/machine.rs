@@ -97,7 +97,10 @@ impl Machine {
         bus.memcard = Box::new(Shared(memcard.clone()));
 
         // carte son : sm1 du BIOS, M1 de la cartouche, V ROM pour l'ADPCM (A et B)
-        let mut sound = SoundBoard::new(YmAdapter::new(std::mem::take(&mut cart.v)));
+        let mut sound = SoundBoard::new(YmAdapter::new(
+            std::mem::take(&mut cart.v),
+            std::mem::take(&mut cart.vb),
+        ));
         sound.sm1 = std::mem::take(&mut bios.sm1);
         sound.m1 = std::mem::take(&mut cart.m);
 
@@ -245,7 +248,7 @@ mod tests {
             m: vec![0x34; 0x2000],
             m_crypt: Vec::new(),
             v: vec![0x56; 0x400],
-            vb: Vec::new(),
+            vb: vec![0xBB; 8],
             c: vec![0; 0x100],
         }
     }
@@ -272,9 +275,15 @@ mod tests {
         assert_eq!(m.bus.cart_p.len(), 0x1000);
         assert_eq!(m.sound.sm1.len(), 0x1000);
         assert_eq!(m.sound.m1.len(), 0x2000);
-        assert!(m.cart.p.is_empty() && m.cart.m.is_empty() && m.cart.v.is_empty());
+        assert!(
+            m.cart.p.is_empty()
+                && m.cart.m.is_empty()
+                && m.cart.v.is_empty()
+                && m.cart.vb.is_empty()
+        );
         assert!(m.bios.main.is_empty() && m.bios.sm1.is_empty());
         assert_eq!(m.sound.ym.intf().borrow().adpcm_rom.len(), 0x400);
+        assert_eq!(m.sound.ym.intf().borrow().adpcm_b_rom.len(), 8);
         assert_eq!(m.model, Model::Mvs);
     }
 

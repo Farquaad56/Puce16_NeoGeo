@@ -32,16 +32,19 @@ pub struct YmIntf {
     pub busy_end: u64,
     /// ROM ADPCM (région V de la cartouche ; la même pour A et B).
     pub adpcm_rom: Vec<u8>,
+    /// ROM ADPCM-B séparée (région `ymsnd:adpcmb`) ; vide = repli sur `adpcm_rom` (comportement MAME).
+    pub adpcm_b_rom: Vec<u8>,
 }
 
 impl YmIntf {
-    fn new(adpcm_rom: Vec<u8>) -> Self {
+    fn new(adpcm_rom: Vec<u8>, adpcm_b_rom: Vec<u8>) -> Self {
         YmIntf {
             ym_time: 0,
             timer_deadline: [None, None],
             irq: false,
             busy_end: 0,
             adpcm_rom,
+            adpcm_b_rom,
         }
     }
 }
@@ -73,8 +76,14 @@ impl YmfmInterface for YmIntf {
 
     fn external_read(&mut self, access: AccessClass, address: u32) -> u8 {
         match access {
-            AccessClass::AdpcmA | AccessClass::AdpcmB => {
-                self.adpcm_rom.get(address as usize).copied().unwrap_or(0)
+            AccessClass::AdpcmA => self.adpcm_rom.get(address as usize).copied().unwrap_or(0),
+            AccessClass::AdpcmB => {
+                let rom = if self.adpcm_b_rom.is_empty() {
+                    &self.adpcm_rom
+                } else {
+                    &self.adpcm_b_rom
+                };
+                rom.get(address as usize).copied().unwrap_or(0)
             }
             _ => 0,
         }
@@ -93,8 +102,8 @@ pub struct YmAdapter {
 
 impl YmAdapter {
     /// Crée l'adaptateur avec la ROM ADPCM donnée.
-    pub fn new(adpcm_rom: Vec<u8>) -> Self {
-        let intf = Rc::new(RefCell::new(YmIntf::new(adpcm_rom)));
+    pub fn new(adpcm_rom: Vec<u8>, adpcm_b_rom: Vec<u8>) -> Self {
+        let intf = Rc::new(RefCell::new(YmIntf::new(adpcm_rom, adpcm_b_rom)));
         let shared: SharedIntf = intf.clone();
         let mut adapter = YmAdapter {
             ym: Ym2610::new(shared, 0x36),
@@ -239,7 +248,7 @@ mod tests {
 
     #[test]
     fn set_timer_converts_ym_clocks_to_mclk() {
-        let a = YmAdapter::new(Vec::new());
+        let a = YmAdapter::new(Vec::new(), Vec::new());
         a.intf.borrow_mut().set_timer(0, 100);
         assert_eq!(a.intf.borrow().timer_deadline[0], Some(300));
         a.intf.borrow_mut().set_timer(0, -1);
@@ -248,7 +257,7 @@ mod tests {
 
     #[test]
     fn timer_expires_exactly_at_its_deadline() {
-        let mut a = YmAdapter::new(Vec::new());
+        let mut a = YmAdapter::new(Vec::new(), Vec::new());
         a.intf.borrow_mut().set_timer(0, 100); // échéance 300
         a.advance(299);
         assert_eq!(a.intf.borrow().timer_deadline[0], Some(300));
@@ -260,7 +269,7 @@ mod tests {
 
     #[test]
     fn timer_a_sets_status_and_irq() {
-        let mut a = YmAdapter::new(Vec::new());
+        let mut a = YmAdapter::new(Vec::new(), Vec::new());
         a.advance(0);
         for (port, v) in [
             (0u8, 0x24u8),
@@ -284,7 +293,7 @@ mod tests {
 
     #[test]
     fn three_samples_in_three_sample_periods() {
-        let mut a = YmAdapter::new(Vec::new());
+        let mut a = YmAdapter::new(Vec::new(), Vec::new());
         a.advance(432 * 3);
         assert_eq!(a.samples.len(), 3);
         a.advance(432 * 3 + 431);
@@ -296,7 +305,7 @@ mod tests {
 
     #[test]
     fn external_read_outside_rom_is_zero() {
-        let a = YmAdapter::new(vec![0x11, 0x22]);
+        let a = YmAdapter::new(vec![0x11, 0x22], Vec::new());
         let mut i = a.intf.borrow_mut();
         assert_eq!(i.external_read(AccessClass::AdpcmA, 1), 0x22);
         assert_eq!(i.external_read(AccessClass::AdpcmB, 0), 0x11);
@@ -306,7 +315,7 @@ mod tests {
 
     #[test]
     fn busy_follows_writes() {
-        let mut a = YmAdapter::new(Vec::new());
+        let mut a = YmAdapter::new(Vec::new(), Vec::new());
         assert_eq!(a.read(0) & 0x80, 0);
         a.write(0, 0x30);
         a.write(1, 0x00); // écriture FM : occupé 32 x prescale 6 horloges YM
@@ -317,11 +326,24 @@ mod tests {
 
     #[test]
     fn reset_clears_state_but_keeps_rom() {
-        let mut a = YmAdapter::new(vec![7]);
+        let mut a = YmAdapter::new(vec![7], Vec::new());
         a.advance(432 * 2);
         a.reset();
         assert!(a.samples.is_empty());
         assert_eq!(a.intf.borrow().ym_time, 0);
         assert_eq!(a.intf.borrow().adpcm_rom, vec![7]);
+    }
+
+    #[test]
+    fn adpcm_b_reads_its_own_rom_with_fallback_to_a() {
+        let a = YmAdapter::new(vec![1, 2, 3], vec![9, 8]);
+        let mut i = a.intf.borrow_mut();
+        assert_eq!(i.external_read(AccessClass::AdpcmA, 2), 3);
+        assert_eq!(i.external_read(AccessClass::AdpcmB, 1), 8);
+        assert_eq!(i.external_read(AccessClass::AdpcmB, 2), 0);
+        assert_eq!(i.external_read(AccessClass::AdpcmA, 5), 0);
+        drop(i);
+        let a = YmAdapter::new(vec![1, 2, 3], Vec::new());
+        assert_eq!(a.intf.borrow_mut().external_read(AccessClass::AdpcmB, 2), 3);
     }
 }

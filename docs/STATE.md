@@ -503,3 +503,6 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 - Écart : liste des jeux dans `tools/catalogue.py` (et non dans gen_tables.py) pour la partager avec l'extracteur.
 - GUI : le menu Fichier > Ouvrir ne liste plus que les jeux dont le zip est présent, triés par titre, dans une zone défilante (`installed_games`).
 - Suite : T1002 (ADPCM-B dans le YM), T1003 (CRC réels), T1004 (banc).
+
+## T1002 - ADPCM-B sur sa propre ROM
+- `YmIntf.adpcm_b_rom` ; `YmAdapter::new(a, b)` ; `external_read(AdpcmB)` lit B si non vide, sinon A (comportement MAME). `Machine::new` déplace `cart.vb`. Tests : `adpcm_b_reads_its_own_rom_with_fallback_to_a`, `regions_are_moved_to_their_owners`.
