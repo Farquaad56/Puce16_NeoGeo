@@ -510,3 +510,8 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 ## T1003 - Intégrité du catalogue
 - `crates/ng-cart/tests/catalogue.rs` (#[ignore], `NG_ROMS`, `NG_GAMES`; jeu inconnu => compté ABSENT). Bilan réel : OK 134 / ABSENT 0 / ECHEC 0.
 - Piège : `puzzldpr` est un split set (zip sans c1/c2/m1/v1) -> `load_cart` cherche désormais par CRC dans les zips voisins (repli parent, `read_from_sibling_zip`).
+
+## T1004 - Banc de démarrage catalogue + goldens MAME par lot
+- `crates/ng-core/tests/catalogue.rs` : banc générique 600 trames/jeu, vérifications santé (pas de double faute, SP en RAM), détection noir (<16 couleurs), comparaison goldens MAME (seuil 2%), rapport target/catalogue-report.md. Test unitaire `classify_rules` valide les règles de classification.
+- `tools/mame_golden_batch.ps1` : génération par lot des goldens MAME (trames 120/600) pour une liste de jeux, aucune ROM copiée.
+- Vérifié : NG_GAMES=mslug,kof94 -> rapport 2 lignes ok avec diff 0% aux goldens. Gate OK.
