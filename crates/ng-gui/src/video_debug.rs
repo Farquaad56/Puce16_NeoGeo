@@ -74,8 +74,10 @@ pub struct VideoDebug {
 }
 
 impl VideoDebug {
-    pub fn show(&mut self, ctx: &egui::Context, s: &DebugSnapshot) {
-        egui::Window::new("Vidéo").show(ctx, |ui| {
+    pub fn ui(&mut self, ui: &mut egui::Ui, s: &DebugSnapshot) {
+        let ctx = ui.ctx().clone();
+        let ctx = &ctx;
+        {
             ui.monospace(format!(
                 "offset={:04X} modulo={:04X} irq2={:04X} disp={:08X} anim={}",
                 s.lspc.offset,
@@ -141,7 +143,7 @@ impl VideoDebug {
                     }
                 },
             );
-        });
+        }
     }
 }
 

@@ -1,4 +1,4 @@
-//! Barre de menus : Fichier, Émulation, Système, Vidéo, Débogueur.
+//! Barre de menus : Fichier, Émulation, Système, Vidéo, Débogage.
 
 use eframe::egui;
 use ng_cart::defs::ALL_CARTS;
@@ -6,6 +6,7 @@ use ng_cart::{Config, Model};
 
 use crate::bios_menu::{bios_label, BiosEntry};
 
+use crate::debugger::Tab;
 pub use crate::prefs::ScaleMode as Scale;
 use crate::prefs::{Aspect, DisplayPrefs};
 
@@ -25,6 +26,9 @@ pub enum MenuAction {
     Fullscreen(bool),
     Aspect(Aspect),
     Smooth(bool),
+    Step,
+    DebugTab(Tab),
+    StatusBar(bool),
 }
 
 /// Jeux connus et présence de leur zip dans `roms_dir`, dans l'ordre de `ALL_CARTS`.
@@ -53,6 +57,9 @@ pub struct MenuState<'a> {
     /// Échelle effective, ex. « x3 (960x672) ».
     pub scale_info: &'a str,
     pub bios: &'a [BiosEntry],
+    pub debug_open: bool,
+    pub debug_tab: Tab,
+    pub status_bar: bool,
 }
 
 /// Dessine la barre de menus et renvoie l'action choisie.
@@ -72,7 +79,7 @@ pub fn show(ui: &mut egui::Ui, st: &MenuState) -> Option<MenuAction> {
                     }
                 }
             });
-            if ui.button("Capture d'écran").clicked() {
+            if ui.button("Capture d'écran (F9)").clicked() {
                 action = Some(MenuAction::Screenshot);
                 ui.close();
             }
@@ -84,7 +91,7 @@ pub fn show(ui: &mut egui::Ui, st: &MenuState) -> Option<MenuAction> {
         });
         ui.menu_button("Émulation", |ui| {
             let mut paused = st.paused;
-            if ui.checkbox(&mut paused, "Pause").changed() {
+            if ui.checkbox(&mut paused, "Pause (F5)").changed() {
                 action = Some(MenuAction::Pause(paused));
                 ui.close();
             }
@@ -168,9 +175,40 @@ pub fn show(ui: &mut egui::Ui, st: &MenuState) -> Option<MenuAction> {
             ui.separator();
             ui.weak(st.scale_info);
         });
-        if ui.button("Débogueur").clicked() {
-            action = Some(MenuAction::Debugger);
-        }
+        ui.menu_button("Débogage", |ui| {
+            let mut open = st.debug_open;
+            if ui.checkbox(&mut open, "Débogueur (F12)").changed() {
+                action = Some(MenuAction::Debugger);
+                ui.close();
+            }
+            ui.menu_button("Onglet", |ui| {
+                for t in Tab::ALL {
+                    if ui
+                        .radio(st.debug_open && st.debug_tab == t, t.label())
+                        .clicked()
+                    {
+                        action = Some(MenuAction::DebugTab(t));
+                        ui.close();
+                    }
+                }
+            });
+            ui.separator();
+            let mut paused = st.paused;
+            if ui.checkbox(&mut paused, "Pause (F5)").changed() {
+                action = Some(MenuAction::Pause(paused));
+                ui.close();
+            }
+            if ui.button("Avancer d'une trame (F6)").clicked() {
+                action = Some(MenuAction::Step);
+                ui.close();
+            }
+            ui.separator();
+            let mut bar = st.status_bar;
+            if ui.checkbox(&mut bar, "Barre d'état").changed() {
+                action = Some(MenuAction::StatusBar(bar));
+                ui.close();
+            }
+        });
     });
     action
 }

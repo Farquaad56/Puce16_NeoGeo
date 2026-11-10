@@ -2278,6 +2278,7 @@ dependencies = [
  "ng-common",
  "ng-core",
  "ng-lspc",
+ "puce-m68k",
  "rfd",
 ]
 

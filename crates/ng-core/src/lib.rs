@@ -13,5 +13,5 @@ pub mod waits;
 pub mod ym_adapter;
 
 pub use boot::{insert_memcard, load_machine, memcard_path, save_machine};
-pub use debug::{DebugSnapshot, LspcDebug};
+pub use debug::{DebugLevel, DebugSnapshot, LspcDebug};
 pub use machine::{Machine, Stats};

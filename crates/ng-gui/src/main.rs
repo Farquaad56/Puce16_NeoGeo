@@ -9,6 +9,7 @@ mod input;
 mod menu;
 mod prefs;
 mod settings;
+mod statusbar;
 mod video_debug;
 
 fn main() -> eframe::Result {

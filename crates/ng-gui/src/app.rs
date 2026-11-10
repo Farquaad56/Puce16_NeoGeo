@@ -8,13 +8,15 @@ use ng_cart::Config;
 
 use crate::bios_menu::{self, BiosEntry};
 use crate::controls_menu::ControlsWindow;
-use crate::debugger::Debugger;
+use crate::debugger::{DebugAction, Debugger, Region, Tab};
 use crate::display::{self, DisplayRect};
 use crate::emu_thread::{self, Cmd, EmuHandle, FrameMsg};
 use crate::input::{Bindings, InputState};
 use crate::menu::{self, MenuAction, MenuState};
 use crate::prefs::{self, Prefs};
 use crate::settings::ConfigForm;
+use crate::statusbar::{format_status, StatusInfo};
+use ng_core::DebugLevel;
 
 pub const FB_W: usize = display::FB_W as usize;
 pub const FB_H: usize = display::FB_H as usize;
@@ -78,6 +80,8 @@ pub struct App {
     input: InputState,
     controls: ControlsWindow,
     debugger: Debugger,
+    /// Dernier niveau de débogage envoyé au thread d'émulation.
+    debug_level: DebugLevel,
     /// Dernier état plein écran demandé à la fenêtre.
     fullscreen_applied: Option<bool>,
     menu_shown: bool,
@@ -92,11 +96,11 @@ impl App {
         let prefs_path = prefs::prefs_path(&cfg_path);
         let prefs = Prefs::load(&prefs_path);
         let bindings = Bindings::from_prefs(&prefs.input);
-        let mut debugger = Debugger::default();
-        debugger.open = prefs.debug.open;
-        if let (Some(e), true) = (&emu, debugger.open) {
-            let _ = e.tx.send(Cmd::Debug(true));
-        }
+        let debugger = Debugger::new(
+            prefs.debug.open,
+            Tab::from_name(&prefs.debug.tab).unwrap_or_default(),
+            Region::from_name(&prefs.debug.region).unwrap_or_default(),
+        );
         let bios = cfg
             .as_ref()
             .map(bios_menu::available_bios)
@@ -119,6 +123,7 @@ impl App {
             input: InputState::with_bindings(bindings),
             controls: ControlsWindow::default(),
             debugger,
+            debug_level: DebugLevel::Off,
             fullscreen_applied: None,
             menu_shown: false,
             shown: None,
@@ -176,7 +181,7 @@ impl App {
             self.error = Some(e);
         }
         while let Ok(s) = emu.dbg_rx.try_recv() {
-            self.debugger.snap = Some(s);
+            self.debugger.set_snapshot(s);
         }
         let opts = self.texture_options();
         if let Some(f) = self
@@ -213,9 +218,37 @@ impl App {
         self.send(Cmd::Pause(p));
     }
 
-    fn toggle_debugger(&mut self) {
-        self.debugger.open = !self.debugger.open;
-        self.send(Cmd::Debug(self.debugger.open));
+    /// Avance d'une trame (met en pause si besoin).
+    fn step_frame(&mut self) {
+        if !self.paused {
+            self.set_paused(true);
+        }
+        self.send(Cmd::StepFrame);
+    }
+
+    /// Informe le thread d'émulation quand l'onglet visible demande d'autres données.
+    fn sync_debug_level(&mut self) {
+        let level = self.debugger.level();
+        if level != self.debug_level && self.emu.is_some() {
+            self.send(Cmd::Debug(level));
+            self.debug_level = level;
+        }
+    }
+
+    fn status_text(&self, cfg: &Config) -> String {
+        let scale = self.scale_info();
+        format_status(&StatusInfo {
+            game: self.game.as_deref(),
+            bios: Some(bios_menu::bios_label(&cfg.bios)),
+            model: Some(match cfg.model {
+                ng_cart::Model::Mvs => "MVS",
+                ng_cart::Model::Aes => "AES",
+            }),
+            frame: self.last.as_ref().map(|f| f.frame),
+            fps: self.last.as_ref().map(|f| f.fps),
+            scale: self.shown.is_some().then_some(scale.as_str()),
+            paused: self.paused,
+        })
     }
 
     fn handle(&mut self, ctx: &egui::Context, action: MenuAction) {
@@ -236,7 +269,13 @@ impl App {
             MenuAction::SetBios(file) => self.change_system(|c| c.bios = file),
             MenuAction::SetModel(m) => self.change_system(|c| c.model = m),
             MenuAction::Controls => self.controls.open = true,
-            MenuAction::Debugger => self.toggle_debugger(),
+            MenuAction::Debugger => self.debugger.open = !self.debugger.open,
+            MenuAction::DebugTab(t) => {
+                self.debugger.open = true;
+                self.debugger.tab = t;
+            }
+            MenuAction::Step => self.step_frame(),
+            MenuAction::StatusBar(b) => self.prefs.debug.show_status_bar = b,
         }
     }
 
@@ -251,6 +290,18 @@ impl App {
         }
         if pressed(Key::Escape) && self.prefs.display.fullscreen {
             self.prefs.display.fullscreen = false;
+        }
+        if pressed(Key::F5) {
+            self.set_paused(!self.paused);
+        }
+        if pressed(Key::F6) {
+            self.step_frame();
+        }
+        if pressed(Key::F9) {
+            self.screenshot();
+        }
+        if pressed(Key::F12) {
+            self.debugger.open = !self.debugger.open;
         }
     }
 
@@ -319,9 +370,6 @@ impl eframe::App for App {
                     self.emu = Some(emu_thread::spawn(cfg.clone()));
                     self.bios = bios_menu::available_bios(&cfg);
                     self.error = missing_bios_message(&cfg, &self.bios);
-                    if self.debugger.open {
-                        self.send(Cmd::Debug(true));
-                    }
                     self.cfg = Some(cfg);
                 }
             });
@@ -365,6 +413,9 @@ impl eframe::App for App {
                             display: &self.prefs.display,
                             scale_info: &scale_info,
                             bios: &self.bios,
+                            debug_open: self.debugger.open,
+                            debug_tab: self.debugger.tab,
+                            status_bar: self.prefs.debug.show_status_bar,
                         },
                     )
                 })
@@ -383,10 +434,10 @@ impl eframe::App for App {
                 });
             });
         }
-        if !fullscreen {
+        if !fullscreen && self.prefs.debug.show_status_bar {
+            let text = self.status_text(&cfg);
             egui::Panel::bottom("status").show(ui, |ui| {
-                let fps = self.last.as_ref().map_or(0.0, |f| f.fps);
-                ui.monospace(format!("{fps:.1} fps · {}", self.scale_info()));
+                ui.monospace(text);
             });
         }
         egui::CentralPanel::default()
@@ -394,9 +445,16 @@ impl eframe::App for App {
             .show(ui, |ui| self.draw_frame(ui));
 
         if self.debugger.open {
-            self.debugger.show(&ctx);
+            match self.debugger.show(&ctx, self.paused) {
+                Some(DebugAction::Pause(p)) => self.set_paused(p),
+                Some(DebugAction::Step) => self.step_frame(),
+                None => {}
+            }
         }
+        self.sync_debug_level();
         self.prefs.debug.open = self.debugger.open;
+        self.prefs.debug.tab = self.debugger.tab.name().to_string();
+        self.prefs.debug.region = self.debugger.region.name().to_string();
         self.save_prefs_if_changed();
         ctx.request_repaint();
     }

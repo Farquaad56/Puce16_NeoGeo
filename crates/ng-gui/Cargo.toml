@@ -12,4 +12,5 @@ ng-cart = { version = "0.1.0", path = "../ng-cart" }
 ng-common = { path = "../ng-common" }
 ng-core = { path = "../ng-core" }
 ng-lspc = { path = "../ng-lspc" }
+puce-m68k = { workspace = true }
 rfd = "0.18.0"

@@ -7,7 +7,7 @@ use crossbeam_channel::{bounded, unbounded, Receiver, Sender, TryRecvError};
 use ng_cart::Config;
 use ng_common::{PadState, SystemButtons};
 use ng_core::audio_mix::AudioResampler;
-use ng_core::{load_machine, DebugSnapshot, Machine};
+use ng_core::{load_machine, DebugLevel, DebugSnapshot, Machine};
 
 use crate::audio::AudioOut;
 
@@ -24,8 +24,10 @@ pub enum Cmd {
     Pause(bool),
     /// Remplace la configuration (BIOS, modèle) utilisée par les prochains `Load`.
     Config(Config),
-    /// Active/désactive l'envoi d'un `DebugSnapshot` par trame.
-    Debug(bool),
+    /// Niveau des instantanés de débogage (`Off` = aucun).
+    Debug(DebugLevel),
+    /// En pause : exécute une seule trame.
+    StepFrame,
     Inputs {
         p1: PadState,
         p2: PadState,
@@ -88,7 +90,10 @@ fn run(
         .map(|a| AudioResampler::new(55_555.56, a.rate));
     let mut pcm: Vec<f32> = Vec::new();
     let mut paused = false;
-    let mut debug = false;
+    let mut debug = DebugLevel::Off;
+    // un instantané est dû (niveau changé, pause, jeu chargé) même sans nouvelle trame
+    let mut dbg_dirty = false;
+    let mut step = false;
     let mut inputs = (
         PadState::default(),
         PadState::default(),
@@ -122,18 +127,30 @@ fn run(
                 }
                 Ok(Cmd::Pause(p)) => {
                     paused = p;
+                    dbg_dirty = true;
                     t0 = Instant::now();
                     frames_since_t0 = 0;
                 }
                 Ok(Cmd::Config(c)) => cfg = c,
-                Ok(Cmd::Debug(d)) => debug = d,
+                Ok(Cmd::Debug(d)) => {
+                    debug = d;
+                    dbg_dirty = true;
+                }
+                Ok(Cmd::StepFrame) => step = true,
                 Ok(Cmd::Inputs { p1, p2, sys }) => inputs = (p1, p2, sys),
                 Err(TryRecvError::Empty) => break,
             }
         }
 
-        let Some(m) = machine.as_mut().filter(|_| !paused) else {
-            thread::sleep(Duration::from_millis(16));
+        let stepping = paused && std::mem::take(&mut step);
+        let Some(m) = machine.as_mut().filter(|_| !paused || stepping) else {
+            // à l'arrêt : rafraîchir le débogueur si son contenu demandé a changé
+            if let (true, Some(m)) = (dbg_dirty && debug != DebugLevel::Off, machine.as_mut()) {
+                let _ = dbg_tx.try_send(m.debug_snapshot_level(debug));
+            }
+            dbg_dirty = false;
+            step = false;
+            thread::sleep(Duration::from_millis(8));
             continue;
         };
         m.set_inputs(inputs.0, inputs.1, inputs.2);
@@ -148,10 +165,12 @@ fn run(
             r.pop_into(&mut pcm);
             a.push(&pcm);
         }
-        if debug {
-            let _ = dbg_tx.try_send(m.debug_snapshot());
-        }
         let frame = m.frame_count();
+        // une trame sur deux suffit à l'affichage ; toujours après un pas à pas
+        if debug != DebugLevel::Off && (stepping || dbg_dirty || frame % 2 == 0) {
+            let _ = dbg_tx.try_send(m.debug_snapshot_level(debug));
+            dbg_dirty = false;
+        }
         if fps_mark.0.elapsed() >= Duration::from_millis(500) {
             fps = (frame - fps_mark.1) as f32 / fps_mark.0.elapsed().as_secs_f32();
             fps_mark = (Instant::now(), frame);
@@ -161,6 +180,12 @@ fn run(
             frame,
             fps,
         });
+        if stepping {
+            // pas à pas : pas de cadencement, l'horloge repart à la reprise
+            t0 = Instant::now();
+            frames_since_t0 = 0;
+            continue;
+        }
         let target =
             t0 + Duration::from_secs_f64(frames_since_t0 as f64 * MCLK_PER_FRAME / MCLK_HZ);
         let now = Instant::now();

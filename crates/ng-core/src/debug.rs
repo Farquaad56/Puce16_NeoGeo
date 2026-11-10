@@ -17,6 +17,30 @@ pub struct LspcDebug {
     pub irq2_ctrl: u16,
     pub display_counter: u32,
     pub anim_counter: u8,
+    pub anim_speed: u8,
+    pub anim_disabled: bool,
+    /// Niveau d'interruption demandé au 68000 (0 = aucune).
+    pub irq_level: u8,
+    /// Banque de palette active (0 ou 1) et mode ombre.
+    pub pal_bank: u8,
+    pub shadow: bool,
+    /// La couche fix vient de la cartouche (sinon du BIOS).
+    pub fix_from_cart: bool,
+}
+
+/// Quantité de données copiées dans un instantané : seulement ce que l'onglet visible demande.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum DebugLevel {
+    #[default]
+    Off,
+    /// Registres des CPU et du LSPC seulement.
+    Cpu,
+    /// + RAM de travail, RAM Z80, VRAM, RAM palette.
+    Memory,
+    /// + VRAM, RAM palette et image de la couche fix (sans les RAM des CPU).
+    Video,
+    /// Tout.
+    Full,
 }
 
 /// Copie de l'état de la machine, envoyable à l'interface.
@@ -24,6 +48,10 @@ pub struct LspcDebug {
 pub struct DebugSnapshot {
     pub m68k: puce_m68k::state::CpuState,
     pub z80: puce_z80::Regs,
+    /// Le 68000 est arrêté (double faute).
+    pub m68k_halted: bool,
+    /// Numéro de la trame en cours.
+    pub frame: u64,
     pub now: u64,
     pub vpos: u16,
     /// 64 Kio ($100000-$10FFFF).
@@ -40,26 +68,62 @@ pub struct DebugSnapshot {
 }
 
 impl Machine {
-    /// Copie l'état courant. Termine d'abord l'instruction du 68000 en cours.
+    /// Copie tout l'état visible. Termine d'abord l'instruction du 68000 en cours.
     pub fn debug_snapshot(&mut self) -> DebugSnapshot {
+        self.debug_snapshot_level(DebugLevel::Full)
+    }
+
+    /// Copie l'état demandé par `level` ; les tableaux non demandés sont vides.
+    pub fn debug_snapshot_level(&mut self, level: DebugLevel) -> DebugSnapshot {
         self.finish_instruction();
-        let fix_image = self.render_fix_image();
+        let (cpu_ram, video, fix) = match level {
+            DebugLevel::Off | DebugLevel::Cpu => (false, false, false),
+            DebugLevel::Memory => (true, true, false),
+            DebugLevel::Video => (false, true, true),
+            DebugLevel::Full => (true, true, true),
+        };
+        let fix_image = if fix {
+            self.render_fix_image()
+        } else {
+            Vec::new()
+        };
         let lspc = self.lspc.borrow();
+        let pal = self.pal.borrow();
         DebugSnapshot {
             m68k: self.cpu.state(),
             z80: self.z80.regs,
+            m68k_halted: self.cpu.is_halted(),
+            frame: self.frame_count(),
             now: self.now,
             vpos: lspc.vpos,
-            work_ram: self.bus.work_ram.to_vec(),
-            z80_ram: self.sound.ram.to_vec(),
-            vram: lspc.vram.data.to_vec(),
-            palette: self.pal.borrow().ram.to_vec(),
+            work_ram: if cpu_ram {
+                self.bus.work_ram.to_vec()
+            } else {
+                Vec::new()
+            },
+            z80_ram: if cpu_ram {
+                self.sound.ram.to_vec()
+            } else {
+                Vec::new()
+            },
+            vram: if video {
+                lspc.vram.data.to_vec()
+            } else {
+                Vec::new()
+            },
+            palette: if video { pal.ram.to_vec() } else { Vec::new() },
             lspc: LspcDebug {
                 offset: lspc.vram.get_offset(),
                 modulo: lspc.vram.get_modulo(),
                 irq2_ctrl: lspc.irq2_ctrl,
                 display_counter: lspc.display_counter,
                 anim_counter: lspc.anim_counter,
+                anim_speed: lspc.anim_speed,
+                anim_disabled: lspc.anim_disabled,
+                irq_level: lspc.irq_level(),
+                pal_bank: pal.bank,
+                shadow: pal.shadow,
+                fix_from_cart: self.latch.use_cart_fix_audio(),
             },
             fix_image,
         }
@@ -136,6 +200,21 @@ mod tests {
         assert_eq!(s.vram.len(), 0x8800);
         assert_eq!(s.palette.len(), 0x2000);
         assert_eq!(s.fix_image.len(), 320 * 256);
+    }
+
+    #[test]
+    fn levels_copy_only_what_is_asked() {
+        use super::DebugLevel;
+        let mut m = machine_with(program_bios(&[]), 0);
+        let s = m.debug_snapshot_level(DebugLevel::Cpu);
+        assert!(s.work_ram.is_empty() && s.vram.is_empty() && s.fix_image.is_empty());
+        assert_eq!(s.m68k.pc, 0x00C0_0402 + 4);
+        let s = m.debug_snapshot_level(DebugLevel::Memory);
+        assert_eq!((s.work_ram.len(), s.vram.len()), (0x10000, 0x8800));
+        assert!(s.fix_image.is_empty());
+        let s = m.debug_snapshot_level(DebugLevel::Video);
+        assert!(s.work_ram.is_empty());
+        assert_eq!((s.palette.len(), s.fix_image.len()), (0x2000, 320 * 256));
     }
 
     #[test]

@@ -480,3 +480,10 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 - `display.rs` : `layout()` calcule en pixels physiques (facteur entier >= 1, coin sur un pixel entier, HiDPI pris en compte) ; image peinte directement (`painter.image`) sur fond noir, sans marge, NEAREST (LINEAR si Lissage). Menu Vidéo : Échelle (Auto, x1-x8), Plein écran, Ratio, Lissage ; tout est dans `gui.toml`.
 - Plein écran : F11 (bascule), Échap (sortie), restauré au démarrage ; barre de menus masquée, révélée quand la souris touche le bord haut ; curseur masqué après 2 s ; barre d'état masquée.
 - Écart : le ratio 4:3 est 320x240 par facteur (960x720 à x3), pas « 960x672 » comme écrit par erreur dans la carte ; il étire les lignes, donc n'est pas pixel perfect.
+
+## T805b - Débogueur à onglets, barre d'état
+- `ng-core::debug` : `DebugLevel { Off, Cpu, Memory, Video, Full }`, `debug_snapshot_level` (ne copie que le nécessaire) ; `DebugSnapshot` gagne `frame`, `m68k_halted` ; `LspcDebug` gagne `anim_speed`, `anim_disabled`, `irq_level`, `pal_bank`, `shadow`, `fix_from_cart`.
+- `emu_thread` : `Cmd::Debug(DebugLevel)`, `Cmd::StepFrame` ; instantané une trame sur deux en marche, immédiat en pause quand l'onglet change ou après un pas.
+- `debugger.rs` : une fenêtre, onglets CPU / Mémoire / Vidéo / Palette / Sprites, boutons Pause et Trame suivante. CPU : PC (adresse de l'instruction), IR, SR + drapeaux, D0-D7/A0-A7, USP/SSP ; Z80 complet + drapeaux ; niveau d'IRQ. Mémoire : RAM 68000, RAM Z80, RAM palette, VRAM ; « Aller à » ; colonne ASCII. Valeurs modifiées surlignées.
+- `statusbar.rs` : `format_status` (jeu · BIOS · modèle · trame · fps · échelle · MARCHE/PAUSE). Menu Débogage ; raccourcis F5 pause, F6 trame suivante, F9 capture, F12 débogueur. Onglet, région et état de la fenêtre dans `gui.toml`.
+- Écart : `DebugLevel::Memory` copie les quatre régions (150 Ko) plutôt que la seule région choisie. Dépendance `puce-m68k` ajoutée à ng-gui (type `CpuState`).
