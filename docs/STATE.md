@@ -541,3 +541,10 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 - `PROT_PCM2_ROTD` (clé 0x3F, `pcm2.decrypt(V,16)`) et `PROT_PCM2_PNYAA` (0x2E, `decrypt(V,4)`), M1 chiffrée + C50 + sfix, banc Garou. `ALL_CARTS` = 148. `pcm2_decrypt` est générique (pas de `match`) : aucune modification de `pcm2.rs`. Tests `pcm2_game_tests` (tables, valeurs 16 et 4 dont [0,1,2,3] -> [2,3,0,1] pour n = 4, chaîne sur zéros).
 - Banc réel (sp-s2, trames 120 et 600) : rotd et pnyaa à 0,00 % de différence avec MAME.
 - Suite : T1009 (K2K2 : kof2002, samsho5, samsh5sp).
+
+## T1009 - Famille K2K2 (kof2002, samsho5, samsh5sp)
+- `ng-cart/src/kof2k2.rs` : `kof2002_decrypt_68k` (8 blocs de 0x80000 à partir de 0x100000), `samsho5_decrypt_68k` et `samsh5sp_decrypt_68k` (16 blocs sur 0x800000), ports exacts de prot_kof2k2.cpp ; `PDecrypt` gagne Kof2002/Samsho5/Samsh5sp ; dispatch dans `install.rs`. `PROT_K2K2_*` : C50 (0xEC, 0x0F, 0x0D), `pcm2.swap(V, 0/4/6)`, banc Std pour kof2002, Garou pour les deux Samurai. `ALL_CARTS` = 151.
+- `pcm2_swap` gérait déjà les valeurs 0, 4, 6 (tables à 7 entrées) : aucune modification. Appliqué deux fois, ce n'est pas une involution (testé).
+- Tests : blocs déplacés selon la table (valeurs par bloc), permutation complète, tables de protection, chaîne `decrypt_all`.
+- Banc réel (sp-s2, trames 120 et 600) : kof2002, samsho5, samsh5sp à 0,00 % de différence avec MAME.
+- Suite : T1010 (PVC : kof2003, svc).

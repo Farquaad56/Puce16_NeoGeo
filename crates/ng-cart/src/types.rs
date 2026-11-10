@@ -11,7 +11,7 @@ pub enum Load { Plain, WordSwap, Byte, Word32Swap }
 pub struct RomPart { pub file: &'static str, pub region: Region, pub dest: u32, pub size: u32, pub src_off: u32, pub crc: u32, pub load: Load }
 #[derive(Clone, Copy, Debug)]
 pub struct RegionSizes { pub p: u32, pub s: u32, pub m: u32, pub m_crypt: u32, pub v: u32, pub vb: u32, pub c: u32 }
-#[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum PDecrypt { None, Sma3, Pvc5, Kof99, Garou, Kof2000 }
+#[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum PDecrypt { None, Sma3, Pvc5, Kof99, Garou, Kof2000, Kof2002, Samsho5, Samsh5sp }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum Cmc { None, C42, C50 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum Pcm2 { None, Decrypt(u8), Swap(u8) }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum RuntimeProt { None, Msx, Sma3, Pvc, Sma99, SmaGarou, Sma2000 }
@@ -48,3 +48,7 @@ pub const PROT_SMA_KOF2000: Protection = Protection { p_decrypt: PDecrypt::Kof20
 // T1008 : CMC50 + M1 chiffrée + pcm2.decrypt(V, n) (pcm2.cpp) ; banc fixe Garou
 pub const PROT_PCM2_ROTD: Protection = Protection { cmc: Cmc::C50, gfx_key: 0x3F, sfix_decrypt: true, m1_decrypt: true, pcm2: Pcm2::Decrypt(16), fix_bank: FixBank::Garou, ..N };
 pub const PROT_PCM2_PNYAA: Protection = Protection { cmc: Cmc::C50, gfx_key: 0x2E, sfix_decrypt: true, m1_decrypt: true, pcm2: Pcm2::Decrypt(4), fix_bank: FixBank::Garou, ..N };
+// T1009 : K2K2 (kof2k2.cpp) : P permutée + M1 chiffrée + C50 + sfix + pcm2.swap(V, n)
+pub const PROT_K2K2_KOF2002: Protection = Protection { p_decrypt: PDecrypt::Kof2002, cmc: Cmc::C50, gfx_key: 0xEC, sfix_decrypt: true, m1_decrypt: true, pcm2: Pcm2::Swap(0), ..N };
+pub const PROT_K2K2_SAMSHO5: Protection = Protection { p_decrypt: PDecrypt::Samsho5, cmc: Cmc::C50, gfx_key: 0x0F, sfix_decrypt: true, m1_decrypt: true, pcm2: Pcm2::Swap(4), fix_bank: FixBank::Garou, ..N };
+pub const PROT_K2K2_SAMSH5SP: Protection = Protection { p_decrypt: PDecrypt::Samsh5sp, cmc: Cmc::C50, gfx_key: 0x0D, sfix_decrypt: true, m1_decrypt: true, pcm2: Pcm2::Swap(6), fix_bank: FixBank::Garou, ..N };

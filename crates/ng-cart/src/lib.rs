@@ -2,6 +2,7 @@
 //! ng-cart : cartouches (chargeur, déchiffrement). Voir tasks/T300.
 pub mod cmc;
 pub mod install;
+pub mod kof2k2;
 #[rustfmt::skip]
 pub mod cmc_tables;
 pub mod pcm2;

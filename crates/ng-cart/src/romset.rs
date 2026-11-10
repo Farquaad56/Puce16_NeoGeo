@@ -569,8 +569,8 @@ mod tests {
 
     #[test]
     fn test_find_def() {
-        // find_def("mslug3").unwrap().sizes.c == 0x4000000 ; ALL_CARTS.len()==148 (6 Metal Slug + 128 jeux + 7 CMC42 + 2 CMC50 + 3 SMA + 2 PCM2)
-        assert_eq!(crate::defs::ALL_CARTS.len(), 148);
+        // find_def("mslug3").unwrap().sizes.c == 0x4000000 ; ALL_CARTS.len()==151 (6 Metal Slug + 128 jeux + 7 CMC42 + 2 CMC50 + 3 SMA + 2 PCM2 + 3 K2K2)
+        assert_eq!(crate::defs::ALL_CARTS.len(), 151);
         let mslug3 = find_def("mslug3").expect("mslug3 should exist");
         assert_eq!(mslug3.sizes.c, 0x4000000);
     }

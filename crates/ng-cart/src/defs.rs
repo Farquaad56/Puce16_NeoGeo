@@ -401,6 +401,72 @@ pub static PNYAA: CartDef = CartDef {
     prot: PROT_PCM2_PNYAA,
 };
 
+pub static KOF2002_PARTS: &[RomPart] = &[
+    RomPart { file: "265-p1.p1", region: Region::P, dest: 0x0, size: 0x100000, src_off: 0x0, crc: 0x9EDE7323, load: Load::WordSwap },
+    RomPart { file: "265-p2.sp2", region: Region::P, dest: 0x100000, size: 0x400000, src_off: 0x0, crc: 0x327266B8, load: Load::WordSwap },
+    RomPart { file: "265-m1.m1", region: Region::MCrypt, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0x85AAA632, load: Load::Plain },
+    RomPart { file: "265-v1.v1", region: Region::V, dest: 0x0, size: 0x800000, src_off: 0x0, crc: 0x15E8F3F5, load: Load::Plain },
+    RomPart { file: "265-v2.v2", region: Region::V, dest: 0x800000, size: 0x800000, src_off: 0x0, crc: 0xDA41D6F9, load: Load::Plain },
+    RomPart { file: "265-c1.c1", region: Region::C, dest: 0x0, size: 0x800000, src_off: 0x0, crc: 0x2B65A656, load: Load::Byte },
+    RomPart { file: "265-c2.c2", region: Region::C, dest: 0x1, size: 0x800000, src_off: 0x0, crc: 0xADF18983, load: Load::Byte },
+    RomPart { file: "265-c3.c3", region: Region::C, dest: 0x1000000, size: 0x800000, src_off: 0x0, crc: 0x875E9FD7, load: Load::Byte },
+    RomPart { file: "265-c4.c4", region: Region::C, dest: 0x1000001, size: 0x800000, src_off: 0x0, crc: 0x2DA13947, load: Load::Byte },
+    RomPart { file: "265-c5.c5", region: Region::C, dest: 0x2000000, size: 0x800000, src_off: 0x0, crc: 0x61BD165D, load: Load::Byte },
+    RomPart { file: "265-c6.c6", region: Region::C, dest: 0x2000001, size: 0x800000, src_off: 0x0, crc: 0x03FDD1EB, load: Load::Byte },
+    RomPart { file: "265-c7.c7", region: Region::C, dest: 0x3000000, size: 0x800000, src_off: 0x0, crc: 0x1A2749D8, load: Load::Byte },
+    RomPart { file: "265-c8.c8", region: Region::C, dest: 0x3000001, size: 0x800000, src_off: 0x0, crc: 0xAB0BB549, load: Load::Byte },
+];
+pub static KOF2002: CartDef = CartDef {
+    name: "kof2002", title: "The King of Fighters 2002 (NGM-2650 ~ NGH-2650)", parts: KOF2002_PARTS,
+    sizes: RegionSizes { p: 0x500000, s: 0x20000, m: 0x90000, m_crypt: 0x80000, v: 0x1000000, vb: 0x0, c: 0x4000000 },
+    m1_reload: None,
+    prot: PROT_K2K2_KOF2002,
+};
+
+pub static SAMSHO5_PARTS: &[RomPart] = &[
+    RomPart { file: "270-p1.p1", region: Region::P, dest: 0x0, size: 0x400000, src_off: 0x0, crc: 0x4A2A09E6, load: Load::WordSwap },
+    RomPart { file: "270-p2.sp2", region: Region::P, dest: 0x400000, size: 0x400000, src_off: 0x0, crc: 0xE0C74C85, load: Load::WordSwap },
+    RomPart { file: "270-m1.m1", region: Region::MCrypt, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0x49C9901A, load: Load::Plain },
+    RomPart { file: "270-v1.v1", region: Region::V, dest: 0x0, size: 0x800000, src_off: 0x0, crc: 0x62E434EB, load: Load::Plain },
+    RomPart { file: "270-v2.v2", region: Region::V, dest: 0x800000, size: 0x800000, src_off: 0x0, crc: 0x180F3C9A, load: Load::Plain },
+    RomPart { file: "270-c1.c1", region: Region::C, dest: 0x0, size: 0x800000, src_off: 0x0, crc: 0x14FFFFAC, load: Load::Byte },
+    RomPart { file: "270-c2.c2", region: Region::C, dest: 0x1, size: 0x800000, src_off: 0x0, crc: 0x401F7299, load: Load::Byte },
+    RomPart { file: "270-c3.c3", region: Region::C, dest: 0x1000000, size: 0x800000, src_off: 0x0, crc: 0x838F0260, load: Load::Byte },
+    RomPart { file: "270-c4.c4", region: Region::C, dest: 0x1000001, size: 0x800000, src_off: 0x0, crc: 0x041560A5, load: Load::Byte },
+    RomPart { file: "270-c5.c5", region: Region::C, dest: 0x2000000, size: 0x800000, src_off: 0x0, crc: 0xBD30B52D, load: Load::Byte },
+    RomPart { file: "270-c6.c6", region: Region::C, dest: 0x2000001, size: 0x800000, src_off: 0x0, crc: 0x86A69C70, load: Load::Byte },
+    RomPart { file: "270-c7.c7", region: Region::C, dest: 0x3000000, size: 0x800000, src_off: 0x0, crc: 0xD28FBC3C, load: Load::Byte },
+    RomPart { file: "270-c8.c8", region: Region::C, dest: 0x3000001, size: 0x800000, src_off: 0x0, crc: 0x02C530A6, load: Load::Byte },
+];
+pub static SAMSHO5: CartDef = CartDef {
+    name: "samsho5", title: "Samurai Shodown V / Samurai Spirits Zero (NGM-2700, set 1)", parts: SAMSHO5_PARTS,
+    sizes: RegionSizes { p: 0x800000, s: 0x20000, m: 0x90000, m_crypt: 0x80000, v: 0x1000000, vb: 0x0, c: 0x4000000 },
+    m1_reload: None,
+    prot: PROT_K2K2_SAMSHO5,
+};
+
+pub static SAMSH5SP_PARTS: &[RomPart] = &[
+    RomPart { file: "272-p1.p1", region: Region::P, dest: 0x0, size: 0x400000, src_off: 0x0, crc: 0xFB7A6BBA, load: Load::WordSwap },
+    RomPart { file: "272-p2.sp2", region: Region::P, dest: 0x400000, size: 0x400000, src_off: 0x0, crc: 0x63492EA6, load: Load::WordSwap },
+    RomPart { file: "272-m1.m1", region: Region::MCrypt, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0xADEEBF40, load: Load::Plain },
+    RomPart { file: "272-v1.v1", region: Region::V, dest: 0x0, size: 0x800000, src_off: 0x0, crc: 0x76A94127, load: Load::Plain },
+    RomPart { file: "272-v2.v2", region: Region::V, dest: 0x800000, size: 0x800000, src_off: 0x0, crc: 0x4BA507F1, load: Load::Plain },
+    RomPart { file: "272-c1.c1", region: Region::C, dest: 0x0, size: 0x800000, src_off: 0x0, crc: 0x4F97661A, load: Load::Byte },
+    RomPart { file: "272-c2.c2", region: Region::C, dest: 0x1, size: 0x800000, src_off: 0x0, crc: 0xA3AFDA4F, load: Load::Byte },
+    RomPart { file: "272-c3.c3", region: Region::C, dest: 0x1000000, size: 0x800000, src_off: 0x0, crc: 0x8C3C7502, load: Load::Byte },
+    RomPart { file: "272-c4.c4", region: Region::C, dest: 0x1000001, size: 0x800000, src_off: 0x0, crc: 0x32D5E2E2, load: Load::Byte },
+    RomPart { file: "272-c5.c5", region: Region::C, dest: 0x2000000, size: 0x800000, src_off: 0x0, crc: 0x6CE085BC, load: Load::Byte },
+    RomPart { file: "272-c6.c6", region: Region::C, dest: 0x2000001, size: 0x800000, src_off: 0x0, crc: 0x05C8DC8E, load: Load::Byte },
+    RomPart { file: "272-c7.c7", region: Region::C, dest: 0x3000000, size: 0x800000, src_off: 0x0, crc: 0x1417B742, load: Load::Byte },
+    RomPart { file: "272-c8.c8", region: Region::C, dest: 0x3000001, size: 0x800000, src_off: 0x0, crc: 0xD49773CD, load: Load::Byte },
+];
+pub static SAMSH5SP: CartDef = CartDef {
+    name: "samsh5sp", title: "Samurai Shodown V Special / Samurai Spirits Zero Special (NGM-2720)", parts: SAMSH5SP_PARTS,
+    sizes: RegionSizes { p: 0x800000, s: 0x20000, m: 0x90000, m_crypt: 0x80000, v: 0x1000000, vb: 0x0, c: 0x4000000 },
+    m1_reload: None,
+    prot: PROT_K2K2_SAMSH5SP,
+};
+
 pub static N_2020BB_PARTS: &[RomPart] = &[
     RomPart { file: "030-p1.p1", region: Region::P, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0xD396C9CB, load: Load::WordSwap },
     RomPart { file: "030-s1.s1", region: Region::S, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0x7015B8FC, load: Load::Plain },
@@ -2924,4 +2990,4 @@ pub static ZINTRCKB: CartDef = CartDef {
     prot: PROT_NONE,
 };
 
-pub static ALL_CARTS: &[&CartDef] = &[&MSLUG, &MSLUG2, &MSLUGX, &MSLUG3, &MSLUG4, &MSLUG5, &ZUPAPA, &GANRYU, &S1945P, &PREISLE2, &BANGBEAD, &NITD, &SENGOKU3, &KOF2001, &JOCKEYGP, &KOF99, &GAROU, &KOF2000, &ROTD, &PNYAA, &N_2020BB, &N_3COUNTB, &ALPHAM2, &ANDRODUN, &AODK, &AOF, &AOF2, &AOF3, &B2B, &BAKATONO, &BJOURNEY, &BLAZSTAR, &BREAKERS, &BREAKREV, &BSTARS, &BSTARS2, &BURNINGF, &CRSWD2BL, &CRSWORD, &CTOMADAY, &CYBERLIP, &DIGGERMA, &DOUBLEDR, &EIGHTMAN, &FATFURSP, &FATFURY1, &FATFURY3, &FBFRENZY, &FIGHTFEV, &FLIPSHOT, &FROMAN2B, &GALAXYFG, &GHOSTLOP, &GOALX3, &GOWCAIZR, &GPILOTS, &GURURIN, &IRONCLAD, &IRRMAZE, &JANSHIN, &JOYJOY, &KABUKIKL, &KARNOVR, &KIZUNA, &KOF94, &KOF95, &KOF96, &KOF97, &KOTM, &KOTM2, &LASTBLAD, &LASTBLD2, &LASTHOPE, &LBOWLING, &LEGENDOS, &LRESORT, &MAGDROP2, &MAGDROP3, &MAGLORD, &MAHRETSU, &MARUKODQ, &MIEXCHNG, &MINASAN, &MOSHOUGI, &MUTNAT, &NAM1975, &NCOMBAT, &NCOMMAND, &NEOBOMBE, &NEOCUP98, &NEODRIFT, &NEOMRDO, &NINJAMAS, &OVERTOP, &PANICBOM, &PBOBBL2N, &PBOBBLEN, &PGOAL, &POPBOUNC, &PSPIKES2, &PULSTAR, &PUZZLDPR, &PUZZLEDP, &QUIZDAI2, &QUIZDAIS, &QUIZKOF, &RAGNAGRD, &RBFF1, &RBFF2, &RBFFSPEC, &RIDHERO, &ROBOARMY, &SAMSHO, &SAMSHO2, &SAMSHO3, &SAMSHO4, &SAVAGERE, &SDODGEB, &SENGOKU, &SENGOKU2, &SHOCKTR2, &SHOCKTRO, &SOCBRAWL, &SONICWI2, &SONICWI3, &SPINMAST, &SSIDEKI2, &SSIDEKI3, &SSIDEKI4, &STAKWIN, &STAKWIN2, &STRHOOP, &SUPERSPY, &TOPHUNTR, &TPGOLF, &TRALLY, &TURFMAST, &TWINSPRI, &TWSOC96, &VIEWPOIN, &WAKUWAK7, &WH1, &WH2, &WH2J, &WHP, &WJAMMERS, &ZEDBLADE, &ZINTRCKB];
+pub static ALL_CARTS: &[&CartDef] = &[&MSLUG, &MSLUG2, &MSLUGX, &MSLUG3, &MSLUG4, &MSLUG5, &ZUPAPA, &GANRYU, &S1945P, &PREISLE2, &BANGBEAD, &NITD, &SENGOKU3, &KOF2001, &JOCKEYGP, &KOF99, &GAROU, &KOF2000, &ROTD, &PNYAA, &KOF2002, &SAMSHO5, &SAMSH5SP, &N_2020BB, &N_3COUNTB, &ALPHAM2, &ANDRODUN, &AODK, &AOF, &AOF2, &AOF3, &B2B, &BAKATONO, &BJOURNEY, &BLAZSTAR, &BREAKERS, &BREAKREV, &BSTARS, &BSTARS2, &BURNINGF, &CRSWD2BL, &CRSWORD, &CTOMADAY, &CYBERLIP, &DIGGERMA, &DOUBLEDR, &EIGHTMAN, &FATFURSP, &FATFURY1, &FATFURY3, &FBFRENZY, &FIGHTFEV, &FLIPSHOT, &FROMAN2B, &GALAXYFG, &GHOSTLOP, &GOALX3, &GOWCAIZR, &GPILOTS, &GURURIN, &IRONCLAD, &IRRMAZE, &JANSHIN, &JOYJOY, &KABUKIKL, &KARNOVR, &KIZUNA, &KOF94, &KOF95, &KOF96, &KOF97, &KOTM, &KOTM2, &LASTBLAD, &LASTBLD2, &LASTHOPE, &LBOWLING, &LEGENDOS, &LRESORT, &MAGDROP2, &MAGDROP3, &MAGLORD, &MAHRETSU, &MARUKODQ, &MIEXCHNG, &MINASAN, &MOSHOUGI, &MUTNAT, &NAM1975, &NCOMBAT, &NCOMMAND, &NEOBOMBE, &NEOCUP98, &NEODRIFT, &NEOMRDO, &NINJAMAS, &OVERTOP, &PANICBOM, &PBOBBL2N, &PBOBBLEN, &PGOAL, &POPBOUNC, &PSPIKES2, &PULSTAR, &PUZZLDPR, &PUZZLEDP, &QUIZDAI2, &QUIZDAIS, &QUIZKOF, &RAGNAGRD, &RBFF1, &RBFF2, &RBFFSPEC, &RIDHERO, &ROBOARMY, &SAMSHO, &SAMSHO2, &SAMSHO3, &SAMSHO4, &SAVAGERE, &SDODGEB, &SENGOKU, &SENGOKU2, &SHOCKTR2, &SHOCKTRO, &SOCBRAWL, &SONICWI2, &SONICWI3, &SPINMAST, &SSIDEKI2, &SSIDEKI3, &SSIDEKI4, &STAKWIN, &STAKWIN2, &STRHOOP, &SUPERSPY, &TOPHUNTR, &TPGOLF, &TRALLY, &TURFMAST, &TWINSPRI, &TWSOC96, &VIEWPOIN, &WAKUWAK7, &WH1, &WH2, &WH2J, &WHP, &WJAMMERS, &ZEDBLADE, &ZINTRCKB];

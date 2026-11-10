@@ -12,7 +12,7 @@ const ADPCM_B: [&str; 13] = [
 
 #[test]
 fn catalogue_has_expected_size_and_unique_names() {
-    assert_eq!(ALL_CARTS.len(), 148);
+    assert_eq!(ALL_CARTS.len(), 151);
     let names: HashSet<_> = ALL_CARTS.iter().map(|d| d.name).collect();
     assert_eq!(names.len(), ALL_CARTS.len());
 }
@@ -308,6 +308,70 @@ mod pcm2_game_tests {
             c.decrypt_all();
             assert_eq!(c.v.len(), s.v as usize, "{name}");
             assert_eq!(c.m.len(), 0x90000, "{name}");
+        }
+    }
+}
+
+// ---- T1009 : famille K2K2 (kof2002, samsho5, samsh5sp) ----
+#[cfg(test)]
+mod k2k2_tests {
+    use crate::pcm2::pcm2_swap;
+    use crate::romset::{find_def, Cart};
+    use crate::types::{Cmc, FixBank, PDecrypt, Pcm2, RuntimeProt};
+
+    #[test]
+    fn k2k2_protection_tables() {
+        for (name, pd, key, swap, bank) in [
+            ("kof2002", PDecrypt::Kof2002, 0xECu8, 0u8, FixBank::Std),
+            ("samsho5", PDecrypt::Samsho5, 0x0F, 4, FixBank::Garou),
+            ("samsh5sp", PDecrypt::Samsh5sp, 0x0D, 6, FixBank::Garou),
+        ] {
+            let p = find_def(name).expect(name).prot;
+            assert_eq!(p.p_decrypt, pd, "{name}");
+            assert_eq!((p.cmc, p.gfx_key), (Cmc::C50, key), "{name}");
+            assert_eq!(p.pcm2, Pcm2::Swap(swap), "{name}");
+            assert_eq!(p.fix_bank, bank, "{name}");
+            assert!(p.m1_decrypt && p.sfix_decrypt, "{name}");
+            assert_eq!(p.runtime, RuntimeProt::None, "{name}");
+        }
+    }
+
+    #[test]
+    fn pcm2_swap_values_0_4_6() {
+        for n in [0usize, 4, 6] {
+            let original: Vec<u8> = (0..0x1000000usize).map(|i| i as u8).collect();
+            let mut v = original.clone();
+            pcm2_swap(&mut v, n);
+            assert_eq!(v.len(), original.len(), "n = {n}");
+            assert_ne!(v, original, "n = {n}");
+            // Appliqué deux fois : ce n'est pas une involution (décalage d'adresse + XOR de données).
+            pcm2_swap(&mut v, n);
+            assert_ne!(v, original, "n = {n}");
+        }
+    }
+
+    #[test]
+    fn k2k2_decrypt_chain_runs() {
+        for name in ["kof2002", "samsho5", "samsh5sp"] {
+            let def = find_def(name).expect(name);
+            let s = def.sizes;
+            let mut c = Cart {
+                def,
+                p: (0..s.p as usize)
+                    .map(|i| (i >> 19) as u8 ^ i as u8)
+                    .collect(),
+                s: vec![0; s.s as usize],
+                m: vec![0; s.m as usize],
+                m_crypt: vec![0; s.m_crypt as usize],
+                v: vec![0; s.v as usize],
+                vb: Vec::new(),
+                c: vec![0; s.c as usize],
+            };
+            let before = c.p.clone();
+            c.decrypt_all();
+            assert_eq!(c.p.len(), s.p as usize, "{name}");
+            assert_ne!(c.p, before, "{name}");
+            assert_eq!(c.v.len(), s.v as usize, "{name}");
         }
     }
 }
