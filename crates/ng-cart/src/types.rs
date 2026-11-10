@@ -11,10 +11,10 @@ pub enum Load { Plain, WordSwap, Byte, Word32Swap }
 pub struct RomPart { pub file: &'static str, pub region: Region, pub dest: u32, pub size: u32, pub src_off: u32, pub crc: u32, pub load: Load }
 #[derive(Clone, Copy, Debug)]
 pub struct RegionSizes { pub p: u32, pub s: u32, pub m: u32, pub m_crypt: u32, pub v: u32, pub vb: u32, pub c: u32 }
-#[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum PDecrypt { None, Sma3, Pvc5 }
+#[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum PDecrypt { None, Sma3, Pvc5, Kof99, Garou, Kof2000 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum Cmc { None, C42, C50 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum Pcm2 { None, Decrypt(u8), Swap(u8) }
-#[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum RuntimeProt { None, Msx, Sma3, Pvc }
+#[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum RuntimeProt { None, Msx, Sma3, Pvc, Sma99, SmaGarou, Sma2000 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum FixBank { Std, Garou, Kof2000 }
 #[derive(Clone, Copy, Debug)]
 pub struct Protection { pub p_decrypt: PDecrypt, pub cmc: Cmc, pub gfx_key: u8, pub sfix_decrypt: bool, pub m1_decrypt: bool, pub pcm2: Pcm2, pub runtime: RuntimeProt, pub fix_bank: FixBank }
@@ -41,3 +41,7 @@ pub const PROT_C42_SENGOKU3: Protection = Protection { cmc: Cmc::C42, gfx_key: 0
 // T1006 : puce CMC50 (cmc.cpp) : cmc50_m1_decrypt + cmc50_gfx_decrypt(clé) + sfix_decrypt ; banc fixe Garou
 pub const PROT_C50_KOF2001: Protection = Protection { cmc: Cmc::C50, gfx_key: 0x1E, sfix_decrypt: true, m1_decrypt: true, fix_bank: FixBank::Garou, ..N };
 pub const PROT_C50_JOCKEYGP: Protection = Protection { cmc: Cmc::C50, gfx_key: 0xAC, sfix_decrypt: true, m1_decrypt: true, fix_bank: FixBank::Garou, ..N };
+// T1007 : SMA (sma.cpp) : P chiffrée + banque + rng ; kof99/garou : CMC42 ; kof2000 : CMC50 + M1 chiffrée, banc fixe Kof2000
+pub const PROT_SMA_KOF99: Protection = Protection { p_decrypt: PDecrypt::Kof99, cmc: Cmc::C42, gfx_key: 0x00, sfix_decrypt: true, runtime: RuntimeProt::Sma99, fix_bank: FixBank::Garou, ..N };
+pub const PROT_SMA_GAROU: Protection = Protection { p_decrypt: PDecrypt::Garou, cmc: Cmc::C42, gfx_key: 0x06, sfix_decrypt: true, runtime: RuntimeProt::SmaGarou, fix_bank: FixBank::Garou, ..N };
+pub const PROT_SMA_KOF2000: Protection = Protection { p_decrypt: PDecrypt::Kof2000, cmc: Cmc::C50, gfx_key: 0x00, sfix_decrypt: true, m1_decrypt: true, runtime: RuntimeProt::Sma2000, fix_bank: FixBank::Kof2000, ..N };

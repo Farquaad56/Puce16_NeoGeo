@@ -12,7 +12,7 @@ const ADPCM_B: [&str; 13] = [
 
 #[test]
 fn catalogue_has_expected_size_and_unique_names() {
-    assert_eq!(ALL_CARTS.len(), 143);
+    assert_eq!(ALL_CARTS.len(), 146);
     let names: HashSet<_> = ALL_CARTS.iter().map(|d| d.name).collect();
     assert_eq!(names.len(), ALL_CARTS.len());
 }
@@ -213,6 +213,41 @@ mod cmc50_tests {
             c.decrypt_all();
             assert_eq!(c.m.len(), 0x90000, "{name}");
             assert_eq!(c.s.len(), s.s as usize, "{name}");
+        }
+    }
+}
+
+// ---- T1007 : jeux à puce SMA ----
+#[cfg(test)]
+mod sma_tests {
+    use crate::romset::find_def;
+    use crate::types::{Cmc, FixBank, PDecrypt, Pcm2, RuntimeProt};
+
+    #[test]
+    fn sma_protection_tables() {
+        let k99 = find_def("kof99").unwrap().prot;
+        assert_eq!(k99.p_decrypt, PDecrypt::Kof99);
+        assert_eq!((k99.cmc, k99.gfx_key), (Cmc::C42, 0x00));
+        assert_eq!(k99.runtime, RuntimeProt::Sma99);
+        assert_eq!(k99.fix_bank, FixBank::Garou);
+        assert!(k99.sfix_decrypt && !k99.m1_decrypt);
+
+        let g = find_def("garou").unwrap().prot;
+        assert_eq!(g.p_decrypt, PDecrypt::Garou);
+        assert_eq!((g.cmc, g.gfx_key), (Cmc::C42, 0x06));
+        assert_eq!(g.runtime, RuntimeProt::SmaGarou);
+        assert_eq!(g.fix_bank, FixBank::Garou);
+        assert!(g.sfix_decrypt && !g.m1_decrypt);
+
+        let k2 = find_def("kof2000").unwrap().prot;
+        assert_eq!(k2.p_decrypt, PDecrypt::Kof2000);
+        assert_eq!((k2.cmc, k2.gfx_key), (Cmc::C50, 0x00));
+        assert!(k2.m1_decrypt && k2.sfix_decrypt);
+        assert_eq!(k2.runtime, RuntimeProt::Sma2000);
+        assert_eq!(k2.fix_bank, FixBank::Kof2000);
+
+        for n in ["kof99", "garou", "kof2000"] {
+            assert_eq!(find_def(n).unwrap().prot.pcm2, Pcm2::None, "{n}");
         }
     }
 }

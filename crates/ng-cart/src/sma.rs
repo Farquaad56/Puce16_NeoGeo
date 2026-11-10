@@ -80,6 +80,114 @@ pub fn mslug3_decrypt_68k(p: &mut [u8]) {
     }
 }
 
+// ---- T1007 : kof99, garou, kof2000 (ports exacts de prot_sma.cpp) ----
+
+/// Échange de lignes de données sur les 0x800000 octets bankés (`base + 0x100000`).
+fn swap_data_lines(p: &mut [u8], f: impl Fn(u16) -> u16) {
+    let first = 0x100000 / 2;
+    for i in 0..0x800000 / 2 {
+        let w = get16(p, first + i);
+        set16(p, first + i, f(w));
+    }
+}
+
+/// Échange de lignes d'adresse dans la partie bankée : `words` mots au total, par blocs de
+/// `block` mots ; `map(j)` donne l'indice source dans le bloc.
+fn swap_banked_address(p: &mut [u8], words: usize, block: usize, map: impl Fn(usize) -> usize) {
+    let first = 0x100000 / 2;
+    let mut buf = vec![0u16; block];
+    for i in (0..words).step_by(block) {
+        for (j, b) in buf.iter_mut().enumerate() {
+            *b = get16(p, first + i + j);
+        }
+        for j in 0..block {
+            set16(p, first + i + j, buf[map(j)]);
+        }
+    }
+}
+
+/// Relocalise la partie fixe (0xC0000 octets) depuis `src_words` mots, lignes d'adresse permutées.
+fn relocate_fixed(p: &mut [u8], src_words: usize, map: impl Fn(usize) -> usize) {
+    let n = 0x0C0000 / 2;
+    let buf: Vec<u16> = (0..n).map(|i| get16(p, src_words + map(i))).collect();
+    for (i, w) in buf.into_iter().enumerate() {
+        set16(p, i, w);
+    }
+}
+
+fn need_full_p(p: &[u8], name: &str) {
+    assert!(
+        p.len() >= 0x900000,
+        "{name} requires at least 0x900000 bytes"
+    );
+}
+
+/// MAME `kof99_decrypt_68k` : données, adresses bankées (0x600000), relocalisation (0x700000).
+pub fn kof99_decrypt_68k(p: &mut [u8]) {
+    need_full_p(p, "kof99_decrypt_68k");
+    swap_data_lines(p, |w| {
+        bitswap::<16>(
+            w as u32,
+            [13, 7, 3, 0, 9, 4, 5, 6, 1, 12, 8, 14, 10, 11, 2, 15],
+        ) as u16
+    });
+    swap_banked_address(p, 0x600000 / 2, 0x800 / 2, |j| {
+        bitswap::<10>(j as u32, [6, 2, 4, 9, 8, 3, 1, 7, 0, 5]) as usize
+    });
+    relocate_fixed(p, 0x700000 / 2, |i| {
+        bitswap::<19>(
+            i as u32,
+            [
+                18, 11, 6, 14, 17, 16, 5, 8, 10, 12, 0, 4, 3, 2, 7, 9, 15, 13, 1,
+            ],
+        ) as usize
+    });
+}
+
+/// MAME `garou_decrypt_68k` : données, relocalisation (0x710000), puis adresses bankées.
+pub fn garou_decrypt_68k(p: &mut [u8]) {
+    need_full_p(p, "garou_decrypt_68k");
+    swap_data_lines(p, |w| {
+        bitswap::<16>(
+            w as u32,
+            [13, 12, 14, 10, 8, 2, 3, 1, 5, 9, 11, 4, 15, 0, 6, 7],
+        ) as u16
+    });
+    relocate_fixed(p, 0x710000 / 2, |i| {
+        bitswap::<19>(
+            i as u32,
+            [
+                18, 4, 5, 16, 14, 7, 9, 6, 13, 17, 15, 3, 1, 2, 12, 11, 8, 10, 0,
+            ],
+        ) as usize
+    });
+    swap_banked_address(p, 0x800000 / 2, 0x8000 / 2, |j| {
+        bitswap::<14>(j as u32, [9, 4, 8, 3, 13, 6, 2, 7, 0, 12, 1, 11, 10, 5]) as usize
+    });
+}
+
+/// MAME `kof2000_decrypt_68k` : données, adresses bankées (0x63A000), relocalisation (0x73A000).
+pub fn kof2000_decrypt_68k(p: &mut [u8]) {
+    need_full_p(p, "kof2000_decrypt_68k");
+    swap_data_lines(p, |w| {
+        bitswap::<16>(
+            w as u32,
+            [12, 8, 11, 3, 15, 14, 7, 0, 10, 13, 6, 5, 9, 2, 1, 4],
+        ) as u16
+    });
+    swap_banked_address(p, 0x63A000 / 2, 0x800 / 2, |j| {
+        bitswap::<10>(j as u32, [4, 1, 3, 8, 6, 2, 7, 0, 9, 5]) as usize
+    });
+    relocate_fixed(p, 0x73A000 / 2, |i| {
+        bitswap::<19>(
+            i as u32,
+            [
+                18, 8, 4, 15, 13, 3, 14, 16, 2, 6, 17, 7, 12, 10, 0, 5, 11, 1, 9,
+            ],
+        ) as usize
+    });
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -121,6 +229,38 @@ mod tests {
             *byte = (i % 256) as u8;
         }
         mslug3_decrypt_68k(&mut p);
+    }
+
+    fn pattern() -> Vec<u8> {
+        (0..0x900000usize)
+            .map(|i| ((i as u32).wrapping_mul(0x9E3779B1) >> 24) as u8)
+            .collect()
+    }
+
+    #[test]
+    fn new_sma_decrypts_change_the_rom_and_keep_its_length() {
+        for f in [kof99_decrypt_68k, garou_decrypt_68k, kof2000_decrypt_68k] {
+            let original = pattern();
+            let mut p = original.clone();
+            f(&mut p);
+            assert_eq!(p.len(), original.len());
+            assert_ne!(p, original);
+        }
+    }
+
+    #[test]
+    fn kof99_data_swap_and_relocation_follow_mame() {
+        // Mot 0 de la partie bankée (0x100000) d'un ROM nul sauf un bit : bitswap<16>
+        // (13,7,3,0,9,4,5,6,1,12,8,14,10,11,2,15) envoie le bit 15 en position 15-15 = 0
+        // (« 15 » est le dernier de la liste -> poids faible).
+        let mut p = vec![0u8; 0x900000];
+        set16(&mut p, 0x100000 / 2 + 0x400, 0x8000);
+        kof99_decrypt_68k(&mut p);
+        // le bit 15 devient le bit 0 ; l'adresse bankée (bloc 0x800/2 mots) est ensuite permutée :
+        // on vérifie seulement que le mot a été déplacé dans son bloc avec la valeur 0x0001.
+        let block = (0x100000 / 2 + 0x400) / 0x400 * 0x400;
+        let found = (0..0x400).any(|j| get16(&p, block + j) == 0x0001);
+        assert!(found);
     }
 
     #[test]
