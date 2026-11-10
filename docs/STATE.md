@@ -1,7 +1,7 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P5 Audio YM2610 terminée jusqu'à T506 ; P6 Intégration terminée (T600a à T604, 2026-11-09). Prochaine : T701.
+P7 Protections Metal Slug en cours (T702). Prochaine : T703a.
 
 ### Fait — T700 ng-cart bitswap + déchiffrement ROM C (CMC42 / CMC50)
 - `crates/ng-common/src/bitswap.rs` : fonction générique `bitswap::<N>(v, bits)` (sortie bit k = entrée bit args[N-1-k]).
@@ -15,6 +15,12 @@ P5 Audio YM2610 terminée jusqu'à T506 ; P6 Intégration terminée (T600a à T6
 - Tables M1_ADDRESS_8_15_XOR et M1_ADDRESS_0_7_XOR copiées du C++ (256 octets chacune).
 - 5 tests T701 passent dont 2 oracles CRC MAME réels (sfix_decrypt, cmc50_m1_decrypt) + test de permutation m1_address_scramble sur tout l'espace 0x80000.
 - Piège : la tentative précédente a crashé à l'écriture mais le fichier était déjà complet — vérification par tests avant de réécrire.
+
+### Fait — T702 ng-bus protection runtime Metal Slug X ($2FFFE0-$2FFFEF)
+- `crates/ng-bus/src/prot_mslugx.rs` : port 1:1 de MAME prot_mslugx.cpp l.35-87. Structure `MslugX { command, counter }` implémente `CartPort`.
+- Plage active uniquement $2FFFE0-$2FFFEF (offsets mots 0-7). Écritures : offset 0 → command=0 ; offsets 1/2 → command |= data ; offset 5 → reset. Lectures : command 0x0001 lit bits séquentiels de P-ROM via counter ; command 0x0FFF utilise select depuis wram[0xF00A].
+- 7 tests unitaires passent (séquence d'écriture, lecture bit par bit, commande 0x0FFF, reset, hors plage).
+- Piège : les adresses $2FFFEF et $2FFFEE sont DANS la plage de protection (fin du range) — utiliser $2FFFDF pour tester "hors plage". Offset 5 = adresse $2FFFEA.
 
 ### Fait — T602 ng-core test d'intégration BIOS boot
 - `crates/ng-core/tests/bios_boot.rs` : 5 tests dont le jalon BIOS seul 180 trames (PC ∈ [0xC00000,0xC1FFFF] ∪ RAM, ≥ 2 couleurs).
