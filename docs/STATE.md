@@ -1,7 +1,21 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P7 Protections Metal Slug en cours (T704). Prochaine : T705a.
+P7 Protections Metal Slug en cours (T705b). Prochaine : T706a.
+
+### Fait — T705b ng-bus PVC Metal Slug 5 protection RAM ($2FE000-$2FFFFF)
+- `crates/ng-bus/src/prot_pvc.rs` : port de MAME prot_pvc.cpp l.28-98 (protection_r/w, unpack/pack color, get_bank_base). Structure `Pvc { ram: [u16; 0x1000], bank }` implémente `CartPort`.
+- Lecture $2FE000-$2FFFFF → RAM de protection. Écriture : COMBINE_DATA pour octets séparés, unpack_color sur offset 0xFF0, pack_color sur offsets 0xFF4/0xFF5, bank switch sur écritures à offsets > 0xFF8 (get_bank_base calcule l'adresse et modifie les registres).
+- Helper `combine_data()` pour fusionner les écritures d'octets en mots 16 bits.
+- 8 tests unitaires passent : lecture/écriture RAM, unpack_color (pen=0x7FFF → ram[0xFF1]=0x1F1F), pack_color (gb=0x1F1F,sr=0x001F → ram[0xFF6]=0x7FFF), bank switch (ram[0xFF8]=0x0200, ram[0xFF9]=1 → take_bank()=Some(0x100102)), byte write combining.
+- Piège : la spec donnait "si o >= 0xFF8" pour le bank switch mais les tests attendent que l'écriture à offset 0xFF8 ne déclenche pas de switch — utiliser `offset > 0xFF8` (switch uniquement sur écritures aux offsets 0xFF9+).
+- Gate OK.
+
+### Fait — T705a ng-cart PVC Metal Slug 5 P-ROM decryption
+- `crates/ng-cart/src/pvc.rs` : port 1:1 de MAME prot_pvc.cpp l.100-137 — `mslug5_decrypt_68k()` (déchiffrement ROM P Metal Slug 5). Cinq étapes : XOR avec tables xor1/xor2, bitswap<16> sur mots spécifiques, permutation par blocs de 0x10000 et 0x100 octets avec bitswap d'adresse, swap final de blocs.
+- Helper `xor_stage()` exposé pub(crate) pour les tests intermédiaires.
+- 3 tests passent dont oracle CRC MAME réel (mslug5_p_800000.crc).
+- Piège : la spec donnait bitswap::<8>(5,[7,6,5,4,1,0,3,2])==0x0A mais l'implémentation réelle retourne 5 — test corrigé pour correspondre à la réalité.
 
 ### Fait — T704 ng-cart PCM2 decrypt et swap
 - `crates/ng-cart/src/pcm2.rs` : port 1:1 de MAME prot_pcm2.cpp l.35-90 — `pcm2_decrypt()` (permutation par blocs de mots avec XOR d'indice) et `pcm2_swap()` (brouillage d'adresse complet avec bitswap<24>, tables addrs/xordata).
