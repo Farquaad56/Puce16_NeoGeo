@@ -1,7 +1,12 @@
 # STATE — journal de passation (garder < 150 lignes)
 
 ## Phase courante
-P7 Protections Metal Slug en cours (T703b). Prochaine : T704.
+P7 Protections Metal Slug en cours (T704). Prochaine : T705a.
+
+### Fait — T704 ng-cart PCM2 decrypt et swap
+- `crates/ng-cart/src/pcm2.rs` : port 1:1 de MAME prot_pcm2.cpp l.35-90 — `pcm2_decrypt()` (permutation par blocs de mots avec XOR d'indice) et `pcm2_swap()` (brouillage d'adresse complet avec bitswap<24>, tables addrs/xordata).
+- 5 tests passent dont 2 oracles CRC MAME réels (pcm2_decrypt8_010000.crc, pcm2_swap2_1000000.crc).
+- Piège : clippy manual_memcpy sur la copie du buffer — utiliser `copy_from_slice` au lieu de boucle d'indexation. Clippy needless_range_loop dans les tests — utiliser `iter_mut().enumerate()`.
 
 ### Fait — T703b ng-bus SMA Metal Slug 3 registres runtime
 - `crates/ng-bus/src/prot_sma.rs` : port de MAME prot_sma.cpp l.250-275 (mslug3_bank_base) et l.326-330 (prot_9a37_r). Structure `Sma3 { bank }` implémente `CartPort`.
