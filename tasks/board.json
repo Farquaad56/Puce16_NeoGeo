@@ -778,5 +778,204 @@
     "file": "tasks/T805c.md",
     "assignee": "rust-dev",
     "status": "todo"
+  },
+  {
+    "id": "T1001",
+    "title": "T1001 ng-cart : romsets MAME extraits et défs générées pour les jeux sans protection",
+    "phase": "P10 Catalogue de jeux",
+    "deps": [
+      "T903"
+    ],
+    "file": "tasks/T1001.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T1002",
+    "title": "T1002 ng-core : ADPCM-B sur sa propre ROM (région VB) avec repli sur la ROM ADPCM-A",
+    "phase": "P10 Catalogue de jeux",
+    "deps": [
+      "T1001"
+    ],
+    "file": "tasks/T1002.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T1003",
+    "title": "T1003 ng-cart : contrôle d'intégrité de tout le catalogue (zips locaux, CRC)",
+    "phase": "P10 Catalogue de jeux",
+    "deps": [
+      "T1001"
+    ],
+    "file": "tasks/T1003.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T1004",
+    "title": "T1004 ng-core : banc de démarrage de tous les jeux + goldens MAME par lot",
+    "phase": "P10 Catalogue de jeux",
+    "deps": [
+      "T1002",
+      "T1003"
+    ],
+    "file": "tasks/T1004.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T1005",
+    "title": "T1005 ng-cart : jeux à puce CMC42 (zupapa ganryu s1945p preisle2 bangbead nitd sengoku3)",
+    "phase": "P10 Catalogue de jeux",
+    "deps": [
+      "T1004"
+    ],
+    "file": "tasks/T1005.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T1006",
+    "title": "T1006 ng-cart : jeux à puce CMC50 (kof2001, jockeygp sans sa RAM)",
+    "phase": "P10 Catalogue de jeux",
+    "deps": [
+      "T1005"
+    ],
+    "file": "tasks/T1006.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T1007",
+    "title": "T1007 ng-cart + ng-bus : puce SMA (kof99, garou, kof2000)",
+    "phase": "P10 Catalogue de jeux",
+    "deps": [
+      "T1006"
+    ],
+    "file": "tasks/T1007.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T1008",
+    "title": "T1008 ng-cart : jeux PCM2 (rotd, pnyaa)",
+    "phase": "P10 Catalogue de jeux",
+    "deps": [
+      "T1007"
+    ],
+    "file": "tasks/T1008.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T1009",
+    "title": "T1009 ng-cart : jeux « kof2002 » (kof2002, samsho5, samsh5sp)",
+    "phase": "P10 Catalogue de jeux",
+    "deps": [
+      "T1008"
+    ],
+    "file": "tasks/T1009.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T1010",
+    "title": "T1010 ng-cart : jeux PVC (kof2003, svc)",
+    "phase": "P10 Catalogue de jeux",
+    "deps": [
+      "T1009"
+    ],
+    "file": "tasks/T1010.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T1011",
+    "title": "T1011 ng-cart + ng-bus : kof98 (déchiffrement précoce + recouvrement de ROM)",
+    "phase": "P10 Catalogue de jeux",
+    "deps": [
+      "T1010"
+    ],
+    "file": "tasks/T1011.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T1012",
+    "title": "T1012 ng-bus : Fatal Fury 2 et Super Sidekicks (puce de protection PRO-CT0)",
+    "phase": "P10 Catalogue de jeux",
+    "deps": [
+      "T1011"
+    ],
+    "file": "tasks/T1012.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T1013",
+    "title": "T1013 ng-cart + ng-bus : Super Bubble Pop (sbp)",
+    "phase": "P10 Catalogue de jeux",
+    "deps": [
+      "T1012"
+    ],
+    "file": "tasks/T1013.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T1014",
+    "title": "T1014 ng-core + ng-bus : RAM de cartouche 8 Kio persistante (vliner, jockeygp) et entrées spéciales",
+    "phase": "P10 Catalogue de jeux",
+    "deps": [
+      "T1013"
+    ],
+    "file": "tasks/T1014.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T1015",
+    "title": "T1015 ng-bus + ng-gui : panneau mahjong (bakatono, janshin, minasan)",
+    "phase": "P10 Catalogue de jeux",
+    "deps": [
+      "T1014"
+    ],
+    "file": "tasks/T1015.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T1016",
+    "title": "T1016 ng-bus + ng-gui : trackball et molette (irrmaze, popbounc)",
+    "phase": "P10 Catalogue de jeux",
+    "deps": [
+      "T1015"
+    ],
+    "file": "tasks/T1016.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T1017",
+    "title": "T1017 ng-cart : jeux hors neogeo.cpp (homebrews et jeux récents) d'après `mame -listxml`",
+    "phase": "P10 Catalogue de jeux",
+    "deps": [
+      "T1016"
+    ],
+    "file": "tasks/T1017.md",
+    "assignee": "rust-dev",
+    "status": "todo"
+  },
+  {
+    "id": "T1018",
+    "title": "T1018 Bilan du catalogue : comparaison MAME sur un échantillon, docs/CATALOGUE.md, README",
+    "phase": "P10 Catalogue de jeux",
+    "deps": [
+      "T1017"
+    ],
+    "file": "tasks/T1018.md",
+    "assignee": "rust-dev",
+    "status": "todo"
   }
 ]
