@@ -18,6 +18,7 @@ struct Tables {
 }
 
 /// Elementary decrypt operation (MAME lines 474-498).
+#[allow(clippy::too_many_arguments)]
 fn decrypt(
     r0: &mut u8,
     r1: &mut u8,
