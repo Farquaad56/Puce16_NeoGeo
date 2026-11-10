@@ -7,6 +7,7 @@ use ng_cart::{Config, Model};
 use crate::bios_menu::{bios_label, BiosEntry};
 
 pub use crate::prefs::ScaleMode as Scale;
+use crate::prefs::{Aspect, DisplayPrefs};
 
 /// Action demandée par l'utilisateur via le menu.
 #[derive(Debug, PartialEq)]
@@ -21,6 +22,9 @@ pub enum MenuAction {
     SetBios(String),
     SetModel(Model),
     Controls,
+    Fullscreen(bool),
+    Aspect(Aspect),
+    Smooth(bool),
 }
 
 /// Jeux connus et présence de leur zip dans `roms_dir`, dans l'ordre de `ALL_CARTS`.
@@ -45,7 +49,9 @@ pub fn shot_name(game: &str, frame: u64) -> String {
 pub struct MenuState<'a> {
     pub cfg: &'a Config,
     pub paused: bool,
-    pub scale: Scale,
+    pub display: &'a DisplayPrefs,
+    /// Échelle effective, ex. « x3 (960x672) ».
+    pub scale_info: &'a str,
     pub bios: &'a [BiosEntry],
 }
 
@@ -121,18 +127,46 @@ pub fn show(ui: &mut egui::Ui, st: &MenuState) -> Option<MenuAction> {
             });
         });
         ui.menu_button("Vidéo", |ui| {
-            for (label, s) in [
-                ("Auto", Scale::Auto),
-                ("1x", Scale::Fixed(1)),
-                ("2x", Scale::Fixed(2)),
-                ("3x", Scale::Fixed(3)),
-                ("4x", Scale::Fixed(4)),
-            ] {
-                if ui.radio(st.scale == s, label).clicked() {
-                    action = Some(MenuAction::Scale(s));
+            let d = st.display;
+            ui.menu_button("Échelle", |ui| {
+                if ui
+                    .radio(d.scale == Scale::Auto, "Auto (plus grand entier)")
+                    .clicked()
+                {
+                    action = Some(MenuAction::Scale(Scale::Auto));
                     ui.close();
                 }
+                for n in 1..=8 {
+                    let s = Scale::Fixed(n);
+                    if ui.radio(d.scale == s, format!("x{n}")).clicked() {
+                        action = Some(MenuAction::Scale(s));
+                        ui.close();
+                    }
+                }
+            });
+            let mut fs = d.fullscreen;
+            if ui.checkbox(&mut fs, "Plein écran (F11)").changed() {
+                action = Some(MenuAction::Fullscreen(fs));
+                ui.close();
             }
+            ui.menu_button("Ratio", |ui| {
+                for (label, a) in [
+                    ("Pixels carrés (pixel perfect)", Aspect::Square),
+                    ("4:3 (non pixel perfect)", Aspect::Tv4x3),
+                ] {
+                    if ui.radio(d.aspect == a, label).clicked() {
+                        action = Some(MenuAction::Aspect(a));
+                        ui.close();
+                    }
+                }
+            });
+            let mut smooth = d.smooth;
+            if ui.checkbox(&mut smooth, "Lissage").changed() {
+                action = Some(MenuAction::Smooth(smooth));
+                ui.close();
+            }
+            ui.separator();
+            ui.weak(st.scale_info);
         });
         if ui.button("Débogueur").clicked() {
             action = Some(MenuAction::Debugger);

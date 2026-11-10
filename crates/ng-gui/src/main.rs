@@ -3,6 +3,7 @@ mod audio;
 mod bios_menu;
 mod controls_menu;
 mod debugger;
+mod display;
 mod emu_thread;
 mod input;
 mod menu;

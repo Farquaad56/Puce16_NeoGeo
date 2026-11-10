@@ -1,6 +1,6 @@
 //! Interface egui : affiche la dernière trame reçue du thread d'émulation.
 
-use eframe::egui;
+use eframe::egui::{self, Key};
 
 use std::path::PathBuf;
 
@@ -9,14 +9,22 @@ use ng_cart::Config;
 use crate::bios_menu::{self, BiosEntry};
 use crate::controls_menu::ControlsWindow;
 use crate::debugger::Debugger;
+use crate::display::{self, DisplayRect};
 use crate::emu_thread::{self, Cmd, EmuHandle, FrameMsg};
 use crate::input::{Bindings, InputState};
-use crate::menu::{self, MenuAction, MenuState, Scale};
+use crate::menu::{self, MenuAction, MenuState};
 use crate::prefs::{self, Prefs};
 use crate::settings::ConfigForm;
 
-pub const FB_W: usize = 320;
-pub const FB_H: usize = 224;
+pub const FB_W: usize = display::FB_W as usize;
+pub const FB_H: usize = display::FB_H as usize;
+
+/// En plein écran, la barre de menus apparaît quand la souris est à moins de 8 points du bord
+/// haut et reste tant qu'elle est sur la barre.
+const MENU_REVEAL: f32 = 8.0;
+const MENU_KEEP: f32 = 32.0;
+/// Délai d'inactivité (s) avant de masquer le curseur en plein écran.
+const CURSOR_HIDE_AFTER: f32 = 2.0;
 
 /// Convertit un framebuffer 0x00RRGGBB en image egui.
 pub fn to_color_image(pixels: &[u32]) -> egui::ColorImage {
@@ -29,12 +37,6 @@ pub fn to_color_image(pixels: &[u32]) -> egui::ColorImage {
         source_size: egui::vec2(FB_W as f32, FB_H as f32),
         pixels: rgba,
     }
-}
-
-/// Échelle entière maximale (au moins 1) tenant dans la zone.
-pub fn integer_scale(avail_w: f32, avail_h: f32) -> u32 {
-    let s = (avail_w / FB_W as f32).min(avail_h / FB_H as f32).floor();
-    (s as u32).max(1)
 }
 
 /// Message affiché quand le BIOS configuré n'est pas utilisable.
@@ -50,6 +52,11 @@ pub fn missing_bios_message(cfg: &Config, bios: &[BiosEntry]) -> Option<String> 
             cfg.bios_dir.display()
         )),
     }
+}
+
+/// La barre de menus est-elle visible en plein écran ? `y` = ordonnée de la souris.
+pub fn menu_revealed(was_shown: bool, y: Option<f32>, popup_open: bool) -> bool {
+    popup_open || y.is_some_and(|y| y < if was_shown { MENU_KEEP } else { MENU_REVEAL })
 }
 
 pub struct App {
@@ -71,6 +78,11 @@ pub struct App {
     input: InputState,
     controls: ControlsWindow,
     debugger: Debugger,
+    /// Dernier état plein écran demandé à la fenêtre.
+    fullscreen_applied: Option<bool>,
+    menu_shown: bool,
+    /// Placement de l'image à la dernière trame dessinée.
+    shown: Option<DisplayRect>,
 }
 
 impl App {
@@ -107,6 +119,9 @@ impl App {
             input: InputState::with_bindings(bindings),
             controls: ControlsWindow::default(),
             debugger,
+            fullscreen_applied: None,
+            menu_shown: false,
+            shown: None,
         }
     }
 
@@ -142,10 +157,20 @@ impl App {
         }
     }
 
+    fn texture_options(&self) -> egui::TextureOptions {
+        if self.prefs.display.smooth {
+            egui::TextureOptions::LINEAR
+        } else {
+            egui::TextureOptions::NEAREST
+        }
+    }
+
     fn poll(&mut self, ctx: &egui::Context) {
         let Some(emu) = &self.emu else { return };
+        let mut fresh = false;
         while let Ok(f) = emu.rx.try_recv() {
             self.last = Some(f);
+            fresh = true;
         }
         while let Ok(e) = emu.err_rx.try_recv() {
             self.error = Some(e);
@@ -153,13 +178,16 @@ impl App {
         while let Ok(s) = emu.dbg_rx.try_recv() {
             self.debugger.snap = Some(s);
         }
-        if let Some(f) = &self.last {
+        let opts = self.texture_options();
+        if let Some(f) = self
+            .last
+            .as_ref()
+            .filter(|_| fresh || self.texture.is_none())
+        {
             let img = to_color_image(&f.pixels);
             match &mut self.texture {
-                Some(t) => t.set(img, egui::TextureOptions::NEAREST),
-                None => {
-                    self.texture = Some(ctx.load_texture("fb", img, egui::TextureOptions::NEAREST))
-                }
+                Some(t) => t.set(img, opts),
+                None => self.texture = Some(ctx.load_texture("fb", img, opts)),
             }
         }
     }
@@ -180,91 +208,92 @@ impl App {
         }
     }
 
+    fn set_paused(&mut self, p: bool) {
+        self.paused = p;
+        self.send(Cmd::Pause(p));
+    }
+
+    fn toggle_debugger(&mut self) {
+        self.debugger.open = !self.debugger.open;
+        self.send(Cmd::Debug(self.debugger.open));
+    }
+
     fn handle(&mut self, ctx: &egui::Context, action: MenuAction) {
         match action {
             MenuAction::Load(g) => self.load_game(&g),
             MenuAction::Quit => ctx.send_viewport_cmd(egui::ViewportCommand::Close),
-            MenuAction::Pause(p) => {
-                self.paused = p;
-                self.send(Cmd::Pause(p));
-            }
+            MenuAction::Pause(p) => self.set_paused(p),
             MenuAction::Reset => self.send(Cmd::Reset),
             MenuAction::Scale(s) => self.prefs.display.scale = s,
+            MenuAction::Fullscreen(f) => self.prefs.display.fullscreen = f,
+            MenuAction::Aspect(a) => self.prefs.display.aspect = a,
+            MenuAction::Smooth(s) => {
+                self.prefs.display.smooth = s;
+                // la texture reprend ses options au prochain rafraîchissement
+                self.texture = None;
+            }
             MenuAction::Screenshot => self.screenshot(),
             MenuAction::SetBios(file) => self.change_system(|c| c.bios = file),
             MenuAction::SetModel(m) => self.change_system(|c| c.model = m),
             MenuAction::Controls => self.controls.open = true,
-            MenuAction::Debugger => {
-                self.debugger.open = !self.debugger.open;
-                self.send(Cmd::Debug(self.debugger.open));
+            MenuAction::Debugger => self.toggle_debugger(),
+        }
+    }
+
+    /// Raccourcis de l'interface (inactifs pendant une capture de touche).
+    fn shortcuts(&mut self, ctx: &egui::Context) {
+        if self.controls.capturing() {
+            return;
+        }
+        let pressed = |k: Key| ctx.input(|i| i.key_pressed(k));
+        if pressed(Key::F11) {
+            self.prefs.display.fullscreen = !self.prefs.display.fullscreen;
+        }
+        if pressed(Key::Escape) && self.prefs.display.fullscreen {
+            self.prefs.display.fullscreen = false;
+        }
+    }
+
+    /// Applique le plein écran à la fenêtre quand le réglage change (et au démarrage).
+    fn apply_fullscreen(&mut self, ctx: &egui::Context) {
+        let want = self.prefs.display.fullscreen;
+        if self.fullscreen_applied != Some(want) {
+            // au démarrage, ne rien envoyer si la fenêtre doit rester fenêtrée
+            if want || self.fullscreen_applied.is_some() {
+                ctx.send_viewport_cmd(egui::ViewportCommand::Fullscreen(want));
+            }
+            self.fullscreen_applied = Some(want);
+        }
+        if want {
+            let idle = ctx.input(|i| i.pointer.time_since_last_movement());
+            if idle > CURSOR_HIDE_AFTER && !self.menu_shown {
+                ctx.set_cursor_icon(egui::CursorIcon::None);
             }
         }
     }
 
-    pub fn show(&mut self, ctx: &egui::Context, ui: &mut egui::Ui) {
-        let Some(cfg) = self.cfg.clone() else {
-            if let Some(cfg) = self.form.ui(ui, &self.cfg_path) {
-                self.emu = Some(emu_thread::spawn(cfg.clone()));
-                self.bios = bios_menu::available_bios(&cfg);
-                self.error = missing_bios_message(&cfg, &self.bios);
-                if self.debugger.open {
-                    self.send(Cmd::Debug(true));
-                }
-                self.cfg = Some(cfg);
-            }
+    /// Dessine la trame dans la zone centrale : fond noir, facteur entier, pixels nets.
+    fn draw_frame(&mut self, ui: &mut egui::Ui) {
+        let avail = ui.max_rect();
+        let Some(t) = &self.texture else {
+            self.shown = None;
+            ui.centered_and_justified(|ui| {
+                ui.label("Fichier > Ouvrir pour lancer un jeu");
+            });
             return;
         };
-        self.poll(ctx);
-        self.input.update_keys(ctx);
-        self.input.poll_gamepads();
-        if self.controls.show(ctx, &mut self.input) {
-            self.prefs.input = self.input.bindings.to_prefs();
-        }
-        // pendant une capture de touche, rien n'est envoyé au jeu
-        if !self.controls.capturing() {
-            let (p1, p2) = self.input.pads();
-            self.send(Cmd::Inputs {
-                p1,
-                p2,
-                sys: self.input.system(),
-            });
-        }
-        let action = menu::show(
-            ui,
-            &MenuState {
-                cfg: &cfg,
-                paused: self.paused,
-                scale: self.prefs.display.scale,
-                bios: &self.bios,
-            },
-        );
-        if let Some(a) = action {
-            self.handle(ctx, a);
-        }
-        if let Some(f) = &self.last {
-            ui.label(format!("{:.1} fps", f.fps));
-        }
-        if let Some(e) = &self.error {
-            ui.colored_label(egui::Color32::RED, e);
-        }
-        if let Some(t) = &self.texture {
-            let avail = ui.available_size();
-            let s = match self.prefs.display.scale {
-                Scale::Auto => integer_scale(avail.x, avail.y),
-                Scale::Fixed(n) => n,
-            } as f32;
-            ui.centered_and_justified(|ui| {
-                ui.image((t.id(), egui::vec2(FB_W as f32 * s, FB_H as f32 * s)));
-            });
-        } else {
-            ui.label("Fichier > Ouvrir pour lancer un jeu");
-        }
-        if self.debugger.open {
-            self.debugger.show(ctx);
-        }
-        self.prefs.debug.open = self.debugger.open;
-        self.save_prefs_if_changed();
-        ctx.request_repaint();
+        let d = &self.prefs.display;
+        let l = display::layout(avail, ui.pixels_per_point(), d.scale, d.aspect);
+        let uv = egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0));
+        ui.painter_at(avail)
+            .image(t.id(), l.rect, uv, egui::Color32::WHITE);
+        self.shown = Some(l);
+    }
+
+    fn scale_info(&self) -> String {
+        self.shown
+            .as_ref()
+            .map_or_else(|| "–".to_string(), display::scale_label)
     }
 
     /// Sauvegarde `gui.toml` quand les préférences ont changé depuis la dernière écriture.
@@ -284,7 +313,92 @@ impl App {
 impl eframe::App for App {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let ctx = ui.ctx().clone();
-        egui::CentralPanel::default().show(ui, |ui| self.show(&ctx, ui));
+        let Some(cfg) = self.cfg.clone() else {
+            egui::CentralPanel::default().show(ui, |ui| {
+                if let Some(cfg) = self.form.ui(ui, &self.cfg_path) {
+                    self.emu = Some(emu_thread::spawn(cfg.clone()));
+                    self.bios = bios_menu::available_bios(&cfg);
+                    self.error = missing_bios_message(&cfg, &self.bios);
+                    if self.debugger.open {
+                        self.send(Cmd::Debug(true));
+                    }
+                    self.cfg = Some(cfg);
+                }
+            });
+            return;
+        };
+        self.poll(&ctx);
+        self.shortcuts(&ctx);
+        self.apply_fullscreen(&ctx);
+
+        self.input.update_keys(&ctx);
+        self.input.poll_gamepads();
+        if self.controls.show(&ctx, &mut self.input) {
+            self.prefs.input = self.input.bindings.to_prefs();
+        }
+        // pendant une capture de touche, rien n'est envoyé au jeu
+        if !self.controls.capturing() {
+            let (p1, p2) = self.input.pads();
+            self.send(Cmd::Inputs {
+                p1,
+                p2,
+                sys: self.input.system(),
+            });
+        }
+
+        let fullscreen = self.prefs.display.fullscreen;
+        self.menu_shown = !fullscreen
+            || menu_revealed(
+                self.menu_shown,
+                ctx.input(|i| i.pointer.latest_pos()).map(|p| p.y),
+                egui::Popup::is_any_open(&ctx),
+            );
+        if self.menu_shown {
+            let scale_info = self.scale_info();
+            let action = egui::Panel::top("menu")
+                .show(ui, |ui| {
+                    menu::show(
+                        ui,
+                        &MenuState {
+                            cfg: &cfg,
+                            paused: self.paused,
+                            display: &self.prefs.display,
+                            scale_info: &scale_info,
+                            bios: &self.bios,
+                        },
+                    )
+                })
+                .inner;
+            if let Some(a) = action {
+                self.handle(&ctx, a);
+            }
+        }
+        if let Some(e) = self.error.clone() {
+            egui::Panel::top("error").show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    if ui.small_button("×").on_hover_text("Fermer").clicked() {
+                        self.error = None;
+                    }
+                    ui.colored_label(egui::Color32::LIGHT_RED, e);
+                });
+            });
+        }
+        if !fullscreen {
+            egui::Panel::bottom("status").show(ui, |ui| {
+                let fps = self.last.as_ref().map_or(0.0, |f| f.fps);
+                ui.monospace(format!("{fps:.1} fps · {}", self.scale_info()));
+            });
+        }
+        egui::CentralPanel::default()
+            .frame(egui::Frame::NONE.fill(egui::Color32::BLACK))
+            .show(ui, |ui| self.draw_frame(ui));
+
+        if self.debugger.open {
+            self.debugger.show(&ctx);
+        }
+        self.prefs.debug.open = self.debugger.open;
+        self.save_prefs_if_changed();
+        ctx.request_repaint();
     }
 }
 
@@ -308,8 +422,13 @@ mod tests {
     }
 
     #[test]
-    fn scale_is_integer() {
-        assert_eq!(integer_scale(1000.0, 700.0), 3);
-        assert_eq!(integer_scale(300.0, 200.0), 1);
+    fn fullscreen_menu_reveal() {
+        assert!(!menu_revealed(false, Some(100.0), false));
+        assert!(menu_revealed(false, Some(3.0), false));
+        // une fois visible, elle reste tant que la souris est sur la barre ou qu'un menu est ouvert
+        assert!(menu_revealed(true, Some(20.0), false));
+        assert!(!menu_revealed(true, Some(40.0), false));
+        assert!(menu_revealed(false, Some(400.0), true));
+        assert!(!menu_revealed(true, None, false));
     }
 }

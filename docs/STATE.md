@@ -475,3 +475,8 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 ## T804c - Configuration des touches
 - `input.rs` : `Action` (24 actions, `TABLE` = nom, libellé, cible, défauts), `Bindings` (clavier + manette, `set_key`/`set_button` avec échange, `reset`, `from_prefs`/`to_prefs`), `InputState::with_bindings`. `controls_menu.rs` : fenêtre Contrôles (Émulation > Contrôles…), capture par clic, Échap annule, défauts par joueur ou globaux. Sauvegarde dans `gui.toml` ([input.keys], [input.pad]).
 - Détails : `none` = action sans touche ; Maj reste Select J1 tant qu'aucune touche ne lui est assignée ; l'échange de boutons ne concerne que la même manette ; pendant une capture les entrées ne sont pas envoyées au jeu. Échap ne peut pas être assignée.
+
+## T805a - Affichage pixel perfect et plein écran
+- `display.rs` : `layout()` calcule en pixels physiques (facteur entier >= 1, coin sur un pixel entier, HiDPI pris en compte) ; image peinte directement (`painter.image`) sur fond noir, sans marge, NEAREST (LINEAR si Lissage). Menu Vidéo : Échelle (Auto, x1-x8), Plein écran, Ratio, Lissage ; tout est dans `gui.toml`.
+- Plein écran : F11 (bascule), Échap (sortie), restauré au démarrage ; barre de menus masquée, révélée quand la souris touche le bord haut ; curseur masqué après 2 s ; barre d'état masquée.
+- Écart : le ratio 4:3 est 320x240 par facteur (960x720 à x3), pas « 960x672 » comme écrit par erreur dans la carte ; il étire les lignes, donc n'est pas pixel perfect.
