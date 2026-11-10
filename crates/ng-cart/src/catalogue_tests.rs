@@ -12,7 +12,7 @@ const ADPCM_B: [&str; 13] = [
 
 #[test]
 fn catalogue_has_expected_size_and_unique_names() {
-    assert_eq!(ALL_CARTS.len(), 151);
+    assert_eq!(ALL_CARTS.len(), 153);
     let names: HashSet<_> = ALL_CARTS.iter().map(|d| d.name).collect();
     assert_eq!(names.len(), ALL_CARTS.len());
 }
@@ -372,6 +372,55 @@ mod k2k2_tests {
             assert_eq!(c.p.len(), s.p as usize, "{name}");
             assert_ne!(c.p, before, "{name}");
             assert_eq!(c.v.len(), s.v as usize, "{name}");
+        }
+    }
+}
+
+// ---- T1010 : puce PVC (kof2003, svc) ----
+#[cfg(test)]
+mod pvc_game_tests {
+    use crate::romset::{find_def, Cart};
+    use crate::types::{Cmc, FixBank, PDecrypt, Pcm2, RuntimeProt};
+
+    #[test]
+    fn pvc_protection_tables() {
+        for (name, pd, key, swap) in [
+            ("kof2003", PDecrypt::Kof2003, 0x9Du8, 5u8),
+            ("svc", PDecrypt::Svc, 0x57, 3),
+        ] {
+            let p = find_def(name).expect(name).prot;
+            assert_eq!(p.p_decrypt, pd, "{name}");
+            assert_eq!((p.cmc, p.gfx_key), (Cmc::C50, key), "{name}");
+            assert_eq!(p.pcm2, Pcm2::Swap(swap), "{name}");
+            assert_eq!(p.runtime, RuntimeProt::Pvc, "{name}");
+            assert_eq!(p.fix_bank, FixBank::Kof2000, "{name}");
+            assert!(p.m1_decrypt && p.sfix_decrypt, "{name}");
+        }
+        assert_eq!(find_def("kof2003").unwrap().sizes.p, 0x900000);
+        assert_eq!(find_def("svc").unwrap().sizes.p, 0x800000);
+    }
+
+    #[test]
+    fn pvc_decrypt_chain_runs() {
+        for name in ["kof2003", "svc"] {
+            let def = find_def(name).expect(name);
+            let s = def.sizes;
+            let mut c = Cart {
+                def,
+                p: (0..s.p as usize)
+                    .map(|i| (i >> 8) as u8 ^ i as u8)
+                    .collect(),
+                s: vec![0; s.s as usize],
+                m: vec![0; s.m as usize],
+                m_crypt: vec![0; s.m_crypt as usize],
+                v: vec![0; s.v as usize],
+                vb: Vec::new(),
+                c: vec![0; s.c as usize],
+            };
+            let before = c.p.clone();
+            c.decrypt_all();
+            assert_eq!(c.p.len(), s.p as usize, "{name}");
+            assert_ne!(c.p, before, "{name}");
         }
     }
 }

@@ -548,3 +548,9 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 - Tests : blocs déplacés selon la table (valeurs par bloc), permutation complète, tables de protection, chaîne `decrypt_all`.
 - Banc réel (sp-s2, trames 120 et 600) : kof2002, samsho5, samsh5sp à 0,00 % de différence avec MAME.
 - Suite : T1010 (PVC : kof2003, svc).
+
+## T1010 - Puce PVC (kof2003, svc)
+- `ng-cart/src/pvc.rs` : `svc_px_decrypt` (P 0x800000) et `kof2003_decrypt_68k` (P 0x900000), ports exacts de prot_pvc.cpp (correspondance `rom[k]` MAME <-> `p[k ^ 1]`, comme `mslug5_decrypt_68k`). `PDecrypt` gagne Kof2003/Svc ; dispatch dans `install.rs`. `PROT_PVC_KOF2003` (0x9D, `swap(V,5)`) et `PROT_PVC_SVC` (0x57, `swap(V,3)`), `runtime == Pvc`, banc Kof2000. `make_port` couvre déjà `Pvc`. `ALL_CARTS` = 153.
+- Tests : tables, taille P (kof2003 0x900000, svc 0x800000), chaîne `decrypt_all`, octets connus d'une ROM nulle après svc (xor1), `make_port` pour les deux.
+- Banc réel (sp-s2, trames 120 et 600) : kof2003 et svc à 0,00 % de différence avec MAME (le port PVC runtime est donc correct pour ces deux jeux).
+- Suite : T1011 (kof98).

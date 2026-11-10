@@ -128,6 +128,9 @@ mod tests {
         for g in ["kof99", "garou", "kof2000"] {
             assert!(make_port(&cart_named(g)).is_some(), "{g}");
         }
+        for g in ["kof2003", "svc"] {
+            assert!(make_port(&cart_named(g)).is_some(), "{g}");
+        }
         assert!(make_port(&cart_named("kof94")).is_none());
     }
 

@@ -5,7 +5,7 @@
 use crate::cmc::{cmc42_gfx_decrypt, cmc50_gfx_decrypt, cmc50_m1_decrypt, sfix_decrypt};
 use crate::kof2k2::{kof2002_decrypt_68k, samsh5sp_decrypt_68k, samsho5_decrypt_68k};
 use crate::pcm2::{pcm2_decrypt, pcm2_swap};
-use crate::pvc::mslug5_decrypt_68k;
+use crate::pvc::{kof2003_decrypt_68k, mslug5_decrypt_68k, svc_px_decrypt};
 use crate::romset::Cart;
 use crate::sma::{garou_decrypt_68k, kof2000_decrypt_68k, kof99_decrypt_68k, mslug3_decrypt_68k};
 use crate::types::{Cmc, PDecrypt, Pcm2};
@@ -26,6 +26,8 @@ impl Cart {
             PDecrypt::Kof2002 => kof2002_decrypt_68k(&mut self.p),
             PDecrypt::Samsho5 => samsho5_decrypt_68k(&mut self.p),
             PDecrypt::Samsh5sp => samsh5sp_decrypt_68k(&mut self.p),
+            PDecrypt::Kof2003 => kof2003_decrypt_68k(&mut self.p),
+            PDecrypt::Svc => svc_px_decrypt(&mut self.p),
         }
         if let Pcm2::Swap(v) = prot.pcm2 {
             pcm2_swap(&mut self.v, v as usize);
