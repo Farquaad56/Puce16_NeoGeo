@@ -9,3 +9,4 @@ eframe = "0.37.0"
 ng-cart = { version = "0.1.0", path = "../ng-cart" }
 ng-common = { path = "../ng-common" }
 ng-core = { path = "../ng-core" }
+rfd = "0.18.0"
