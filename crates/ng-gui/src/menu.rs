@@ -4,12 +4,7 @@ use eframe::egui;
 use ng_cart::defs::ALL_CARTS;
 use ng_cart::Config;
 
-/// Mode d'échelle de l'image.
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum Scale {
-    Auto,
-    Fixed(u32),
-}
+pub use crate::prefs::ScaleMode as Scale;
 
 /// Action demandée par l'utilisateur via le menu.
 #[derive(Debug, PartialEq)]

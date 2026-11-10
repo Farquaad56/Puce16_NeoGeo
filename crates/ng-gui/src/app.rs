@@ -10,6 +10,7 @@ use crate::debugger::Debugger;
 use crate::emu_thread::{self, Cmd, EmuHandle, FrameMsg};
 use crate::input::InputState;
 use crate::menu::{self, MenuAction, Scale};
+use crate::prefs::{self, Prefs};
 use crate::settings::ConfigForm;
 
 pub const FB_W: usize = 320;
@@ -43,7 +44,10 @@ pub struct App {
     last: Option<FrameMsg>,
     error: Option<String>,
     paused: bool,
-    scale: Scale,
+    prefs: Prefs,
+    /// Dernières préférences écrites sur disque (évite d'écrire à chaque trame).
+    saved: Prefs,
+    prefs_path: PathBuf,
     game: Option<String>,
     input: InputState,
     debugger: Debugger,
@@ -53,6 +57,13 @@ impl App {
     pub fn new(cfg_path: PathBuf) -> Self {
         let cfg = ng_cart::load_config(&cfg_path).ok();
         let emu = cfg.clone().map(emu_thread::spawn);
+        let prefs_path = prefs::prefs_path(&cfg_path);
+        let prefs = Prefs::load(&prefs_path);
+        let mut debugger = Debugger::default();
+        debugger.open = prefs.debug.open;
+        if let (Some(e), true) = (&emu, debugger.open) {
+            let _ = e.tx.send(Cmd::Debug(true));
+        }
         Self {
             cfg,
             cfg_path,
@@ -62,10 +73,12 @@ impl App {
             last: None,
             error: None,
             paused: false,
-            scale: Scale::Auto,
+            saved: prefs.clone(),
+            prefs,
+            prefs_path,
             game: None,
             input: InputState::new(),
-            debugger: Debugger::default(),
+            debugger,
         }
     }
 
@@ -127,7 +140,7 @@ impl App {
             MenuAction::Quit => ctx.send_viewport_cmd(egui::ViewportCommand::Close),
             MenuAction::Pause(p) => self.send(Cmd::Pause(p)),
             MenuAction::Reset => self.send(Cmd::Reset),
-            MenuAction::Scale(s) => self.scale = s,
+            MenuAction::Scale(s) => self.prefs.display.scale = s,
             MenuAction::Screenshot => self.screenshot(),
             MenuAction::Debugger => {
                 self.debugger.open = !self.debugger.open;
@@ -154,7 +167,7 @@ impl App {
             sys: self.input.system(),
         });
         let mut paused = self.paused;
-        let action = menu::show(ui, &cfg, &mut paused, self.scale);
+        let action = menu::show(ui, &cfg, &mut paused, self.prefs.display.scale);
         self.paused = paused;
         if let Some(a) = action {
             self.handle(ctx, a);
@@ -167,7 +180,7 @@ impl App {
         }
         if let Some(t) = &self.texture {
             let avail = ui.available_size();
-            let s = match self.scale {
+            let s = match self.prefs.display.scale {
                 Scale::Auto => integer_scale(avail.x, avail.y),
                 Scale::Fixed(n) => n,
             } as f32;
@@ -180,7 +193,22 @@ impl App {
         if self.debugger.open {
             self.debugger.show(ctx);
         }
+        self.prefs.debug.open = self.debugger.open;
+        self.save_prefs_if_changed();
         ctx.request_repaint();
+    }
+
+    /// Sauvegarde `gui.toml` quand les préférences ont changé depuis la dernière écriture.
+    fn save_prefs_if_changed(&mut self) {
+        if self.prefs == self.saved {
+            return;
+        }
+        match self.prefs.save(&self.prefs_path) {
+            Ok(()) => {}
+            Err(e) => self.error = Some(format!("préférences non sauvegardées : {e}")),
+        }
+        // même en cas d'échec : ne pas réessayer à chaque trame
+        self.saved = self.prefs.clone();
     }
 }
 
@@ -193,6 +221,7 @@ impl eframe::App for App {
 
 impl Drop for App {
     fn drop(&mut self) {
+        self.save_prefs_if_changed();
         self.send(Cmd::Quit);
     }
 }

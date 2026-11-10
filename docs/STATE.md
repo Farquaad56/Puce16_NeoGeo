@@ -463,3 +463,7 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 - `ng-bus::memcard::MemCard` (2 Kio, octets impairs, `present`/`protected`, load/save) remplace `MemCardStub` ; `Io::card_present` pilote les bits 12-14 de $380000 (0x7000 absente, 0 présente) ; `Machine::memcard` partagée avec le bus ; `load_memcard`/`save_memcard`.
 - Persistance : `saves_dir/<profil>.memcard` (profil = nom du BIOS de neogeo.toml, caractères non alphanumériques -> `_`), 2048 octets. La carte est présente si ce fichier existe au `load_machine` ; `insert_memcard(cfg)` crée une carte vierge ; `save_machine` la réécrit.
 - Écarts : pas de verrous `REG_CRDLOCK` ni du bit de protection en lecture de $380000 (seulement `protected` côté carte) ; la carte n'est pas dans les savestates ; pas de menu GUI pour insérer la carte ; test de boot AES non ajouté (BIOS AES non disponible ici).
+
+## T804a - Préférences persistantes
+- `ng-gui/src/prefs.rs` : `Prefs { display, input, debug }` dans `gui.toml` (même dossier que `neogeo.toml`), `to_toml`/`from_toml` (lignes invalides ignorées), `load` (absent = défauts), `save` atomique (`write_atomic` : `.tmp` + renommage). `App` sauvegarde quand les préférences changent et à la fermeture. L'échelle et l'ouverture du débogueur sont déjà restaurées.
+- Ajout par rapport à la carte : `DebugPrefs::region` (région de l'onglet Mémoire, T805b).

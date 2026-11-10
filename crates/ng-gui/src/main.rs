@@ -4,6 +4,7 @@ mod debugger;
 mod emu_thread;
 mod input;
 mod menu;
+mod prefs;
 mod settings;
 mod video_debug;
 
