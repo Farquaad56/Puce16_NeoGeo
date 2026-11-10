@@ -9,7 +9,7 @@ use std::rc::Rc;
 
 use ng_bus::backup::BackupRam;
 use ng_bus::rtc::Upd4990a;
-use ng_bus::{Bus68k, Io, SoundBoard, SystemLatch, Watchdog, Ym};
+use ng_bus::{Bus68k, Io, SoundBoard, SystemLatch, Watchdog};
 use ng_cart::types::FixBank;
 use ng_cart::{Bios, Cart};
 use ng_common::Framebuffer;
@@ -44,6 +44,7 @@ pub struct Host68k<'a> {
     pub synced: &'a mut u64,
     pub reset_request: &'a mut bool,
     pub stats: &'a mut Stats,
+    pub lazy: bool,
     /// Override pour les tests : si Some(f), wait_clocks appelle f(addr) au lieu de bus_wait.
     #[cfg(test)]
     pub wait_override: Option<Box<dyn Fn(u32) -> u8>>,
@@ -72,6 +73,7 @@ impl Machine {
                 synced: &mut self.synced,
                 reset_request: &mut self.reset_request,
                 stats: &mut self.stats,
+                lazy: self.lazy_catch_up,
                 #[cfg(test)]
                 wait_override: None,
             },
@@ -110,13 +112,26 @@ impl Host68k<'_> {
         }
     }
 
+    /// Un accès à `addr` doit-il rattraper les périphériques ? Non pour la ROM P, la RAM de travail
+    /// et le BIOS (aucun périphérique n'y est observable), tant que le watchdog n'expire pas.
+    fn needs_sync(&self, addr: u32) -> bool {
+        if !self.lazy {
+            return true;
+        }
+        match (addr & 0xFF_FFFF) >> 20 {
+            0x0 | 0x1 | 0xC => *self.now - *self.synced >= self.wd.headroom(),
+            _ => true,
+        }
+    }
+
     /// Rattrape LSPC, Z80, YM2610, RTC et watchdog jusqu'à `now`.
     pub fn catch_up(&mut self) {
         self.stats.catch_ups += 1;
         let now = *self.now;
         self.lspc_advance();
+        // Le YM n'est plus avancé ici : `SoundBoard::tick` l'amène à l'instant du Z80 (T900b), ce qui
+        // rend le résultat indépendant de la fréquence des rattrapages. Fin de trame : `run_frame`.
         self.z80_run_until(now);
-        self.sound.ym.advance(now);
         let delta = now.saturating_sub(*self.synced);
         if delta > 0 {
             self.rtc.advance(delta);
@@ -170,12 +185,16 @@ impl Host68k<'_> {
 
 impl Bus for Host68k<'_> {
     fn read(&mut self, addr: u32, _fc: u8, _uds: bool, _lds: bool) -> u16 {
-        self.catch_up();
+        if self.needs_sync(addr) {
+            self.catch_up();
+        }
         self.bus.read16(addr)
     }
 
     fn write(&mut self, addr: u32, _fc: u8, uds: bool, lds: bool, data: u16) {
-        self.catch_up();
+        if self.needs_sync(addr) {
+            self.catch_up();
+        }
         self.bus.write16(addr, data, uds, lds);
         self.rtc_control(addr, lds, data);
         self.after_write(addr);

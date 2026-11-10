@@ -17,6 +17,11 @@ impl Watchdog {
         self.counter = 0;
     }
 
+    /// Cycles restant avant l'expiration (T900b : décider si un rattrapage peut être différé).
+    pub fn headroom(&self) -> u64 {
+        WATCHDOG_TIMEOUT.saturating_sub(self.counter)
+    }
+
     /// Advance the watchdog by `mclk` master clock cycles.
     /// Returns true if the watchdog has timed out (requires machine reset).
     pub fn advance(&mut self, mclk: u64) -> bool {

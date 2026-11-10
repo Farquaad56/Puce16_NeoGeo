@@ -442,3 +442,9 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 ## T900 — Banc criterion
 - `crates/ng-core/benches/frame.rs` (300 trames mslug) ; `Machine::stats` (`catch_ups`, `z80_ticks`) ; `docs/PERF.md` : 5.91 ms/trame, ~35 % du budget (~2,9x temps réel).
 - Suite : T900b (catch-up paresseux) doit conserver les goldens identiques.
+
+## T900b - Catch-up paresseux
+- Voir docs/PERF.md. Gain mesuré -22,1 % (5.91 -> 4.60 ms/trame). Tests : `sched::lazy_catch_up_gives_identical_state` (synthétique) et `tests/lazy_catch_up.rs` (mslug, #[ignore]).
+- Piège : avec un simple saut de catch-up, l'état du Z80 divergeait (niveau IRQ du YM échantillonné à granularité différente). Corrigé en rendant le YM dépendant du temps du Z80, pas de la fréquence des rattrapages ; goldens inchangés.
+- Écart à la carte : le cache `next_event_global` n'est pas utilisé (le Z80 est dû presque à chaque accès bus) ; le saut se décide par zone d'adresse.
+- Test adapté : `machine::reset_restores_a_clean_state` n'exige plus que le Z80 ait déjà tourné après le reset (les lectures de vecteurs BIOS ne rattrapent plus).

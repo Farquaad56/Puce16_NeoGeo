@@ -1,5 +1,6 @@
 //! Boucle de trame : le 68000 avance une horloge à la fois, le reste suit par catch-up.
 
+use ng_bus::Ym;
 use ng_common::MCLK_PER_FRAME;
 
 use crate::machine::Machine;
@@ -24,6 +25,8 @@ impl Machine {
         {
             let (_, mut host) = self.split();
             host.catch_up();
+            let now = *host.now;
+            host.sound.ym.advance(now);
         }
         self.frame_start = target;
         self.audio.append(&mut self.sound.ym.samples);
@@ -43,6 +46,29 @@ mod tests {
     use crate::machine::tests_support::{machine_with, program_bios};
     use ng_bus::Watchdog;
     use puce_m68k::bus::Bus;
+
+    /// RAM, registres LSPC et chien de garde mêlés : le rattrapage paresseux ne doit rien changer.
+    const MIXED: [u8; 22] = [
+        0x33, 0xC0, 0x00, 0x10, 0x00, 0x00, // move.w d0,($100000).l
+        0x52, 0x40, // addq.w #1,d0
+        0x30, 0x39, 0x00, 0x3C, 0x00, 0x06, // move.w ($3C0006).l,d0
+        0x33, 0xC0, 0x00, 0x30, 0x00, 0x00, // move.w d0,($300000).l
+        0x60, 0xEA, // bra début
+    ];
+
+    #[test]
+    fn lazy_catch_up_gives_identical_state() {
+        let mut eager = machine_with(program_bios(&MIXED), 0x00);
+        eager.lazy_catch_up = false;
+        let mut lazy = machine_with(program_bios(&MIXED), 0x00);
+        for _ in 0..5 {
+            eager.run_frame();
+            lazy.run_frame();
+        }
+        assert!(lazy.stats.catch_ups < eager.stats.catch_ups);
+        assert_eq!(eager.framebuffer().pixels, lazy.framebuffer().pixels);
+        assert_eq!(eager.save_state(), lazy.save_state());
+    }
 
     #[test]
     fn nop_loop_runs_a_full_frame() {

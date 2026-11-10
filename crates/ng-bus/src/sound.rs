@@ -19,6 +19,10 @@ pub trait Ym {
     fn write(&mut self, port: u8, v: u8);
     /// Return true if the YM2610 is requesting an IRQ (timers A/B).
     fn irq(&self) -> bool;
+    /// Une échéance de timer est-elle atteinte à `mclk` ? (le niveau d'IRQ ne peut changer qu'alors.)
+    fn timer_due(&self, _mclk: u64) -> bool {
+        true
+    }
 }
 
 /// Z80 SoundBoard with memory map, banking, ports, and pin server.
@@ -231,7 +235,12 @@ impl<Y: Ym> SoundBoard<Y> {
             self.port.write_done = false;
         }
 
-        // Forward interrupt lines (no WAIT, no BUSRQ on Neo Geo)
+        // Forward interrupt lines (no WAIT, no BUSRQ on Neo Geo).
+        // La puce est amenée à l'instant du Z80 : le niveau d'IRQ ne dépend plus de la fréquence
+        // des rattrapages du 68000 (T900b).
+        if self.ym.timer_due(self.time) {
+            self.ym.advance(self.time);
+        }
         if self.irq_level() {
             pins_in = pins_in.with(Pins::INT);
         }

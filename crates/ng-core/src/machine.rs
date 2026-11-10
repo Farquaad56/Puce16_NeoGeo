@@ -65,6 +65,8 @@ pub struct Machine {
     /// Le watchdog a expiré : reset demandé à la fin de l'horloge courante.
     pub reset_request: bool,
     pub stats: Stats,
+    /// T900b : n'effectue pas de `catch_up` pour les accès sans périphérique (ROM P, RAM, BIOS).
+    pub lazy_catch_up: bool,
 }
 
 impl Machine {
@@ -115,6 +117,7 @@ impl Machine {
             synced: 0,
             reset_request: false,
             stats: Stats::default(),
+            lazy_catch_up: true,
         };
         machine.reset();
         machine
@@ -284,7 +287,8 @@ mod tests {
         assert_eq!(m.frame_start, 0);
         assert!(!m.bus.vectors_from_cart);
         assert!(m.audio.is_empty());
-        assert!(m.sound.time <= m.now && m.sound.time > 1234 - 1234);
+        // le Z80 est remis à zéro ; avec le rattrapage paresseux il n'a pas forcément encore tourné
+        assert!(m.sound.time <= m.now);
         assert_eq!(m.lspc.borrow().vram.get_modulo(), 0);
         assert_eq!(m.cpu.state().pc, 0x00C0_0402 + 4);
     }

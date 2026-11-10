@@ -193,6 +193,11 @@ impl Ym for YmAdapter {
     fn irq(&self) -> bool {
         self.intf.borrow().irq
     }
+
+    fn timer_due(&self, mclk: u64) -> bool {
+        let i = self.intf.borrow();
+        i.timer_deadline.iter().flatten().any(|&d| d <= mclk)
+    }
 }
 
 /// État hors puce : temps, échéances, IRQ, busy, échantillons, prochain échantillon.
