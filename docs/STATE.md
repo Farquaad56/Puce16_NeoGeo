@@ -605,3 +605,9 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 - Pas de golden MAME possible (machines inconnues de MAME) : le bench ne compare rien pour ces jeux.
 - T1003 (CRC) : OK 11 / ECHEC 0. Bench (sp-s2) : columnsn, ffeast, neonopon, neopong, ngtetris, poknight `ok` à 600 trames ; totc `ok` à 1500. cnbe (démo « Blut Engel »), ltorb, neothund et ngem2k tournent (écrans de jeu visibles) mais le bench les classe « noir » car < 16 couleurs distinctes (graphismes à palette réduite) : faux négatif de la classification.
 - Suite : T1018 (rapport final `docs/CATALOGUE.md`, README).
+
+## T1018 - bilan du catalogue
+- `tools/gen_catalogue_md.py` (+ `--selftest`) génère `docs/CATALOGUE.md` (une ligne par entrée de `ALL_CARTS`, 169 + en-tête/séparateur = 171 lignes de tableau) depuis le rapport du banc et `defs.rs` ; colonne supplémentaire « à 1500 trames ». Option `NG_FRAMES` du banc déjà présente (T1004).
+- Banc complet à 600 trames (169 jeux, 15 min) : 53 ok, 9 diff, 107 noir, 0 échec. Relance à 1500 trames des 107 « noir » + échantillon (samsho fatfury3 rbff2 lastblad garou kof2002 svc mslug3 kof94 ; goldens 1500 générées sauf kof94 : MAME bloque) : 105 ok / 5 diff / 5 noir. Bilan : 155 ok, 10 diff, 4 « noir » (homebrews qui tournent).
+- Nouveaux écarts à 1500 trames sur des jeux conformes à 600 : mslug3 (83 %), garou (32 %), fatfury3 (89 %), rbff2 (2,2 %), kof94 sombre. Non corrigés dans cette carte (consigne) : `docs/QUESTIONS.md`.
+- Dérogation : la colonne diff600 ne vaut que pour les jeux ayant une golden (les autres : `-`).

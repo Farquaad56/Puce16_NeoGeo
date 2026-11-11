@@ -33,3 +33,13 @@
 
 ## T1014 - jockeygp : déroulement différent de MAME à 600 trames
 Notre émulation affiche l'écran de mise (programme en cours) alors que MAME montre l'écran-titre (attract). La RAM de cartouche étant mappée, le jeu tourne ; reste à comparer l'état initial de la NVRAM (MAME) et les bits d'entrée SYSTEM (0x0100 / 0x0400 « freeze »). Non bloquant.
+
+## T1018 - bilan du catalogue : jeux non conformes (banc 600 / 1500 trames, BIOS sp-s2)
+- kof2000, kof2001, kof96, lastblad, samsho4 (600 trames, diff ~94 %) : chronologie de démarrage du jeu en retard sur MAME (BIOS identique) ; hypothèse : rythme du handshake son Z80 (voir T1006).
+- kof99 (diff 33 % à 600) : niveau de fondu différent ; hypothèse : même cause que ci-dessus (décalage de quelques trames).
+- fatfury2, ssideki (diff ~95 % à 600) : même écran que MAME, niveau de fondu différent ; hypothèse : idem.
+- jockeygp (diff 91 % à 600) : écran de mise au lieu du titre ; hypothèse : état initial de la NVRAM ou bits d'entrée SYSTEM.
+- mslug3 (diff 83 % à 1500), garou (32 %), fatfury3 (89 %), rbff2 (2,2 %) : déroulement différent de MAME à 1500 trames alors que 600 trames est conforme ; hypothèse : dérive de timing (fond d'écran/animations) à long terme.
+- kof94 : écran sombre à 1500 trames (8 couleurs) alors qu'il est conforme à 600 ; pas de golden à 1500 (MAME bloque sur ce jeu) ; hypothèse : fondu entre deux écrans, à vérifier par un dump à d'autres trames.
+- cnbe, ltorb, neothund, ngem2k : classés « noir » (< 16 couleurs) mais tournent (démo / jeux à palette réduite) : faux négatifs de la classification, pas de golden possible (hors MAME).
+- irrmaze : pas de golden comparable (autre résolution due au layout MAME) ; actif à 1500 trames.
