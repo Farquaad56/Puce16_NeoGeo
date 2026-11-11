@@ -138,13 +138,14 @@ L'interface détecte le type de contrôleur du jeu : le panneau mahjong s'active
 
 | Réglage | Options |
 |---|---|
+| Agrandissement pixel art | Aucun, HQ2X, 2xPM, Eagle, Super Eagle, SuperScale, SuperScale75, 2xSAI, Super 2xSaI, Scale2x |
 | Préréglage d'écran | Aucun, Sony Trinitron, Faded Tube |
 | Interpolation | Aucune, Douce, Moyenne, Nette, ou netteté de 5 à 100 % |
 | Scanlines | Désactivées, Standard (0 à 95 %), Adaptatives (luminosité conservée selon la clarté du pixel) |
 | Gamma | 1,00 à 2,00 |
 | Masque | Aucun, Sony Trinitron, Tube fané (jaune), avec une force réglable |
 
-Les coefficients proviennent des fichiers de filtres et de masques de la communauté MiSTer, regroupés dans `crates/ng-gui/data/fx.bin` par `tools/gen_fx_data.py`. Les scanlines se voient à partir d'une échelle x2 et les masques à partir d'une hauteur d'image suffisante.
+Les coefficients proviennent des fichiers de filtres et de masques de la communauté MiSTer, regroupés dans `crates/ng-gui/data/fx.bin` par `tools/gen_fx_data.py`. L'agrandissement pixel art double la définition (640x448) avant les autres filtres ; Scale2x, Eagle, Super Eagle, 2xSaI, Super 2xSaI et HQ2X suivent les implémentations de référence (RetroArch / libretro, table HQ2X dans `data/hq2x_lut.bin` générée par `tools/gen_hq2x_lut.py`). 2xPM et SuperScale sont des plugins de Kega Fusion sans code public : leurs versions sont des approximations (marquées « approx. »). Les scanlines se voient à partir d'une échelle x2 et les masques à partir d'une hauteur d'image suffisante.
 
 ### Overlay de performance
 

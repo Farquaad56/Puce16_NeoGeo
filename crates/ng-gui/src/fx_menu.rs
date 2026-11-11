@@ -2,6 +2,7 @@
 
 use eframe::egui;
 
+use crate::pixel2x::Scaler;
 use crate::postfx::{Fx, Mask, Preset, ScanMode, MEDIUM, SHARP, SOFT};
 
 #[derive(Default)]
@@ -32,11 +33,33 @@ impl FxWindow {
                     .show_ui(ui, |ui| {
                         for p in Preset::ALL {
                             if ui.selectable_label(current == Some(p), p.label()).clicked() {
+                                // le filtre d'agrandissement se choisit à part
+                                let scaler = fx.scaler;
                                 *fx = Fx::preset(p);
+                                fx.scaler = scaler;
                                 changed = true;
                             }
                         }
                     });
+                ui.separator();
+
+                ui.strong("Agrandissement pixel art");
+                egui::ComboBox::from_id_salt("pixel_scaler")
+                    .selected_text(fx.scaler.label())
+                    .show_ui(ui, |ui| {
+                        for k in Scaler::ALL {
+                            if ui.selectable_label(fx.scaler == k, k.label()).clicked() {
+                                fx.scaler = k;
+                                changed = true;
+                            }
+                        }
+                    });
+                if fx.scaler != Scaler::Off {
+                    ui.weak("Double la définition avant les autres filtres ; utile à partir d'une échelle x2.");
+                }
+                if fx.scaler.approximate() {
+                    ui.weak("Approximation : le code d'origine n'est pas public.");
+                }
                 ui.separator();
 
                 ui.strong("Interpolation");

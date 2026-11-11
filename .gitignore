@@ -8,6 +8,7 @@ saves/
 *.rom
 *.bin
 !crates/ng-gui/data/fx.bin
+!crates/ng-gui/data/hq2x_lut.bin
 *.zip
 _to_delete/
 *.tgz

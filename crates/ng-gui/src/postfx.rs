@@ -10,6 +10,7 @@ use std::sync::OnceLock;
 use eframe::egui::Color32;
 
 use crate::display::{FB_H, FB_W};
+use crate::pixel2x::{self, Scaler};
 
 /// Scanlines.
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
@@ -36,6 +37,8 @@ pub enum Mask {
 /// Réglages des filtres (tous les pourcentages sont des entiers).
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Fx {
+    /// Agrandissement ×2 pour le pixel art, appliqué avant tous les autres filtres.
+    pub scaler: Scaler,
     /// Netteté de l'interpolation horizontale en % (0 = aucune ; sinon multiple de 5, 5 à 100).
     pub interp: u8,
     pub scan_mode: ScanMode,
@@ -56,6 +59,7 @@ pub struct Fx {
 impl Default for Fx {
     fn default() -> Self {
         Fx {
+            scaler: Scaler::Off,
             interp: 0,
             scan_mode: ScanMode::Off,
             scan: 50,
@@ -132,6 +136,7 @@ impl Fx {
     fn norm(&self) -> Fx {
         let d = Fx::default();
         let mut f = *self;
+        f.scaler = d.scaler;
         if f.scan_mode != ScanMode::Standard {
             f.scan = d.scan;
         }
@@ -147,7 +152,8 @@ impl Fx {
 
     /// Au moins un filtre agit-il sur l'image ?
     pub fn is_active(&self) -> bool {
-        self.interp > 0
+        self.scaler != Scaler::Off
+            || self.interp > 0
             || self.scan_mode != ScanMode::Off
             || self.gamma != 100
             || self.mask != Mask::None
@@ -256,6 +262,9 @@ fn mask_patterns(m: Mask) -> Option<&'static [Pattern]> {
 /// Données communes à toutes les rangées de sortie.
 struct Ctx<'a> {
     src: &'a [[u8; 3]],
+    /// Taille de la source (doublée si un agrandissement ×2 est actif).
+    sw: usize,
+    sh: usize,
     fx: &'a Fx,
     w: usize,
     h: usize,
@@ -275,7 +284,7 @@ struct Ctx<'a> {
 
 /// Calcule les rangées de sortie `y0..y0 + out.len() / w`.
 fn render_rows(c: &Ctx, y0: usize, out: &mut [Color32]) {
-    let (sw, sh) = (FB_W as usize, FB_H as usize);
+    let (sw, sh) = (c.sw, c.sh);
     let (w, h) = (c.w, c.h);
     let mut vrow = vec![[0u8; 3]; sw];
     for (dy, orow) in out.chunks_mut(w).enumerate() {
@@ -357,9 +366,14 @@ fn render_rows(c: &Ctx, y0: usize, out: &mut [Color32]) {
 
 /// Applique les filtres : `src` = image 320x224 (0x00RRGGBB), sortie `w` x `h`.
 pub fn render(src: &[u32], fx: &Fx, w: usize, h: usize) -> Vec<Color32> {
-    let (sw, sh) = (FB_W as usize, FB_H as usize);
-    assert!(src.len() >= sw * sh && w > 0 && h > 0);
-    let src: Vec<[u8; 3]> = src[..sw * sh]
+    let (fw, fh) = (FB_W as usize, FB_H as usize);
+    assert!(src.len() >= fw * fh && w > 0 && h > 0);
+    let big = pixel2x::upscale(src, fw, fh, fx.scaler);
+    let (sw, sh, pix) = match &big {
+        Some(v) => (2 * fw, 2 * fh, &v[..]),
+        None => (fw, fh, &src[..fw * fh]),
+    };
+    let src: Vec<[u8; 3]> = pix
         .iter()
         .map(|p| [(p >> 16) as u8, (p >> 8) as u8, *p as u8])
         .collect();
@@ -416,6 +430,8 @@ pub fn render(src: &[u32], fx: &Fx, w: usize, h: usize) -> Vec<Color32> {
     let (dark_t, bright_t) = adaptive_tables(fx.scan_dk, fx.scan_br);
     let ctx = Ctx {
         src: &src,
+        sw,
+        sh,
         fx,
         w,
         h,

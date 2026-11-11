@@ -4,6 +4,7 @@
 //! touches et l'état du débogueur. Un fichier absent ou invalide donne les valeurs par défaut.
 
 use crate::overlay::{Corner, OverlayPrefs};
+use crate::pixel2x::Scaler;
 use crate::postfx::{Fx, Mask, ScanMode};
 use std::path::{Path, PathBuf};
 
@@ -200,7 +201,8 @@ impl Prefs {
         ));
         let f = &self.fx;
         s.push_str(&format!(
-            "\n[fx]\ninterp = {}\nscanlines = \"{}\"\nscan = {}\nscan_dark = {}\nscan_bright = {}\ngamma = {}\nmask = \"{}\"\nmask_pct = {}\n",
+            "\n[fx]\nscaler = \"{}\"\ninterp = {}\nscanlines = \"{}\"\nscan = {}\nscan_dark = {}\nscan_bright = {}\ngamma = {}\nmask = \"{}\"\nmask_pct = {}\n",
+            f.scaler.key(),
             f.interp,
             scan_mode_str(f.scan_mode),
             f.scan,
@@ -295,6 +297,11 @@ impl Prefs {
                 ("overlay", "corner") => {
                     if let Some(c) = Corner::from_name(v) {
                         p.overlay.corner = c;
+                    }
+                }
+                ("fx", "scaler") => {
+                    if let Some(k) = Scaler::from_key(v) {
+                        p.fx.scaler = k;
                     }
                 }
                 ("fx", "interp") => {
@@ -396,7 +403,10 @@ mod tests {
                 region: "vram".into(),
                 show_status_bar: false,
             },
-            fx: Fx::preset(crate::postfx::Preset::SonyTrinitron),
+            fx: Fx {
+                scaler: Scaler::SuperEagle,
+                ..Fx::preset(crate::postfx::Preset::SonyTrinitron)
+            },
             audio: AudioPrefs {
                 volume: 35,
                 mute: true,

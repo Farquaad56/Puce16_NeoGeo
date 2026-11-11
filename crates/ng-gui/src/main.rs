@@ -10,6 +10,7 @@ mod fx_menu;
 mod input;
 mod menu;
 mod overlay;
+mod pixel2x;
 mod postfx;
 mod prefs;
 mod settings;
