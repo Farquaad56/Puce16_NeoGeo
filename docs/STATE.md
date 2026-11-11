@@ -611,3 +611,7 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 - Banc complet à 600 trames (169 jeux, 15 min) : 53 ok, 9 diff, 107 noir, 0 échec. Relance à 1500 trames des 107 « noir » + échantillon (samsho fatfury3 rbff2 lastblad garou kof2002 svc mslug3 kof94 ; goldens 1500 générées sauf kof94 : MAME bloque) : 105 ok / 5 diff / 5 noir. Bilan : 155 ok, 10 diff, 4 « noir » (homebrews qui tournent).
 - Nouveaux écarts à 1500 trames sur des jeux conformes à 600 : mslug3 (83 %), garou (32 %), fatfury3 (89 %), rbff2 (2,2 %), kof94 sombre. Non corrigés dans cette carte (consigne) : `docs/QUESTIONS.md`.
 - Dérogation : la colonne diff600 ne vaut que pour les jeux ayant une golden (les autres : `-`).
+
+## Banc de vitesse (noyau + filtres vidéo)
+- Noyau : `cargo test --release -p ng-core --test speed -- --ignored --nocapture` (NG_GAMES, NG_FRAMES). Mesure : 4,1 à 4,5 ms/trame (p99 < 5 ms) sur mslug3, kof2003, kof98, samsho5, garou, mslugx, soit x3,8 à x4,2 le temps réel (budget 16,9 ms).
+- Filtres : `cargo test --release -p ng-gui bench_fx -- --ignored --nocapture` (échelles x1 à x8, 1:1 et 4:3, plein écran 720p/1080p/1440p/4K, 5 combinaisons de filtres). Après optimisation (vertical avant horizontal, multi-thread, point fixe) : 0,3 à 7,6 ms/trame, 7,6 ms au pire (4:3 plein écran 4K, tous filtres). Avant : jusqu'à 68 ms.

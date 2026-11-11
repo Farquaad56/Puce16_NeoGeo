@@ -253,146 +253,202 @@ fn mask_patterns(m: Mask) -> Option<&'static [Pattern]> {
     }
 }
 
-/// Applique les filtres : `src` = image 320x224 (0x00RRGGBB), sortie `w` x `h`.
-pub fn render(src: &[u32], fx: &Fx, w: usize, h: usize) -> Vec<Color32> {
+/// Données communes à toutes les rangées de sortie.
+struct Ctx<'a> {
+    src: &'a [[u8; 3]],
+    fx: &'a Fx,
+    w: usize,
+    h: usize,
+    /// Colonnes : indices source (4 points) et poids ; sans interpolation, un seul indice.
+    cols: Vec<([u16; 4], [i32; 4])>,
+    kernel_on: bool,
+    lut: Vec<u32>,
+    /// Gains du motif de masque en 8.8 (256 = inchangé).
+    pw: usize,
+    ph: usize,
+    cells: Vec<[u32; 3]>,
+    xmod: Vec<u16>,
+    std_t: &'static [i16],
+    dark_t: &'static [i16],
+    bright_t: &'static [i16],
+}
+
+/// Calcule les rangées de sortie `y0..y0 + out.len() / w`.
+fn render_rows(c: &Ctx, y0: usize, out: &mut [Color32]) {
     let (sw, sh) = (FB_W as usize, FB_H as usize);
-    assert!(src.len() >= sw * sh && w > 0 && h > 0);
-    let px = |x: usize, y: usize| -> [i32; 3] {
-        let p = src[y * sw + x];
-        [
-            ((p >> 16) & 255) as i32,
-            ((p >> 8) & 255) as i32,
-            (p & 255) as i32,
-        ]
-    };
-
-    // 1. horizontal : une rangée filtrée par ligne source
-    let mut hrows = vec![[0u8; 3]; sh * w];
-    if fx.interp == 0 {
-        for y in 0..sh {
-            for x in 0..w {
-                let c = px((x * sw / w).min(sw - 1), y);
-                hrows[y * w + x] = [c[0] as u8, c[1] as u8, c[2] as u8];
-            }
-        }
-    } else {
-        let k = sharp_table(fx.interp);
-        // (index du premier point, phase) par colonne de sortie
-        let cols: Vec<(i32, usize)> = (0..w)
-            .map(|x| {
-                let pos = (x as f32 + 0.5) * sw as f32 / w as f32 - 0.5;
-                let i = pos.floor();
-                (i as i32, (((pos - i) * 64.0) as usize).min(63))
-            })
-            .collect();
-        for y in 0..sh {
-            for (x, &(i, ph)) in cols.iter().enumerate() {
-                let mut acc = [64i32; 3];
-                for (j, wgt) in k[ph * 4..ph * 4 + 4].iter().enumerate() {
-                    let sx = (i - 1 + j as i32).clamp(0, sw as i32 - 1) as usize;
-                    let c = px(sx, y);
-                    for ch in 0..3 {
-                        acc[ch] += c[ch] * i32::from(*wgt);
-                    }
-                }
-                hrows[y * w + x] = [
-                    (acc[0] >> 7).clamp(0, 255) as u8,
-                    (acc[1] >> 7).clamp(0, 255) as u8,
-                    (acc[2] >> 7).clamp(0, 255) as u8,
-                ];
-            }
-        }
-    }
-
-    // 2. gamma
-    let g = f32::from(fx.gamma) / 100.0;
-    let lut: Vec<u8> = (0..256)
-        .map(|v| {
-            if fx.gamma == 100 {
-                v as u8
-            } else {
-                (255.0 * (v as f32 / 255.0).powf(g)).round() as u8
-            }
-        })
-        .collect();
-
-    // 3. masque (motif choisi selon la hauteur, comme le mode « 1x »)
-    let mp = f32::from(fx.mask_pct) / 100.0;
-    let pat =
-        mask_patterns(fx.mask).and_then(|ps| ps.iter().rev().find(|p| p.res <= h).or(ps.first()));
-
-    let std_t = std_table(fx.scan);
-    let (dark_t, bright_t) = adaptive_tables(fx.scan_dk, fx.scan_br);
-    let mut out = Vec::with_capacity(w * h);
-    for y in 0..h {
-        // 4. vertical : filtre à 4 lignes source selon la phase
+    let (w, h) = (c.w, c.h);
+    let mut vrow = vec![[0u8; 3]; sw];
+    for (dy, orow) in out.chunks_mut(w).enumerate() {
+        let y = y0 + dy;
+        // 1. vertical, à la largeur de la source : filtre à 4 lignes selon la phase
         let pos = y as f32 * sh as f32 / h as f32;
         let fl = pos.floor();
         let frac = pos - fl;
         let i0 = fl as i32;
-        let rows: [&[[u8; 3]]; 4] = std::array::from_fn(|j| {
+        let row = |j: usize| -> &[[u8; 3]] {
             let r = (i0 - 1 + j as i32).clamp(0, sh as i32 - 1) as usize;
-            &hrows[r * w..(r + 1) * w]
-        });
-        let near = if frac <= 0.5 { 1 } else { 2 };
-        let ph64 = ((frac * 64.0) as usize).min(63);
-        let ph256 = ((frac * 256.0) as usize).min(255);
-        let plain = ((y * sh) / h).min(sh - 1);
-        for x in 0..w {
-            let mut c = [0i32; 3];
-            match fx.scan_mode {
-                ScanMode::Off => {
-                    let p = hrows[plain * w + x];
-                    c = [i32::from(p[0]), i32::from(p[1]), i32::from(p[2])];
-                }
-                ScanMode::Standard => {
-                    for j in 0..4 {
-                        let wgt = i32::from(std_t[ph64 * 4 + j]);
-                        let p = rows[j][x];
-                        for ch in 0..3 {
-                            c[ch] += wgt * i32::from(p[ch]);
+            &c.src[r * sw..(r + 1) * sw]
+        };
+        match c.fx.scan_mode {
+            ScanMode::Off => {
+                let r = ((y * sh) / h).min(sh - 1);
+                vrow.copy_from_slice(&c.src[r * sw..(r + 1) * sw]);
+            }
+            ScanMode::Standard => {
+                let ph = ((frac * 64.0) as usize).min(63);
+                let wg: [i32; 4] = std::array::from_fn(|j| i32::from(c.std_t[ph * 4 + j]));
+                let rows: [&[[u8; 3]]; 4] = std::array::from_fn(row);
+                for (x, o) in vrow.iter_mut().enumerate() {
+                    for ch in 0..3 {
+                        let mut a = 64;
+                        for j in 0..4 {
+                            a += wg[j] * i32::from(rows[j][x][ch]);
                         }
-                    }
-                    for v in &mut c {
-                        *v = (*v + 64) >> 7;
+                        o[ch] = (a >> 7).clamp(0, 255) as u8;
                     }
                 }
-                ScanMode::Adaptive => {
+            }
+            ScanMode::Adaptive => {
+                let ph = ((frac * 256.0) as usize).min(255);
+                let near = if frac <= 0.5 { 1 } else { 2 };
+                let rows: [&[[u8; 3]]; 4] = std::array::from_fn(row);
+                let d: [f32; 4] = std::array::from_fn(|j| f32::from(c.dark_t[ph * 4 + j]));
+                let b: [f32; 4] = std::array::from_fn(|j| f32::from(c.bright_t[ph * 4 + j]));
+                for (x, o) in vrow.iter_mut().enumerate() {
                     let n = rows[near][x];
                     let l = (0.299 * f32::from(n[0])
                         + 0.587 * f32::from(n[1])
                         + 0.114 * f32::from(n[2]))
                         / 255.0;
-                    let mut acc = [0f32; 3];
-                    for j in 0..4 {
-                        let (d, b) = (
-                            f32::from(dark_t[ph256 * 4 + j]),
-                            f32::from(bright_t[ph256 * 4 + j]),
-                        );
-                        let wgt = d + (b - d) * l;
-                        let p = rows[j][x];
-                        for ch in 0..3 {
-                            acc[ch] += wgt * f32::from(p[ch]);
-                        }
-                    }
+                    let wg: [f32; 4] = std::array::from_fn(|j| (d[j] + (b[j] - d[j]) * l) / 256.0);
                     for ch in 0..3 {
-                        c[ch] = (acc[ch] / 256.0 + 0.5) as i32;
+                        let mut a = 0.5;
+                        for j in 0..4 {
+                            a += wg[j] * f32::from(rows[j][x][ch]);
+                        }
+                        o[ch] = a.clamp(0.0, 255.0) as u8;
                     }
                 }
             }
-            let mut o = [0f32; 3];
-            for ch in 0..3 {
-                o[ch] = f32::from(lut[c[ch].clamp(0, 255) as usize]);
-            }
-            if let Some(p) = pat {
-                let cell = p.cells[(y % p.h) * p.w + x % p.w];
-                for ch in 0..3 {
-                    o[ch] *= 1.0 - mp * (1.0 - cell[ch]);
-                }
-            }
-            let q = |v: f32| (v + 0.5).clamp(0.0, 255.0) as u8;
-            out.push(Color32::from_rgb(q(o[0]), q(o[1]), q(o[2])));
         }
+        // 2. horizontal (interpolation ou répétition), gamma, masque
+        let mrow = (y % c.ph) * c.pw;
+        for (x, o) in orow.iter_mut().enumerate() {
+            let (idx, wg) = &c.cols[x];
+            let mut v = [0i32; 3];
+            if c.kernel_on {
+                for ch in 0..3 {
+                    let mut a = 64;
+                    for j in 0..4 {
+                        a += wg[j] * i32::from(vrow[usize::from(idx[j])][ch]);
+                    }
+                    v[ch] = (a >> 7).clamp(0, 255);
+                }
+            } else {
+                let p = vrow[usize::from(idx[0])];
+                v = [i32::from(p[0]), i32::from(p[1]), i32::from(p[2])];
+            }
+            let g = &c.cells[mrow + usize::from(c.xmod[x])];
+            let f = |ch: usize| ((c.lut[v[ch] as usize] * g[ch] + 128) >> 8).min(255) as u8;
+            *o = Color32::from_rgb(f(0), f(1), f(2));
+        }
+    }
+}
+
+/// Applique les filtres : `src` = image 320x224 (0x00RRGGBB), sortie `w` x `h`.
+pub fn render(src: &[u32], fx: &Fx, w: usize, h: usize) -> Vec<Color32> {
+    let (sw, sh) = (FB_W as usize, FB_H as usize);
+    assert!(src.len() >= sw * sh && w > 0 && h > 0);
+    let src: Vec<[u8; 3]> = src[..sw * sh]
+        .iter()
+        .map(|p| [(p >> 16) as u8, (p >> 8) as u8, *p as u8])
+        .collect();
+
+    // colonnes
+    let kernel_on = fx.interp > 0;
+    let k = sharp_table(fx.interp);
+    let cols: Vec<([u16; 4], [i32; 4])> = (0..w)
+        .map(|x| {
+            if !kernel_on {
+                return ([(x * sw / w).min(sw - 1) as u16, 0, 0, 0], [0; 4]);
+            }
+            let pos = (x as f32 + 0.5) * sw as f32 / w as f32 - 0.5;
+            let i = pos.floor();
+            let ph = (((pos - i) * 64.0) as usize).min(63);
+            let idx =
+                std::array::from_fn(|j| (i as i32 - 1 + j as i32).clamp(0, sw as i32 - 1) as u16);
+            let wg = std::array::from_fn(|j| i32::from(k[ph * 4 + j]));
+            (idx, wg)
+        })
+        .collect();
+
+    // gamma
+    let g = f32::from(fx.gamma) / 100.0;
+    let lut: Vec<u32> = (0..256)
+        .map(|v| {
+            if fx.gamma == 100 {
+                v as u32
+            } else {
+                (255.0 * (v as f32 / 255.0).powf(g)).round() as u32
+            }
+        })
+        .collect();
+
+    // masque (motif choisi selon la hauteur, comme le mode « 1x »), gains en 8.8
+    let mp = f32::from(fx.mask_pct) / 100.0;
+    let pat =
+        mask_patterns(fx.mask).and_then(|ps| ps.iter().rev().find(|p| p.res <= h).or(ps.first()));
+    let (pw, ph, cells) = match pat {
+        Some(p) => (
+            p.w,
+            p.h,
+            p.cells
+                .iter()
+                .map(|c| {
+                    std::array::from_fn(|ch| ((1.0 - mp * (1.0 - c[ch])) * 256.0 + 0.5) as u32)
+                })
+                .collect(),
+        ),
+        None => (1, 1, vec![[256u32; 3]]),
+    };
+    let xmod = (0..w).map(|x| (x % pw) as u16).collect();
+
+    let (dark_t, bright_t) = adaptive_tables(fx.scan_dk, fx.scan_br);
+    let ctx = Ctx {
+        src: &src,
+        fx,
+        w,
+        h,
+        cols,
+        kernel_on,
+        lut,
+        pw,
+        ph,
+        cells,
+        xmod,
+        std_t: std_table(fx.scan),
+        dark_t,
+        bright_t,
+    };
+
+    let mut out = vec![Color32::BLACK; w * h];
+    let threads = if w * h < 200_000 {
+        1
+    } else {
+        std::thread::available_parallelism()
+            .map_or(1, |n| n.get())
+            .min(8)
+    };
+    if threads <= 1 {
+        render_rows(&ctx, 0, &mut out);
+    } else {
+        let per = h.div_ceil(threads);
+        std::thread::scope(|s| {
+            for (i, chunk) in out.chunks_mut(per * w).enumerate() {
+                let ctx = &ctx;
+                s.spawn(move || render_rows(ctx, i * per, chunk));
+            }
+        });
     }
     out
 }
@@ -540,5 +596,103 @@ mod tests {
             .detect(),
             None
         );
+    }
+
+    /// Banc du coût des filtres par trame, à toutes les échelles, ratios et résolutions plein écran :
+    /// `cargo test --release -p ng-gui bench_fx -- --ignored --nocapture`
+    #[test]
+    #[ignore]
+    fn bench_fx() {
+        use crate::display::layout;
+        use crate::prefs::{Aspect, ScaleMode};
+        use eframe::egui::{pos2, vec2, Rect};
+        use std::time::Instant;
+
+        // image pseudo-aléatoire (pire cas : pas de zones plates)
+        let mut seed = 12345u32;
+        let src: Vec<u32> = (0..FB_W * FB_H)
+            .map(|_| {
+                seed = seed.wrapping_mul(1664525).wrapping_add(1013904223);
+                seed >> 8
+            })
+            .collect();
+        let worst = Fx {
+            interp: SHARP,
+            scan_mode: ScanMode::Adaptive,
+            mask: Mask::Trinitron,
+            gamma: 145,
+            ..Fx::default()
+        };
+        let presets = [
+            (
+                "Interp seule",
+                Fx {
+                    interp: MEDIUM,
+                    ..Fx::default()
+                },
+            ),
+            (
+                "Scanl. std",
+                Fx {
+                    scan_mode: ScanMode::Standard,
+                    ..Fx::default()
+                },
+            ),
+            ("Trinitron", Fx::preset(Preset::SonyTrinitron)),
+            ("Faded Tube", Fx::preset(Preset::FadedTube)),
+            ("Tout", worst),
+        ];
+        let mut cases: Vec<(String, usize, usize)> = Vec::new();
+        for (an, aspect) in [("1:1", Aspect::Square), ("4:3", Aspect::Tv4x3)] {
+            for n in 1..=8 {
+                let l = layout(
+                    Rect::from_min_size(pos2(0.0, 0.0), vec2(8000.0, 8000.0)),
+                    1.0,
+                    ScaleMode::Fixed(n),
+                    aspect,
+                );
+                cases.push((format!("{an} x{n}"), l.px.0 as usize, l.px.1 as usize));
+            }
+            for (rn, rw, rh) in [
+                ("720p", 1280.0, 720.0),
+                ("1080p", 1920.0, 1080.0),
+                ("1440p", 2560.0, 1440.0),
+                ("4K", 3840.0, 2160.0),
+            ] {
+                let l = layout(
+                    Rect::from_min_size(pos2(0.0, 0.0), vec2(rw, rh)),
+                    1.0,
+                    ScaleMode::Auto,
+                    aspect,
+                );
+                cases.push((
+                    format!("{an} plein écran {rn}"),
+                    l.px.0 as usize,
+                    l.px.1 as usize,
+                ));
+            }
+        }
+        println!("budget total : 16,89 ms/trame ; temps de filtrage (ms) par trame");
+        print!("{:28} {:>11}", "cas", "taille");
+        for (n, _) in &presets {
+            print!(" {n:>13}");
+        }
+        println!();
+        for (name, w, h) in cases {
+            print!("{name:28} {:>11}", format!("{w}x{h}"));
+            for (_, fx) in &presets {
+                let _ = render(&src, fx, w, h); // chauffe + tables
+                let n = 8;
+                let t0 = Instant::now();
+                for _ in 0..n {
+                    std::hint::black_box(render(&src, fx, w, h));
+                }
+                print!(
+                    " {:13.2}",
+                    t0.elapsed().as_secs_f64() * 1000.0 / f64::from(n)
+                );
+            }
+            println!();
+        }
     }
 }
