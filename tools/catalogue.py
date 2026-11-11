@@ -38,6 +38,8 @@ def controller(game):
     if game in MAHJONG:
         return "Mahjong"
     return {"irrmaze": "Trackball", "popbounc": "Dial"}.get(game, "Joystick")
+# T1017 : jeux absents de MAME 0.287 (décrits par docs/spec/data/romsets_extra.json, tools/extract_extra.py)
+EXTRA = "cnbe columnsn ffeast ltorb neonopon neopong neothund ngem2k ngtetris poknight totc".split()
 def catalogue():
     """[(nom, clé de protection)] dans l'ordre : Metal Slug puis PLAIN."""
-    return list(PROTECTED.items()) + [(n, "NONE") for n in PLAIN]
+    return list(PROTECTED.items()) + [(n, "NONE") for n in PLAIN] + [(n, "NONE") for n in EXTRA]

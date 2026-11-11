@@ -51,7 +51,38 @@ def num(x): return int(x.strip(), 0)
 def title_of(name):
     m = re.search(r'^GAMEL?\(\s*\d+,\s*%s,.*?ROT\d+,\s*"[^"]*",\s*"((?:[^"\\]|\\.)*)"' % re.escape(name), neogeo_src, re.M)
     return m.group(1).replace('\\"', "'") if m else name
+import json
+EXTRA_JSON = json.load(open(ROOT+"/docs/spec/data/romsets_extra.json", encoding="utf-8"))
+def parse_extra(name):
+    """Jeux hors MAME : régions déduites des extensions (.pN, .s1, .m1, .vN, .cN), comme NEO_* de MAME."""
+    files = EXTRA_JSON[name]["files"]
+    parts = []; sizes = {}; extra = {"m1_reload": None}
+    def key(f): return (re.sub(r"\d+$", "", f["name"].rsplit(".", 1)[1]), int(re.search(r"(\d+)$", f["name"]).group(1)))
+    def add(f, region, dest, load):
+        parts.append(dict(file=f["name"], region=region, dest=dest, size=f["size"], src_off=0, crc=f["crc"], load=load))
+    ext = lambda f: f["name"].rsplit(".", 1)[1]
+    ps = sorted([f for f in files if ext(f).startswith("p")], key=key)
+    off = 0
+    for f in ps:
+        add(f, "P", off, "WordSwap"); off += f["size"]
+    sizes["P"] = max(0x100000, 1 << (off - 1).bit_length())
+    for f in [f for f in files if ext(f).startswith("s")]:
+        add(f, "S", 0, "Plain"); sizes["S"] = 0x20000
+    for f in [f for f in files if ext(f).startswith("m")]:
+        add(f, "M", 0, "Plain"); sizes["M"] = f["size"] + 0x10000; extra["m1_reload"] = (0x10000, f["size"])
+    off = 0
+    for f in sorted([f for f in files if ext(f).startswith("v")], key=key):
+        add(f, "V", off, "Plain"); off += f["size"]
+    sizes["V"] = off
+    off = 0
+    cs = sorted([f for f in files if ext(f).startswith("c")], key=key)
+    for i in range(0, len(cs), 2):
+        add(cs[i], "C", off, "Byte"); add(cs[i+1], "C", off + 1, "Byte"); off += 2 * cs[i]["size"]
+    sizes["C"] = off
+    return parts, sizes, extra
 def parse(name):
+    if name in EXTRA_JSON:
+        return parse_extra(name)
     m = re.search(r"ROM_START\(\s*%s\s*\)(.*?)ROM_END" % name, txt, re.S)
     body = m.group(1)
     parts = []; sizes = {}; region = None; last = None; extra = {"m1_reload": None}
@@ -107,7 +138,7 @@ out = HDR.format(src="docs/spec/data/romsets_all.txt (MAME neogeo.cpp, BSD-3)")
 out += "use crate::types::*;\n\n"
 for g, prot in CATALOGUE:
     parts, sizes, extra = parse(g)
-    title = catalogue.TITLES.get(g) or title_of(g)
+    title = catalogue.TITLES.get(g) or (EXTRA_JSON[g]["title"] if g in EXTRA_JSON else title_of(g))
     out += "pub static %s_PARTS: &[RomPart] = &[\n" % ID(g)
     for p in parts:
         out += '    RomPart { file: "%s", region: Region::%s, dest: 0x%X, size: 0x%X, src_off: 0x%X, crc: 0x%08X, load: Load::%s },\n' % (p["file"], p["region"], p["dest"], p["size"], p["src_off"], p["crc"], p["load"])

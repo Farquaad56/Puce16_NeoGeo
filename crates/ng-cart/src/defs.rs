@@ -3287,4 +3287,183 @@ pub static ZINTRCKB: CartDef = CartDef {
     controller: Controller::Joystick,
 };
 
-pub static ALL_CARTS: &[&CartDef] = &[&MSLUG, &MSLUG2, &MSLUGX, &MSLUG3, &MSLUG4, &MSLUG5, &ZUPAPA, &GANRYU, &S1945P, &PREISLE2, &BANGBEAD, &NITD, &SENGOKU3, &KOF2001, &JOCKEYGP, &KOF99, &GAROU, &KOF2000, &ROTD, &PNYAA, &KOF2002, &SAMSHO5, &SAMSH5SP, &KOF2003, &SVC, &KOF98, &FATFURY2, &SSIDEKI, &SBP, &VLINER, &N_2020BB, &N_3COUNTB, &ALPHAM2, &ANDRODUN, &AODK, &AOF, &AOF2, &AOF3, &B2B, &BAKATONO, &BJOURNEY, &BLAZSTAR, &BREAKERS, &BREAKREV, &BSTARS, &BSTARS2, &BURNINGF, &CRSWD2BL, &CRSWORD, &CTOMADAY, &CYBERLIP, &DIGGERMA, &DOUBLEDR, &EIGHTMAN, &FATFURSP, &FATFURY1, &FATFURY3, &FBFRENZY, &FIGHTFEV, &FLIPSHOT, &FROMAN2B, &GALAXYFG, &GHOSTLOP, &GOALX3, &GOWCAIZR, &GPILOTS, &GURURIN, &IRONCLAD, &IRRMAZE, &JANSHIN, &JOYJOY, &KABUKIKL, &KARNOVR, &KIZUNA, &KOF94, &KOF95, &KOF96, &KOF97, &KOTM, &KOTM2, &LASTBLAD, &LASTBLD2, &LASTHOPE, &LBOWLING, &LEGENDOS, &LRESORT, &MAGDROP2, &MAGDROP3, &MAGLORD, &MAHRETSU, &MARUKODQ, &MIEXCHNG, &MINASAN, &MOSHOUGI, &MUTNAT, &NAM1975, &NCOMBAT, &NCOMMAND, &NEOBOMBE, &NEOCUP98, &NEODRIFT, &NEOMRDO, &NINJAMAS, &OVERTOP, &PANICBOM, &PBOBBL2N, &PBOBBLEN, &PGOAL, &POPBOUNC, &PSPIKES2, &PULSTAR, &PUZZLDPR, &PUZZLEDP, &QUIZDAI2, &QUIZDAIS, &QUIZKOF, &RAGNAGRD, &RBFF1, &RBFF2, &RBFFSPEC, &RIDHERO, &ROBOARMY, &SAMSHO, &SAMSHO2, &SAMSHO3, &SAMSHO4, &SAVAGERE, &SDODGEB, &SENGOKU, &SENGOKU2, &SHOCKTR2, &SHOCKTRO, &SOCBRAWL, &SONICWI2, &SONICWI3, &SPINMAST, &SSIDEKI2, &SSIDEKI3, &SSIDEKI4, &STAKWIN, &STAKWIN2, &STRHOOP, &SUPERSPY, &TOPHUNTR, &TPGOLF, &TRALLY, &TURFMAST, &TWINSPRI, &TWSOC96, &VIEWPOIN, &WAKUWAK7, &WH1, &WH2, &WH2J, &WHP, &WJAMMERS, &ZEDBLADE, &ZINTRCKB];
+pub static CNBE_PARTS: &[RomPart] = &[
+    RomPart { file: "410.p1", region: Region::P, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0x7ECE4186, load: Load::WordSwap },
+    RomPart { file: "410.s1", region: Region::S, dest: 0x0, size: 0x10000, src_off: 0x0, crc: 0x40A4698F, load: Load::Plain },
+    RomPart { file: "410.m1", region: Region::M, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0xA5821C9C, load: Load::Plain },
+    RomPart { file: "410.v1", region: Region::V, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0x70191764, load: Load::Plain },
+    RomPart { file: "410.c1", region: Region::C, dest: 0x0, size: 0x100000, src_off: 0x0, crc: 0x0F4FEA6F, load: Load::Byte },
+    RomPart { file: "410.c2", region: Region::C, dest: 0x1, size: 0x100000, src_off: 0x0, crc: 0x3D5FC36F, load: Load::Byte },
+];
+pub static CNBE: CartDef = CartDef {
+    name: "cnbe", title: "CNBE (hors MAME)", parts: CNBE_PARTS,
+    sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x80000, vb: 0x0, c: 0x200000 },
+    m1_reload: Some((0x10000, 0x20000)),
+    prot: PROT_NONE,
+    controller: Controller::Joystick,
+};
+
+pub static COLUMNSN_PARTS: &[RomPart] = &[
+    RomPart { file: "404.p1", region: Region::P, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0xC6C9888D, load: Load::WordSwap },
+    RomPart { file: "404.s1", region: Region::S, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0x089A28A8, load: Load::Plain },
+    RomPart { file: "407.m1", region: Region::M, dest: 0x0, size: 0x10000, src_off: 0x0, crc: 0x7669DE64, load: Load::Plain },
+    RomPart { file: "407.v1", region: Region::V, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0x504BF849, load: Load::Plain },
+    RomPart { file: "404.c1", region: Region::C, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0x9A579CAB, load: Load::Byte },
+    RomPart { file: "404.c2", region: Region::C, dest: 0x1, size: 0x80000, src_off: 0x0, crc: 0x91D14043, load: Load::Byte },
+];
+pub static COLUMNSN: CartDef = CartDef {
+    name: "columnsn", title: "COLUMNSN (hors MAME)", parts: COLUMNSN_PARTS,
+    sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x20000, m_crypt: 0x0, v: 0x80000, vb: 0x0, c: 0x100000 },
+    m1_reload: Some((0x10000, 0x10000)),
+    prot: PROT_NONE,
+    controller: Controller::Joystick,
+};
+
+pub static FFEAST_PARTS: &[RomPart] = &[
+    RomPart { file: "415.p1", region: Region::P, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0xC26848DA, load: Load::WordSwap },
+    RomPart { file: "415.s1", region: Region::S, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0x88F4CD13, load: Load::Plain },
+    RomPart { file: "415.m1", region: Region::M, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0xC825B484, load: Load::Plain },
+    RomPart { file: "415.v1", region: Region::V, dest: 0x0, size: 0x100000, src_off: 0x0, crc: 0x2639DA11, load: Load::Plain },
+    RomPart { file: "415.v2", region: Region::V, dest: 0x100000, size: 0x100000, src_off: 0x0, crc: 0xE5EDA58B, load: Load::Plain },
+    RomPart { file: "415.c1", region: Region::C, dest: 0x0, size: 0x100000, src_off: 0x0, crc: 0x7B2F9FB3, load: Load::Byte },
+    RomPart { file: "415.c2", region: Region::C, dest: 0x1, size: 0x100000, src_off: 0x0, crc: 0xA7F18A6F, load: Load::Byte },
+];
+pub static FFEAST: CartDef = CartDef {
+    name: "ffeast", title: "FFEAST (hors MAME)", parts: FFEAST_PARTS,
+    sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x200000 },
+    m1_reload: Some((0x10000, 0x20000)),
+    prot: PROT_NONE,
+    controller: Controller::Joystick,
+};
+
+pub static LTORB_PARTS: &[RomPart] = &[
+    RomPart { file: "409.p1", region: Region::P, dest: 0x0, size: 0x40000, src_off: 0x0, crc: 0x353F6B05, load: Load::WordSwap },
+    RomPart { file: "409.s1", region: Region::S, dest: 0x0, size: 0x10000, src_off: 0x0, crc: 0x8224D8B7, load: Load::Plain },
+    RomPart { file: "409.m1", region: Region::M, dest: 0x0, size: 0x10000, src_off: 0x0, crc: 0x6847FD52, load: Load::Plain },
+    RomPart { file: "409.v1", region: Region::V, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0x0329C2E7, load: Load::Plain },
+    RomPart { file: "409.c1", region: Region::C, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0x8B607198, load: Load::Byte },
+    RomPart { file: "409.c2", region: Region::C, dest: 0x1, size: 0x80000, src_off: 0x0, crc: 0x6B96B59C, load: Load::Byte },
+];
+pub static LTORB: CartDef = CartDef {
+    name: "ltorb", title: "LTORB (hors MAME)", parts: LTORB_PARTS,
+    sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x20000, m_crypt: 0x0, v: 0x80000, vb: 0x0, c: 0x100000 },
+    m1_reload: Some((0x10000, 0x10000)),
+    prot: PROT_NONE,
+    controller: Controller::Joystick,
+};
+
+pub static NEONOPON_PARTS: &[RomPart] = &[
+    RomPart { file: "407.p1", region: Region::P, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0x8A792271, load: Load::WordSwap },
+    RomPart { file: "407.s1", region: Region::S, dest: 0x0, size: 0x10000, src_off: 0x0, crc: 0x93E6FE7D, load: Load::Plain },
+    RomPart { file: "407.m1", region: Region::M, dest: 0x0, size: 0x10000, src_off: 0x0, crc: 0x7669DE64, load: Load::Plain },
+    RomPart { file: "407.v1", region: Region::V, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0x504BF849, load: Load::Plain },
+    RomPart { file: "407.c1", region: Region::C, dest: 0x0, size: 0x100000, src_off: 0x0, crc: 0x4A718AE3, load: Load::Byte },
+    RomPart { file: "407.c2", region: Region::C, dest: 0x1, size: 0x100000, src_off: 0x0, crc: 0x0E2CBC25, load: Load::Byte },
+];
+pub static NEONOPON: CartDef = CartDef {
+    name: "neonopon", title: "NEONOPON (hors MAME)", parts: NEONOPON_PARTS,
+    sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x20000, m_crypt: 0x0, v: 0x80000, vb: 0x0, c: 0x200000 },
+    m1_reload: Some((0x10000, 0x10000)),
+    prot: PROT_NONE,
+    controller: Controller::Joystick,
+};
+
+pub static NEOPONG_PARTS: &[RomPart] = &[
+    RomPart { file: "469.p1", region: Region::P, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0x9F35E29D, load: Load::WordSwap },
+    RomPart { file: "469.s1", region: Region::S, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0xCD19264F, load: Load::Plain },
+    RomPart { file: "469.m1", region: Region::M, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0x78C851CB, load: Load::Plain },
+    RomPart { file: "469.v1", region: Region::V, dest: 0x0, size: 0x200000, src_off: 0x0, crc: 0x6C31223C, load: Load::Plain },
+    RomPart { file: "469.c1", region: Region::C, dest: 0x0, size: 0x100000, src_off: 0x0, crc: 0xF5A57D1A, load: Load::Byte },
+    RomPart { file: "469.c2", region: Region::C, dest: 0x1, size: 0x100000, src_off: 0x0, crc: 0xAFFDE64E, load: Load::Byte },
+];
+pub static NEOPONG: CartDef = CartDef {
+    name: "neopong", title: "NEOPONG (hors MAME)", parts: NEOPONG_PARTS,
+    sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x200000 },
+    m1_reload: Some((0x10000, 0x20000)),
+    prot: PROT_NONE,
+    controller: Controller::Joystick,
+};
+
+pub static NEOTHUND_PARTS: &[RomPart] = &[
+    RomPart { file: "419.p1", region: Region::P, dest: 0x0, size: 0x100000, src_off: 0x0, crc: 0xF7050757, load: Load::WordSwap },
+    RomPart { file: "419.s1", region: Region::S, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0xA545B593, load: Load::Plain },
+    RomPart { file: "202.m1", region: Region::M, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0x9C0291EA, load: Load::Plain },
+    RomPart { file: "202.v1", region: Region::V, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0xDEBEB8FB, load: Load::Plain },
+    RomPart { file: "419.c1", region: Region::C, dest: 0x0, size: 0x100000, src_off: 0x0, crc: 0x48B9126E, load: Load::Byte },
+    RomPart { file: "419.c2", region: Region::C, dest: 0x1, size: 0x100000, src_off: 0x0, crc: 0x214DF62E, load: Load::Byte },
+];
+pub static NEOTHUND: CartDef = CartDef {
+    name: "neothund", title: "NEOTHUND (hors MAME)", parts: NEOTHUND_PARTS,
+    sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x80000, vb: 0x0, c: 0x200000 },
+    m1_reload: Some((0x10000, 0x20000)),
+    prot: PROT_NONE,
+    controller: Controller::Joystick,
+};
+
+pub static NGEM2K_PARTS: &[RomPart] = &[
+    RomPart { file: "411.p1", region: Region::P, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0xF2C42FE3, load: Load::WordSwap },
+    RomPart { file: "411.s1", region: Region::S, dest: 0x0, size: 0x10000, src_off: 0x0, crc: 0xFB3C02D2, load: Load::Plain },
+    RomPart { file: "411.m1", region: Region::M, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0xB1F44A15, load: Load::Plain },
+    RomPart { file: "411.v1", region: Region::V, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0xC32199F0, load: Load::Plain },
+    RomPart { file: "411.c1", region: Region::C, dest: 0x0, size: 0x100000, src_off: 0x0, crc: 0xA8E2AB47, load: Load::Byte },
+    RomPart { file: "411.c2", region: Region::C, dest: 0x1, size: 0x100000, src_off: 0x0, crc: 0xA738EA1C, load: Load::Byte },
+];
+pub static NGEM2K: CartDef = CartDef {
+    name: "ngem2k", title: "NGEM2K (hors MAME)", parts: NGEM2K_PARTS,
+    sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x80000, vb: 0x0, c: 0x200000 },
+    m1_reload: Some((0x10000, 0x20000)),
+    prot: PROT_NONE,
+    controller: Controller::Joystick,
+};
+
+pub static NGTETRIS_PARTS: &[RomPart] = &[
+    RomPart { file: "418.p1", region: Region::P, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0x3465569A, load: Load::WordSwap },
+    RomPart { file: "419.s1", region: Region::S, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0xA545B593, load: Load::Plain },
+    RomPart { file: "418.m1", region: Region::M, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0x6B3703C6, load: Load::Plain },
+    RomPart { file: "418.v1", region: Region::V, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0x2BE8E290, load: Load::Plain },
+    RomPart { file: "418.c1", region: Region::C, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0xACC6D1D4, load: Load::Byte },
+    RomPart { file: "418.c2", region: Region::C, dest: 0x1, size: 0x80000, src_off: 0x0, crc: 0x7EC06AB5, load: Load::Byte },
+];
+pub static NGTETRIS: CartDef = CartDef {
+    name: "ngtetris", title: "NGTETRIS (hors MAME)", parts: NGTETRIS_PARTS,
+    sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x80000, vb: 0x0, c: 0x100000 },
+    m1_reload: Some((0x10000, 0x20000)),
+    prot: PROT_NONE,
+    controller: Controller::Joystick,
+};
+
+pub static POKNIGHT_PARTS: &[RomPart] = &[
+    RomPart { file: "403.p1", region: Region::P, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0x750421EE, load: Load::WordSwap },
+    RomPart { file: "403.s1", region: Region::S, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0xA26D2F09, load: Load::Plain },
+    RomPart { file: "407.m1", region: Region::M, dest: 0x0, size: 0x10000, src_off: 0x0, crc: 0x7669DE64, load: Load::Plain },
+    RomPart { file: "407.v1", region: Region::V, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0x504BF849, load: Load::Plain },
+    RomPart { file: "403.c1", region: Region::C, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0x5FB2B761, load: Load::Byte },
+    RomPart { file: "403.c2", region: Region::C, dest: 0x1, size: 0x80000, src_off: 0x0, crc: 0xF2B570E3, load: Load::Byte },
+];
+pub static POKNIGHT: CartDef = CartDef {
+    name: "poknight", title: "POKNIGHT (hors MAME)", parts: POKNIGHT_PARTS,
+    sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x20000, m_crypt: 0x0, v: 0x80000, vb: 0x0, c: 0x100000 },
+    m1_reload: Some((0x10000, 0x10000)),
+    prot: PROT_NONE,
+    controller: Controller::Joystick,
+};
+
+pub static TOTC_PARTS: &[RomPart] = &[
+    RomPart { file: "316.p1", region: Region::P, dest: 0x0, size: 0x100000, src_off: 0x0, crc: 0x99604539, load: Load::WordSwap },
+    RomPart { file: "248.s1", region: Region::S, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0x0A3FEE41, load: Load::Plain },
+    RomPart { file: "316.m1", region: Region::M, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0x18B23ACE, load: Load::Plain },
+    RomPart { file: "316.v1", region: Region::V, dest: 0x0, size: 0x200000, src_off: 0x0, crc: 0x15C7F9E6, load: Load::Plain },
+    RomPart { file: "316.v2", region: Region::V, dest: 0x200000, size: 0x200000, src_off: 0x0, crc: 0x1B264559, load: Load::Plain },
+    RomPart { file: "316.v3", region: Region::V, dest: 0x400000, size: 0x100000, src_off: 0x0, crc: 0x84B62C5D, load: Load::Plain },
+    RomPart { file: "316.c1", region: Region::C, dest: 0x0, size: 0x200000, src_off: 0x0, crc: 0xCDD6600F, load: Load::Byte },
+    RomPart { file: "316.c2", region: Region::C, dest: 0x1, size: 0x200000, src_off: 0x0, crc: 0xF362C271, load: Load::Byte },
+];
+pub static TOTC: CartDef = CartDef {
+    name: "totc", title: "Treasure of the Caribbean", parts: TOTC_PARTS,
+    sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x500000, vb: 0x0, c: 0x400000 },
+    m1_reload: Some((0x10000, 0x20000)),
+    prot: PROT_NONE,
+    controller: Controller::Joystick,
+};
+
+pub static ALL_CARTS: &[&CartDef] = &[&MSLUG, &MSLUG2, &MSLUGX, &MSLUG3, &MSLUG4, &MSLUG5, &ZUPAPA, &GANRYU, &S1945P, &PREISLE2, &BANGBEAD, &NITD, &SENGOKU3, &KOF2001, &JOCKEYGP, &KOF99, &GAROU, &KOF2000, &ROTD, &PNYAA, &KOF2002, &SAMSHO5, &SAMSH5SP, &KOF2003, &SVC, &KOF98, &FATFURY2, &SSIDEKI, &SBP, &VLINER, &N_2020BB, &N_3COUNTB, &ALPHAM2, &ANDRODUN, &AODK, &AOF, &AOF2, &AOF3, &B2B, &BAKATONO, &BJOURNEY, &BLAZSTAR, &BREAKERS, &BREAKREV, &BSTARS, &BSTARS2, &BURNINGF, &CRSWD2BL, &CRSWORD, &CTOMADAY, &CYBERLIP, &DIGGERMA, &DOUBLEDR, &EIGHTMAN, &FATFURSP, &FATFURY1, &FATFURY3, &FBFRENZY, &FIGHTFEV, &FLIPSHOT, &FROMAN2B, &GALAXYFG, &GHOSTLOP, &GOALX3, &GOWCAIZR, &GPILOTS, &GURURIN, &IRONCLAD, &IRRMAZE, &JANSHIN, &JOYJOY, &KABUKIKL, &KARNOVR, &KIZUNA, &KOF94, &KOF95, &KOF96, &KOF97, &KOTM, &KOTM2, &LASTBLAD, &LASTBLD2, &LASTHOPE, &LBOWLING, &LEGENDOS, &LRESORT, &MAGDROP2, &MAGDROP3, &MAGLORD, &MAHRETSU, &MARUKODQ, &MIEXCHNG, &MINASAN, &MOSHOUGI, &MUTNAT, &NAM1975, &NCOMBAT, &NCOMMAND, &NEOBOMBE, &NEOCUP98, &NEODRIFT, &NEOMRDO, &NINJAMAS, &OVERTOP, &PANICBOM, &PBOBBL2N, &PBOBBLEN, &PGOAL, &POPBOUNC, &PSPIKES2, &PULSTAR, &PUZZLDPR, &PUZZLEDP, &QUIZDAI2, &QUIZDAIS, &QUIZKOF, &RAGNAGRD, &RBFF1, &RBFF2, &RBFFSPEC, &RIDHERO, &ROBOARMY, &SAMSHO, &SAMSHO2, &SAMSHO3, &SAMSHO4, &SAVAGERE, &SDODGEB, &SENGOKU, &SENGOKU2, &SHOCKTR2, &SHOCKTRO, &SOCBRAWL, &SONICWI2, &SONICWI3, &SPINMAST, &SSIDEKI2, &SSIDEKI3, &SSIDEKI4, &STAKWIN, &STAKWIN2, &STRHOOP, &SUPERSPY, &TOPHUNTR, &TPGOLF, &TRALLY, &TURFMAST, &TWINSPRI, &TWSOC96, &VIEWPOIN, &WAKUWAK7, &WH1, &WH2, &WH2J, &WHP, &WJAMMERS, &ZEDBLADE, &ZINTRCKB, &CNBE, &COLUMNSN, &FFEAST, &LTORB, &NEONOPON, &NEOPONG, &NEOTHUND, &NGEM2K, &NGTETRIS, &POKNIGHT, &TOTC];

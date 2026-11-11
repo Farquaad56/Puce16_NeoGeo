@@ -12,7 +12,7 @@ const ADPCM_B: [&str; 13] = [
 
 #[test]
 fn catalogue_has_expected_size_and_unique_names() {
-    assert_eq!(ALL_CARTS.len(), 158);
+    assert_eq!(ALL_CARTS.len(), 169);
     let names: HashSet<_> = ALL_CARTS.iter().map(|d| d.name).collect();
     assert_eq!(names.len(), ALL_CARTS.len());
 }
@@ -545,5 +545,57 @@ mod pointer_game_tests {
         );
         assert_eq!(find_def("popbounc").unwrap().controller, Controller::Dial);
         assert_eq!(find_def("kof94").unwrap().controller, Controller::Joystick);
+    }
+}
+
+// ---- T1017 : jeux hors MAME ----
+#[cfg(test)]
+mod extra_games_tests {
+    use crate::romset::find_def;
+    use crate::types::{Region, RuntimeProt};
+
+    const EXTRA: [&str; 11] = [
+        "cnbe", "columnsn", "ffeast", "ltorb", "neonopon", "neopong", "neothund", "ngem2k",
+        "ngtetris", "poknight", "totc",
+    ];
+
+    #[test]
+    fn extra_games_fit_their_regions() {
+        for g in EXTRA {
+            let d = find_def(g).unwrap_or_else(|| panic!("{g}"));
+            assert!(d.sizes.c > 0, "{g}");
+            assert_eq!(d.prot.runtime, RuntimeProt::None, "{g}");
+            for p in d.parts {
+                let cap = match p.region {
+                    Region::P => d.sizes.p,
+                    Region::S => d.sizes.s,
+                    Region::M => d.sizes.m,
+                    Region::V => d.sizes.v,
+                    Region::C => d.sizes.c,
+                    _ => usize::MAX as u32,
+                };
+                // octets pairs/impairs : le dernier octet écrit est à dest + 2 * (size - 1)
+                let end = if matches!(p.region, Region::C) {
+                    p.dest + 2 * p.size - 1
+                } else {
+                    p.dest + p.size
+                };
+                assert!(end <= cap, "{g} {}", p.file);
+            }
+        }
+    }
+
+    #[test]
+    fn ngem2k_parts() {
+        let d = find_def("ngem2k").unwrap();
+        let files: Vec<(&str, Region, u32)> =
+            d.parts.iter().map(|p| (p.file, p.region, p.dest)).collect();
+        assert!(files.contains(&("411.p1", Region::P, 0)));
+        assert!(files.contains(&("411.s1", Region::S, 0)));
+        assert!(files.contains(&("411.m1", Region::M, 0)));
+        assert!(files.contains(&("411.v1", Region::V, 0)));
+        assert!(files.contains(&("411.c1", Region::C, 0)));
+        assert!(files.contains(&("411.c2", Region::C, 1)));
+        assert_eq!(d.sizes.m, 0x30000);
     }
 }
