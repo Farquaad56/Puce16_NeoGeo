@@ -56,7 +56,7 @@ impl FxWindow {
                 if fx.interp > 0 {
                     ui.horizontal(|ui| {
                         ui.label("Netteté");
-                        changed |= pct(ui, &mut fx.interp, 1..=100, 1.0);
+                        changed |= pct(ui, &mut fx.interp, 5..=100, 5.0);
                     });
                 }
                 ui.separator();
@@ -85,16 +85,25 @@ impl FxWindow {
                     ScanMode::Adaptive => {
                         ui.horizontal(|ui| {
                             ui.label("Pixels sombres");
-                            changed |= pct(ui, &mut fx.scan_dk, 0..=95, 5.0);
+                            if pct(ui, &mut fx.scan_dk, 0..=100, 10.0) {
+                                fx.scan_br = fx.scan_br.max(fx.scan_dk);
+                                changed = true;
+                            }
                         });
                         ui.horizontal(|ui| {
                             ui.label("Pixels clairs");
-                            changed |= pct(ui, &mut fx.scan_br, 0..=95, 5.0);
+                            if pct(ui, &mut fx.scan_br, 0..=100, 10.0) {
+                                fx.scan_dk = fx.scan_dk.min(fx.scan_br);
+                                changed = true;
+                            }
                         });
                     }
                 }
                 if fx.scan_mode != ScanMode::Off {
                     ui.weak("Visibles à partir d'une échelle x2.");
+                }
+                if fx.scan_mode == ScanMode::Adaptive {
+                    ui.weak("Luminosité conservée entre deux lignes, selon la clarté du pixel.");
                 }
                 ui.separator();
 
