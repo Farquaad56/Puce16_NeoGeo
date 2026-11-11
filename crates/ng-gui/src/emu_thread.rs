@@ -32,6 +32,8 @@ pub enum Cmd {
         p1: PadState,
         p2: PadState,
         sys: SystemButtons,
+        /// Panneau mahjong (3 rangées, bit à 0 = pressée).
+        mj: [u8; 3],
     },
     Quit,
 }
@@ -52,6 +54,36 @@ pub struct EmuHandle {
     pub dbg_rx: Receiver<DebugSnapshot>,
     #[allow(dead_code)] // conservé pour joindre le thread dans les tests et un futur arrêt propre
     pub join: JoinHandle<()>,
+}
+
+/// BIOS Japon (par ordre de préférence) : le panneau mahjong n'y fonctionne dans le menu service
+/// que sur ces BIOS (MAME : `ROM_DEFAULT_BIOS( "japan" )` pour les machines `neogeo_mj`).
+const JAPAN_BIOS: [&str; 3] = ["vs-bios.rom", "japan-j3.bin", "sp1.jipan.1024"];
+
+/// Configuration à utiliser pour `game` : pour un jeu mahjong, le BIOS Japon est choisi
+/// automatiquement s'il est disponible ; sinon un message est renvoyé pour la barre d'état.
+fn config_for_game(cfg: &Config, game: &str) -> (Config, Option<String>) {
+    let mahjong = ng_cart::find_def(game)
+        .is_some_and(|d| d.controller == ng_cart::types::Controller::Mahjong);
+    if !mahjong || JAPAN_BIOS.contains(&cfg.bios.as_str()) {
+        return (cfg.clone(), None);
+    }
+    match JAPAN_BIOS
+        .iter()
+        .find(|b| cfg.bios_dir.join(b).exists())
+    {
+        Some(b) => {
+            let mut c = cfg.clone();
+            c.bios = (*b).to_string();
+            (c, Some(format!("{game} : BIOS Japon {b} sélectionné pour le panneau mahjong")))
+        }
+        None => (
+            cfg.clone(),
+            Some(format!(
+                "{game} : BIOS Japon introuvable, le panneau mahjong peut ne pas fonctionner dans le menu service"
+            )),
+        ),
+    }
 }
 
 /// Démarre le thread d'émulation.
@@ -98,6 +130,7 @@ fn run(
         PadState::default(),
         PadState::default(),
         SystemButtons::default(),
+        [0xFFu8; 3],
     );
     let mut t0 = Instant::now();
     let mut frames_since_t0: u64 = 0;
@@ -108,16 +141,22 @@ fn run(
         loop {
             match cmd_rx.try_recv() {
                 Ok(Cmd::Quit) | Err(TryRecvError::Disconnected) => return,
-                Ok(Cmd::Load { game }) => match load_machine(&cfg, &game) {
-                    Ok(m) => {
-                        machine = Some(m);
-                        t0 = Instant::now();
-                        frames_since_t0 = 0;
+                Ok(Cmd::Load { game }) => {
+                    let (game_cfg, note) = config_for_game(&cfg, &game);
+                    if let Some(n) = note {
+                        let _ = err_tx.send(n);
                     }
-                    Err(e) => {
-                        let _ = err_tx.send(format!("{game} : {e}"));
+                    match load_machine(&game_cfg, &game) {
+                        Ok(m) => {
+                            machine = Some(m);
+                            t0 = Instant::now();
+                            frames_since_t0 = 0;
+                        }
+                        Err(e) => {
+                            let _ = err_tx.send(format!("{game} : {e}"));
+                        }
                     }
-                },
+                }
                 Ok(Cmd::Reset) => {
                     if let Some(m) = machine.as_mut() {
                         m.reset();
@@ -137,7 +176,7 @@ fn run(
                     dbg_dirty = true;
                 }
                 Ok(Cmd::StepFrame) => step = true,
-                Ok(Cmd::Inputs { p1, p2, sys }) => inputs = (p1, p2, sys),
+                Ok(Cmd::Inputs { p1, p2, sys, mj }) => inputs = (p1, p2, sys, mj),
                 Err(TryRecvError::Empty) => break,
             }
         }
@@ -154,6 +193,7 @@ fn run(
             continue;
         };
         m.set_inputs(inputs.0, inputs.1, inputs.2);
+        m.set_mahjong(inputs.3);
         m.run_frame();
         frames_since_t0 += 1;
         let samples = m.take_audio();
@@ -216,6 +256,30 @@ mod tests {
             model: ng_cart::Model::Mvs,
             bios: "euro".into(),
         }
+    }
+
+    #[test]
+    fn mahjong_games_pick_the_japan_bios() {
+        let dir = std::env::temp_dir().join(format!("ng_mj_bios_{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let mut c = fallback_cfg();
+        c.bios_dir = dir.clone();
+        // joystick : inchangé
+        let (r, n) = config_for_game(&c, "kof94");
+        assert_eq!((r.bios.as_str(), n), ("euro", None));
+        // mahjong sans BIOS Japon : message, BIOS inchangé
+        let (r, n) = config_for_game(&c, "janshin");
+        assert_eq!(r.bios, "euro");
+        assert!(n.unwrap().contains("introuvable"));
+        // avec vs-bios.rom : sélectionné
+        std::fs::write(dir.join("vs-bios.rom"), b"x").unwrap();
+        let (r, n) = config_for_game(&c, "bakatono");
+        assert_eq!(r.bios, "vs-bios.rom");
+        assert!(n.is_some());
+        // déjà un BIOS Japon : inchangé
+        c.bios = "japan-j3.bin".into();
+        assert_eq!(config_for_game(&c, "minasan").0.bios, "japan-j3.bin");
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]

@@ -143,6 +143,14 @@ impl App {
         }
     }
 
+    /// Le jeu courant se joue avec le panneau mahjong.
+    fn is_mahjong(&self) -> bool {
+        self.game
+            .as_deref()
+            .and_then(ng_cart::find_def)
+            .is_some_and(|d| d.controller == ng_cart::types::Controller::Mahjong)
+    }
+
     pub fn load_game(&mut self, name: &str) {
         self.game = Some(name.to_string());
         self.error = None;
@@ -392,7 +400,8 @@ impl eframe::App for App {
 
         self.input.update_keys(&ctx);
         self.input.poll_gamepads();
-        if self.controls.show(&ctx, &mut self.input) {
+        let mahjong = self.is_mahjong();
+        if self.controls.show(&ctx, &mut self.input, mahjong) {
             self.prefs.input = self.input.bindings.to_prefs();
         }
         // pendant une capture de touche, rien n'est envoyé au jeu
@@ -402,6 +411,7 @@ impl eframe::App for App {
                 p1,
                 p2,
                 sys: self.input.system(),
+                mj: self.input.mahjong(mahjong),
             });
         }
 

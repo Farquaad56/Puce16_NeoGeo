@@ -82,6 +82,7 @@ impl Machine {
         let pal = Rc::new(RefCell::new(Palette::new()));
         let io = Rc::new(RefCell::new(Io {
             model: model.clone(),
+            mahjong: cart.def.controller == ng_cart::types::Controller::Mahjong,
             ..Io::default()
         }));
         let backup = Rc::new(RefCell::new(BackupRam::new()));
@@ -180,6 +181,11 @@ impl Machine {
         io.pad[0] = p1;
         io.pad[1] = p2;
         io.system = sys;
+    }
+
+    /// État du panneau mahjong (3 rangées, bit à 0 = pressée) ; sans effet hors jeux mahjong.
+    pub fn set_mahjong(&mut self, rows: [u8; 3]) {
+        self.io.borrow_mut().mj = rows;
     }
 
     /// Retourne un emprunt du framebuffer.

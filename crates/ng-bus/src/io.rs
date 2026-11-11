@@ -33,6 +33,13 @@ pub struct Io {
     pub card_bank: u8,
     /// Une carte mémoire est insérée (bits 12-14 de $380000 à 0).
     pub card_present: bool,
+    /// Panneau mahjong branché sur le port 1 (jeux `Controller::Mahjong`, MVS).
+    pub mahjong: bool,
+    /// Touches du panneau mahjong, 3 rangées (MJ.0 : A-G, MJ.1 : H-N, MJ.2 : Pon, Chi, Kan, Ron,
+    /// Reach en bits 0-4), bit à 0 = pressée.
+    pub mj: [u8; 3],
+    /// Dernier octet écrit en `REG_POUTPUT` ($380001) : sélection des rangées du panneau.
+    pub mj_sel: u8,
 }
 
 impl Default for Io {
@@ -50,11 +57,26 @@ impl Default for Io {
             rtc_data_out: false,
             card_bank: 0,
             card_present: false,
+            mahjong: false,
+            mj: [0xFF; 3],
+            mj_sel: 0,
         }
     }
 }
 
 impl Io {
+    /// `neogeo_mjctrl_ctrl_device::read_ctrl` (MAME) : 0xFF puis ET des rangées sélectionnées par
+    /// les bits 0, 1 et 2 de `mj_sel` (une touche pressée met son bit à 0).
+    pub fn mahjong_read_ctrl(&self) -> u8 {
+        let mut d = 0xFFu8;
+        for (i, row) in self.mj.iter().enumerate() {
+            if self.mj_sel & (1 << i) != 0 {
+                d &= row;
+            }
+        }
+        d
+    }
+
     /// Bits 12-14 de $380000 : 0x7000 = pas de carte, 0 = carte présente.
     fn card_bits(&self) -> u16 {
         if self.card_present {
@@ -77,6 +99,10 @@ impl Device for Io {
                     if self.model == Model::Aes {
                         // AES: no DIP switches, lower byte always 0xFF
                         ((self.pad[0].bits as u16) << 8) | 0xFF
+                    } else if self.mahjong {
+                        // Panneau mahjong : rangées sélectionnées ; DIP « Controller » (0x04) = 0
+                        // (« Mahjong Panel », défaut de `INPUT_PORTS_START( neogeo_mj )`).
+                        ((self.mahjong_read_ctrl() as u16) << 8) | (self.dipsw & !0x04) as u16
                     } else {
                         // MVS: lower byte is DIP switch setting
                         ((self.pad[0].bits as u16) << 8) | (self.dipsw as u16)
@@ -144,7 +170,11 @@ impl Device for Io {
                         | self.card_bits()
                 } else {
                     // MVS: bit 15 = 1
-                    let sys_bits = (self.system.bits & 0x0F) as u16;
+                    let mut sys_bits = (self.system.bits & 0x0F) as u16;
+                    // Panneau mahjong : SELECT masqué (relâché) quand le bit 2 de la sélection est à 1.
+                    if self.mahjong && self.mj_sel & 4 != 0 {
+                        sys_bits |= 2;
+                    }
                     0x00FF | (sys_bits << 8) | self.card_bits() | 0x8000
                 }
             }
@@ -183,7 +213,7 @@ impl Device for Io {
         if (addr >> 16) & 0xFE == 0x38 && addr & 1 != 0 {
             let off = (addr >> 1) & 0x78;
             match off {
-                0x00 => { /* REG_POUTPUT - pad select, ignored */ }
+                0x00 => self.mj_sel = byte, // REG_POUTPUT : sélection des rangées du panneau mahjong
                 0x08 => {
                     self.card_bank = byte & 7;
                 } // REG_CRDBANK
@@ -208,6 +238,50 @@ mod tests {
 
     fn make_io() -> Io {
         Io::default()
+    }
+
+    #[test]
+    fn mahjong_rows_follow_selection() {
+        // MAME neogeo_mj : rangée 0 = A-G (bits 0-6), rangée 1 = H-N, rangée 2 = Pon, Chi, Kan, Ron, Reach.
+        let mut io = Io {
+            mahjong: true,
+            ..Io::default()
+        };
+        // repos : tout à 1 quelle que soit la sélection
+        assert_eq!(io.read(0x300000) >> 8, 0xFF);
+        io.mj[0] = !0x01; // touche A pressée
+        io.mj[1] = !0x04; // touche J pressée
+        io.mj[2] = !0x08; // Ron
+        io.write(0x380001, 0x0000, true, false); // POUTPUT = 0 -> aucune rangée
+        assert_eq!(io.read(0x300000) >> 8, 0xFF);
+        io.write(0x380001, 0x0100, true, false);
+        assert_eq!(io.mj_sel, 1);
+        assert_eq!(io.read(0x300000) >> 8, 0xFE);
+        io.write(0x380001, 0x0200, true, false);
+        assert_eq!(io.read(0x300000) >> 8, 0xFB);
+        io.write(0x380001, 0x0400, true, false);
+        assert_eq!(io.read(0x300000) >> 8, 0xF7);
+        io.write(0x380001, 0x0300, true, false); // rangées 0 et 1 : ET des deux
+        assert_eq!(io.read(0x300000) >> 8, 0xFE & 0xFB);
+        // DIP : bit « Controller » (0x04) à 0 = panneau mahjong
+        assert_eq!(io.read(0x300000) & 0xFF, 0xFB);
+    }
+
+    #[test]
+    fn mahjong_select_is_masked_when_row2_selected() {
+        let mut io = Io {
+            mahjong: true,
+            ..Io::default()
+        };
+        io.system.bits = !0x02; // SELECT J1 pressé
+        assert_eq!(io.read(0x380000) & 0x0200, 0);
+        io.write(0x380001, 0x0400, true, false);
+        assert_eq!(io.read(0x380000) & 0x0200, 0x0200);
+        // sans panneau, aucun masquage
+        let mut j = Io::default();
+        j.system.bits = !0x02;
+        j.write(0x380001, 0x0400, true, false);
+        assert_eq!(j.read(0x380000) & 0x0200, 0);
     }
 
     #[test]

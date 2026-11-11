@@ -18,8 +18,11 @@ pub struct RegionSizes { pub p: u32, pub s: u32, pub m: u32, pub m_crypt: u32, p
 #[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum FixBank { Std, Garou, Kof2000 }
 #[derive(Clone, Copy, Debug)]
 pub struct Protection { pub p_decrypt: PDecrypt, pub cmc: Cmc, pub gfx_key: u8, pub sfix_decrypt: bool, pub m1_decrypt: bool, pub pcm2: Pcm2, pub runtime: RuntimeProt, pub fix_bank: FixBank }
+/// Contrôleur du port 1 (T1015).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Controller { Joystick, Mahjong }
 #[derive(Clone, Copy, Debug)]
-pub struct CartDef { pub name: &'static str, pub title: &'static str, pub parts: &'static [RomPart], pub sizes: RegionSizes, pub m1_reload: Option<(u32, u32)>, pub prot: Protection }
+pub struct CartDef { pub name: &'static str, pub title: &'static str, pub parts: &'static [RomPart], pub sizes: RegionSizes, pub m1_reload: Option<(u32, u32)>, pub prot: Protection, pub controller: Controller }
 
 const N: Protection = Protection { p_decrypt: PDecrypt::None, cmc: Cmc::None, gfx_key: 0, sfix_decrypt: false, m1_decrypt: false, pcm2: Pcm2::None, runtime: RuntimeProt::None, fix_bank: FixBank::Std };
 pub const PROT_NONE: Protection = N;

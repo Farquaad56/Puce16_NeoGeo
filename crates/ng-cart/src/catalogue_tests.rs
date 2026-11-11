@@ -511,3 +511,22 @@ mod cartram_game_tests {
         assert_eq!(find_def("kof94").unwrap().prot.runtime, RuntimeProt::None);
     }
 }
+
+// ---- T1015 : mahjong ----
+#[cfg(test)]
+mod mahjong_game_tests {
+    use crate::romset::find_def;
+    use crate::types::Controller;
+
+    #[test]
+    fn mahjong_controller_table() {
+        for g in ["bakatono", "janshin", "minasan"] {
+            assert_eq!(find_def(g).unwrap().controller, Controller::Mahjong, "{g}");
+        }
+        assert_eq!(find_def("kof94").unwrap().controller, Controller::Joystick);
+        assert_eq!(
+            find_def("mahretsu").unwrap().controller,
+            Controller::Joystick
+        );
+    }
+}

@@ -61,7 +61,7 @@ impl ControlsWindow {
     }
 
     /// Affiche la fenêtre ; renvoie vrai si les assignations ont changé.
-    pub fn show(&mut self, ctx: &egui::Context, input: &mut InputState) -> bool {
+    pub fn show(&mut self, ctx: &egui::Context, input: &mut InputState, mahjong: bool) -> bool {
         if !self.open {
             self.capture = None;
             return false;
@@ -111,6 +111,40 @@ impl ControlsWindow {
                         }
                     }
                 });
+                if mahjong {
+                    ui.separator();
+                    ui.strong("Panneau mahjong (jeu courant)");
+                    let acts: Vec<Action> =
+                        Action::ALL.into_iter().filter(|a| a.group() == 3).collect();
+                    ui.columns(2, |cols| {
+                        for (c, chunk) in acts.chunks(acts.len().div_ceil(2)).enumerate() {
+                            egui::Grid::new(("controls_mj", c))
+                                .num_columns(3)
+                                .striped(true)
+                                .show(&mut cols[c], |ui| {
+                                    for &a in chunk {
+                                        ui.label(a.label());
+                                        let cap = self.capture == Some(Capture::Key(a));
+                                        let text = key_cell(&input.bindings, a, cap);
+                                        if ui.selectable_label(cap, text).clicked() {
+                                            self.capture = Some(Capture::Key(a));
+                                        }
+                                        let cap = self.capture == Some(Capture::Button(a));
+                                        let text = button_cell(&input.bindings, a, cap);
+                                        if ui.selectable_label(cap, text).clicked() {
+                                            input.take_pressed_button();
+                                            self.capture = Some(Capture::Button(a));
+                                        }
+                                        ui.end_row();
+                                    }
+                                });
+                        }
+                    });
+                    if ui.button("Défaut panneau mahjong").clicked() {
+                        input.bindings.reset(|a| a.group() == 3);
+                        changed = true;
+                    }
+                }
                 ui.separator();
                 ui.horizontal(|ui| {
                     if ui.button("Tout par défaut").clicked() {

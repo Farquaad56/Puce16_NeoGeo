@@ -18,6 +18,7 @@ pub static MSLUG: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x800000, vb: 0x0, c: 0x1000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static MSLUG2_PARTS: &[RomPart] = &[
@@ -37,6 +38,7 @@ pub static MSLUG2: CartDef = CartDef {
     sizes: RegionSizes { p: 0x300000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x800000, vb: 0x0, c: 0x2000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static MSLUGX_PARTS: &[RomPart] = &[
@@ -59,6 +61,7 @@ pub static MSLUGX: CartDef = CartDef {
     sizes: RegionSizes { p: 0x500000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0xA00000, vb: 0x0, c: 0x3000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_MSX,
+    controller: Controller::Joystick,
 };
 
 pub static MSLUG3_PARTS: &[RomPart] = &[
@@ -84,6 +87,7 @@ pub static MSLUG3: CartDef = CartDef {
     sizes: RegionSizes { p: 0x900000, s: 0x80000, m: 0x90000, m_crypt: 0x0, v: 0x1000000, vb: 0x0, c: 0x4000000 },
     m1_reload: Some((0x10000, 0x80000)),
     prot: PROT_MS3,
+    controller: Controller::Joystick,
 };
 
 pub static MSLUG4_PARTS: &[RomPart] = &[
@@ -104,6 +108,7 @@ pub static MSLUG4: CartDef = CartDef {
     sizes: RegionSizes { p: 0x500000, s: 0x80000, m: 0x90000, m_crypt: 0x80000, v: 0x1000000, vb: 0x0, c: 0x3000000 },
     m1_reload: None,
     prot: PROT_MS4,
+    controller: Controller::Joystick,
 };
 
 pub static MSLUG5_PARTS: &[RomPart] = &[
@@ -126,6 +131,7 @@ pub static MSLUG5: CartDef = CartDef {
     sizes: RegionSizes { p: 0x800000, s: 0x20000, m: 0x90000, m_crypt: 0x80000, v: 0x1000000, vb: 0x0, c: 0x4000000 },
     m1_reload: None,
     prot: PROT_MS5,
+    controller: Controller::Joystick,
 };
 
 pub static ZUPAPA_PARTS: &[RomPart] = &[
@@ -140,6 +146,7 @@ pub static ZUPAPA: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x1000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_C42_ZUPAPA,
+    controller: Controller::Joystick,
 };
 
 pub static GANRYU_PARTS: &[RomPart] = &[
@@ -155,6 +162,7 @@ pub static GANRYU: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x400000, vb: 0x0, c: 0x1000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_C42_GANRYU,
+    controller: Controller::Joystick,
 };
 
 pub static S1945P_PARTS: &[RomPart] = &[
@@ -179,6 +187,7 @@ pub static S1945P: CartDef = CartDef {
     sizes: RegionSizes { p: 0x500000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x1000000, vb: 0x0, c: 0x4000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_C42_S1945P,
+    controller: Controller::Joystick,
 };
 
 pub static PREISLE2_PARTS: &[RomPart] = &[
@@ -199,6 +208,7 @@ pub static PREISLE2: CartDef = CartDef {
     sizes: RegionSizes { p: 0x500000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x600000, vb: 0x0, c: 0x3000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_C42_PREISLE2,
+    controller: Controller::Joystick,
 };
 
 pub static BANGBEAD_PARTS: &[RomPart] = &[
@@ -215,6 +225,7 @@ pub static BANGBEAD: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x500000, vb: 0x0, c: 0x1000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_C42_BANGBEAD,
+    controller: Controller::Joystick,
 };
 
 pub static NITD_PARTS: &[RomPart] = &[
@@ -229,6 +240,7 @@ pub static NITD: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x90000, m_crypt: 0x0, v: 0x400000, vb: 0x0, c: 0x1000000 },
     m1_reload: Some((0x10000, 0x80000)),
     prot: PROT_C42_NITD,
+    controller: Controller::Joystick,
 };
 
 pub static SENGOKU3_PARTS: &[RomPart] = &[
@@ -249,6 +261,7 @@ pub static SENGOKU3: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x90000, m_crypt: 0x0, v: 0xE00000, vb: 0x0, c: 0x2000000 },
     m1_reload: Some((0x10000, 0x80000)),
     prot: PROT_C42_SENGOKU3,
+    controller: Controller::Joystick,
 };
 
 pub static KOF2001_PARTS: &[RomPart] = &[
@@ -273,6 +286,7 @@ pub static KOF2001: CartDef = CartDef {
     sizes: RegionSizes { p: 0x500000, s: 0x20000, m: 0x90000, m_crypt: 0x80000, v: 0x1000000, vb: 0x0, c: 0x4000000 },
     m1_reload: None,
     prot: PROT_C50_KOF2001,
+    controller: Controller::Joystick,
 };
 
 pub static JOCKEYGP_PARTS: &[RomPart] = &[
@@ -287,6 +301,7 @@ pub static JOCKEYGP: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x90000, m_crypt: 0x80000, v: 0x200000, vb: 0x0, c: 0x1000000 },
     m1_reload: None,
     prot: PROT_C50_JOCKEYGP,
+    controller: Controller::Joystick,
 };
 
 pub static KOF99_PARTS: &[RomPart] = &[
@@ -312,6 +327,7 @@ pub static KOF99: CartDef = CartDef {
     sizes: RegionSizes { p: 0x900000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0xE00000, vb: 0x0, c: 0x4000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_SMA_KOF99,
+    controller: Controller::Joystick,
 };
 
 pub static GAROU_PARTS: &[RomPart] = &[
@@ -339,6 +355,7 @@ pub static GAROU: CartDef = CartDef {
     sizes: RegionSizes { p: 0x900000, s: 0x80000, m: 0x50000, m_crypt: 0x0, v: 0x1000000, vb: 0x0, c: 0x4000000 },
     m1_reload: Some((0x10000, 0x40000)),
     prot: PROT_SMA_GAROU,
+    controller: Controller::Joystick,
 };
 
 pub static KOF2000_PARTS: &[RomPart] = &[
@@ -364,6 +381,7 @@ pub static KOF2000: CartDef = CartDef {
     sizes: RegionSizes { p: 0x900000, s: 0x80000, m: 0x90000, m_crypt: 0x80000, v: 0x1000000, vb: 0x0, c: 0x4000000 },
     m1_reload: None,
     prot: PROT_SMA_KOF2000,
+    controller: Controller::Joystick,
 };
 
 pub static ROTD_PARTS: &[RomPart] = &[
@@ -385,6 +403,7 @@ pub static ROTD: CartDef = CartDef {
     sizes: RegionSizes { p: 0x800000, s: 0x20000, m: 0x90000, m_crypt: 0x80000, v: 0x1000000, vb: 0x0, c: 0x4000000 },
     m1_reload: None,
     prot: PROT_PCM2_ROTD,
+    controller: Controller::Joystick,
 };
 
 pub static PNYAA_PARTS: &[RomPart] = &[
@@ -399,6 +418,7 @@ pub static PNYAA: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x90000, m_crypt: 0x80000, v: 0x400000, vb: 0x0, c: 0x1000000 },
     m1_reload: None,
     prot: PROT_PCM2_PNYAA,
+    controller: Controller::Joystick,
 };
 
 pub static KOF2002_PARTS: &[RomPart] = &[
@@ -421,6 +441,7 @@ pub static KOF2002: CartDef = CartDef {
     sizes: RegionSizes { p: 0x500000, s: 0x20000, m: 0x90000, m_crypt: 0x80000, v: 0x1000000, vb: 0x0, c: 0x4000000 },
     m1_reload: None,
     prot: PROT_K2K2_KOF2002,
+    controller: Controller::Joystick,
 };
 
 pub static SAMSHO5_PARTS: &[RomPart] = &[
@@ -443,6 +464,7 @@ pub static SAMSHO5: CartDef = CartDef {
     sizes: RegionSizes { p: 0x800000, s: 0x20000, m: 0x90000, m_crypt: 0x80000, v: 0x1000000, vb: 0x0, c: 0x4000000 },
     m1_reload: None,
     prot: PROT_K2K2_SAMSHO5,
+    controller: Controller::Joystick,
 };
 
 pub static SAMSH5SP_PARTS: &[RomPart] = &[
@@ -465,6 +487,7 @@ pub static SAMSH5SP: CartDef = CartDef {
     sizes: RegionSizes { p: 0x800000, s: 0x20000, m: 0x90000, m_crypt: 0x80000, v: 0x1000000, vb: 0x0, c: 0x4000000 },
     m1_reload: None,
     prot: PROT_K2K2_SAMSH5SP,
+    controller: Controller::Joystick,
 };
 
 pub static KOF2003_PARTS: &[RomPart] = &[
@@ -488,6 +511,7 @@ pub static KOF2003: CartDef = CartDef {
     sizes: RegionSizes { p: 0x900000, s: 0x80000, m: 0x90000, m_crypt: 0x80000, v: 0x1000000, vb: 0x0, c: 0x4000000 },
     m1_reload: None,
     prot: PROT_PVC_KOF2003,
+    controller: Controller::Joystick,
 };
 
 pub static SVC_PARTS: &[RomPart] = &[
@@ -510,6 +534,7 @@ pub static SVC: CartDef = CartDef {
     sizes: RegionSizes { p: 0x800000, s: 0x80000, m: 0x90000, m_crypt: 0x80000, v: 0x1000000, vb: 0x0, c: 0x4000000 },
     m1_reload: None,
     prot: PROT_PVC_SVC,
+    controller: Controller::Joystick,
 };
 
 pub static KOF98_PARTS: &[RomPart] = &[
@@ -535,6 +560,7 @@ pub static KOF98: CartDef = CartDef {
     sizes: RegionSizes { p: 0x600000, s: 0x20000, m: 0x50000, m_crypt: 0x0, v: 0x1000000, vb: 0x0, c: 0x4000000 },
     m1_reload: Some((0x10000, 0x40000)),
     prot: PROT_KOF98,
+    controller: Controller::Joystick,
 };
 
 pub static FATFURY2_PARTS: &[RomPart] = &[
@@ -557,6 +583,7 @@ pub static FATFURY2: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x400000, vb: 0x0, c: 0x800000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_FATFURY2,
+    controller: Controller::Joystick,
 };
 
 pub static SSIDEKI_PARTS: &[RomPart] = &[
@@ -574,6 +601,7 @@ pub static SSIDEKI: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x600000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_FATFURY2,
+    controller: Controller::Joystick,
 };
 
 pub static SBP_PARTS: &[RomPart] = &[
@@ -590,6 +618,7 @@ pub static SBP: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x90000, m_crypt: 0x0, v: 0x800000, vb: 0x0, c: 0x400000 },
     m1_reload: Some((0x10000, 0x80000)),
     prot: PROT_SBP,
+    controller: Controller::Joystick,
 };
 
 pub static VLINER_PARTS: &[RomPart] = &[
@@ -604,6 +633,7 @@ pub static VLINER: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x20000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x400000 },
     m1_reload: Some((0x10000, 0x10000)),
     prot: PROT_VLINER,
+    controller: Controller::Joystick,
 };
 
 pub static N_2020BB_PARTS: &[RomPart] = &[
@@ -622,6 +652,7 @@ pub static N_2020BB: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x400000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static N_3COUNTB_PARTS: &[RomPart] = &[
@@ -644,6 +675,7 @@ pub static N_3COUNTB: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x400000, vb: 0x0, c: 0x800000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static ALPHAM2_PARTS: &[RomPart] = &[
@@ -663,6 +695,7 @@ pub static ALPHAM2: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x300000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static ANDRODUN_PARTS: &[RomPart] = &[
@@ -679,6 +712,7 @@ pub static ANDRODUN: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x100000, vb: 0x0, c: 0x200000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static AODK_PARTS: &[RomPart] = &[
@@ -702,6 +736,7 @@ pub static AODK: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x400000, vb: 0x0, c: 0x1000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static AOF_PARTS: &[RomPart] = &[
@@ -724,6 +759,7 @@ pub static AOF: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x400000, vb: 0x0, c: 0x800000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static AOF2_PARTS: &[RomPart] = &[
@@ -747,6 +783,7 @@ pub static AOF2: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x500000, vb: 0x0, c: 0x1000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static AOF3_PARTS: &[RomPart] = &[
@@ -771,6 +808,7 @@ pub static AOF3: CartDef = CartDef {
     sizes: RegionSizes { p: 0x300000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x600000, vb: 0x0, c: 0x1C00000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static B2B_PARTS: &[RomPart] = &[
@@ -786,6 +824,7 @@ pub static B2B: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x100000, vb: 0x0, c: 0x400000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static BAKATONO_PARTS: &[RomPart] = &[
@@ -804,6 +843,7 @@ pub static BAKATONO: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x400000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Mahjong,
 };
 
 pub static BJOURNEY_PARTS: &[RomPart] = &[
@@ -822,6 +862,7 @@ pub static BJOURNEY: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x300000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static BLAZSTAR_PARTS: &[RomPart] = &[
@@ -845,6 +886,7 @@ pub static BLAZSTAR: CartDef = CartDef {
     sizes: RegionSizes { p: 0x300000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x800000, vb: 0x0, c: 0x2000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static BREAKERS_PARTS: &[RomPart] = &[
@@ -864,6 +906,7 @@ pub static BREAKERS: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x800000, vb: 0x0, c: 0x1000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static BREAKREV_PARTS: &[RomPart] = &[
@@ -885,6 +928,7 @@ pub static BREAKREV: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x800000, vb: 0x0, c: 0x1800000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static BSTARS_PARTS: &[RomPart] = &[
@@ -908,6 +952,7 @@ pub static BSTARS: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x50000, m_crypt: 0x0, v: 0x200000, vb: 0x80000, c: 0x300000 },
     m1_reload: Some((0x10000, 0x40000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static BSTARS2_PARTS: &[RomPart] = &[
@@ -927,6 +972,7 @@ pub static BSTARS2: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x280000, vb: 0x0, c: 0x400000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static BURNINGF_PARTS: &[RomPart] = &[
@@ -945,6 +991,7 @@ pub static BURNINGF: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x400000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static CRSWD2BL_PARTS: &[RomPart] = &[
@@ -961,6 +1008,7 @@ pub static CRSWD2BL: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x800000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static CRSWORD_PARTS: &[RomPart] = &[
@@ -978,6 +1026,7 @@ pub static CRSWORD: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x100000, vb: 0x0, c: 0x400000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static CTOMADAY_PARTS: &[RomPart] = &[
@@ -995,6 +1044,7 @@ pub static CTOMADAY: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x500000, vb: 0x0, c: 0x800000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static CYBERLIP_PARTS: &[RomPart] = &[
@@ -1018,6 +1068,7 @@ pub static CYBERLIP: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x80000, c: 0x300000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static DIGGERMA_PARTS: &[RomPart] = &[
@@ -1033,6 +1084,7 @@ pub static DIGGERMA: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x100000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static DOUBLEDR_PARTS: &[RomPart] = &[
@@ -1056,6 +1108,7 @@ pub static DOUBLEDR: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x400000, vb: 0x0, c: 0xE00000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static EIGHTMAN_PARTS: &[RomPart] = &[
@@ -1074,6 +1127,7 @@ pub static EIGHTMAN: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x300000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static FATFURSP_PARTS: &[RomPart] = &[
@@ -1096,6 +1150,7 @@ pub static FATFURSP: CartDef = CartDef {
     sizes: RegionSizes { p: 0x180000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x500000, vb: 0x0, c: 0xC00000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static FATFURY1_PARTS: &[RomPart] = &[
@@ -1115,6 +1170,7 @@ pub static FATFURY1: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x400000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static FATFURY3_PARTS: &[RomPart] = &[
@@ -1137,6 +1193,7 @@ pub static FATFURY3: CartDef = CartDef {
     sizes: RegionSizes { p: 0x300000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0xA00000, vb: 0x0, c: 0x1400000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static FBFRENZY_PARTS: &[RomPart] = &[
@@ -1155,6 +1212,7 @@ pub static FBFRENZY: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x300000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static FIGHTFEV_PARTS: &[RomPart] = &[
@@ -1173,6 +1231,7 @@ pub static FIGHTFEV: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x300000, vb: 0x0, c: 0x800000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static FLIPSHOT_PARTS: &[RomPart] = &[
@@ -1188,6 +1247,7 @@ pub static FLIPSHOT: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x400000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static FROMAN2B_PARTS: &[RomPart] = &[
@@ -1203,6 +1263,7 @@ pub static FROMAN2B: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x100000, vb: 0x0, c: 0x800000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static GALAXYFG_PARTS: &[RomPart] = &[
@@ -1227,6 +1288,7 @@ pub static GALAXYFG: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x500000, vb: 0x0, c: 0xE00000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static GHOSTLOP_PARTS: &[RomPart] = &[
@@ -1242,6 +1304,7 @@ pub static GHOSTLOP: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x800000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static GOALX3_PARTS: &[RomPart] = &[
@@ -1260,6 +1323,7 @@ pub static GOALX3: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0xA00000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static GOWCAIZR_PARTS: &[RomPart] = &[
@@ -1284,6 +1348,7 @@ pub static GOWCAIZR: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x500000, vb: 0x0, c: 0x1000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static GPILOTS_PARTS: &[RomPart] = &[
@@ -1304,6 +1369,7 @@ pub static GPILOTS: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x180000, vb: 0x80000, c: 0x400000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static GURURIN_PARTS: &[RomPart] = &[
@@ -1319,6 +1385,7 @@ pub static GURURIN: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x80000, vb: 0x0, c: 0x400000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static IRONCLAD_PARTS: &[RomPart] = &[
@@ -1337,6 +1404,7 @@ pub static IRONCLAD: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x400000, vb: 0x0, c: 0x1000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static IRRMAZE_PARTS: &[RomPart] = &[
@@ -1354,6 +1422,7 @@ pub static IRRMAZE: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x300000, vb: 0x0, c: 0x800000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static JANSHIN_PARTS: &[RomPart] = &[
@@ -1369,6 +1438,7 @@ pub static JANSHIN: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x400000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Mahjong,
 };
 
 pub static JOYJOY_PARTS: &[RomPart] = &[
@@ -1385,6 +1455,7 @@ pub static JOYJOY: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x50000, m_crypt: 0x0, v: 0x80000, vb: 0x80000, c: 0x100000 },
     m1_reload: Some((0x10000, 0x40000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static KABUKIKL_PARTS: &[RomPart] = &[
@@ -1406,6 +1477,7 @@ pub static KABUKIKL: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x700000, vb: 0x0, c: 0x1000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static KARNOVR_PARTS: &[RomPart] = &[
@@ -1425,6 +1497,7 @@ pub static KARNOVR: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0xC00000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static KIZUNA_PARTS: &[RomPart] = &[
@@ -1450,6 +1523,7 @@ pub static KIZUNA: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x800000, vb: 0x0, c: 0x1C00000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static KOF94_PARTS: &[RomPart] = &[
@@ -1474,6 +1548,7 @@ pub static KOF94: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x600000, vb: 0x0, c: 0x1000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static KOF95_PARTS: &[RomPart] = &[
@@ -1498,6 +1573,7 @@ pub static KOF95: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x900000, vb: 0x0, c: 0x1A00000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static KOF96_PARTS: &[RomPart] = &[
@@ -1522,6 +1598,7 @@ pub static KOF96: CartDef = CartDef {
     sizes: RegionSizes { p: 0x300000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0xA00000, vb: 0x0, c: 0x2000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static KOF97_PARTS: &[RomPart] = &[
@@ -1544,6 +1621,7 @@ pub static KOF97: CartDef = CartDef {
     sizes: RegionSizes { p: 0x500000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0xC00000, vb: 0x0, c: 0x2800000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static KOTM_PARTS: &[RomPart] = &[
@@ -1563,6 +1641,7 @@ pub static KOTM: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x400000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static KOTM2_PARTS: &[RomPart] = &[
@@ -1584,6 +1663,7 @@ pub static KOTM2: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x300000, vb: 0x0, c: 0x600000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static LASTBLAD_PARTS: &[RomPart] = &[
@@ -1607,6 +1687,7 @@ pub static LASTBLAD: CartDef = CartDef {
     sizes: RegionSizes { p: 0x500000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x1000000, vb: 0x0, c: 0x2800000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static LASTBLD2_PARTS: &[RomPart] = &[
@@ -1630,6 +1711,7 @@ pub static LASTBLD2: CartDef = CartDef {
     sizes: RegionSizes { p: 0x500000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x1000000, vb: 0x0, c: 0x3000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static LASTHOPE_PARTS: &[RomPart] = &[
@@ -1649,6 +1731,7 @@ pub static LASTHOPE: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x600000, vb: 0x0, c: 0x1000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static LBOWLING_PARTS: &[RomPart] = &[
@@ -1666,6 +1749,7 @@ pub static LBOWLING: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x100000, vb: 0x80000, c: 0x100000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static LEGENDOS_PARTS: &[RomPart] = &[
@@ -1683,6 +1767,7 @@ pub static LEGENDOS: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x100000, vb: 0x0, c: 0x400000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static LRESORT_PARTS: &[RomPart] = &[
@@ -1701,6 +1786,7 @@ pub static LRESORT: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x300000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static MAGDROP2_PARTS: &[RomPart] = &[
@@ -1716,6 +1802,7 @@ pub static MAGDROP2: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x800000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static MAGDROP3_PARTS: &[RomPart] = &[
@@ -1734,6 +1821,7 @@ pub static MAGDROP3: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x480000, vb: 0x0, c: 0x1000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static MAGLORD_PARTS: &[RomPart] = &[
@@ -1755,6 +1843,7 @@ pub static MAGLORD: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x50000, m_crypt: 0x0, v: 0x80000, vb: 0x100000, c: 0x300000 },
     m1_reload: Some((0x10000, 0x40000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static MAHRETSU_PARTS: &[RomPart] = &[
@@ -1776,6 +1865,7 @@ pub static MAHRETSU: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x100000, vb: 0x180000, c: 0x200000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static MARUKODQ_PARTS: &[RomPart] = &[
@@ -1794,6 +1884,7 @@ pub static MARUKODQ: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x400000, vb: 0x0, c: 0xA00000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static MIEXCHNG_PARTS: &[RomPart] = &[
@@ -1811,6 +1902,7 @@ pub static MIEXCHNG: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x400000, vb: 0x0, c: 0x600000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static MINASAN_PARTS: &[RomPart] = &[
@@ -1829,6 +1921,7 @@ pub static MINASAN: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x100000, vb: 0x100000, c: 0x400000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Mahjong,
 };
 
 pub static MOSHOUGI_PARTS: &[RomPart] = &[
@@ -1844,6 +1937,7 @@ pub static MOSHOUGI: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x400000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static MUTNAT_PARTS: &[RomPart] = &[
@@ -1862,6 +1956,7 @@ pub static MUTNAT: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x400000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static NAM1975_PARTS: &[RomPart] = &[
@@ -1884,6 +1979,7 @@ pub static NAM1975: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x50000, m_crypt: 0x0, v: 0x80000, vb: 0x180000, c: 0x300000 },
     m1_reload: Some((0x10000, 0x40000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static NCOMBAT_PARTS: &[RomPart] = &[
@@ -1906,6 +2002,7 @@ pub static NCOMBAT: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x180000, vb: 0x80000, c: 0x300000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static NCOMMAND_PARTS: &[RomPart] = &[
@@ -1924,6 +2021,7 @@ pub static NCOMMAND: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x180000, vb: 0x0, c: 0x400000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static NEOBOMBE_PARTS: &[RomPart] = &[
@@ -1942,6 +2040,7 @@ pub static NEOBOMBE: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x600000, vb: 0x0, c: 0x900000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static NEOCUP98_PARTS: &[RomPart] = &[
@@ -1959,6 +2058,7 @@ pub static NEOCUP98: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x600000, vb: 0x0, c: 0x1000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static NEODRIFT_PARTS: &[RomPart] = &[
@@ -1976,6 +2076,7 @@ pub static NEODRIFT: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x400000, vb: 0x0, c: 0x800000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static NEOMRDO_PARTS: &[RomPart] = &[
@@ -1991,6 +2092,7 @@ pub static NEOMRDO: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x400000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static NINJAMAS_PARTS: &[RomPart] = &[
@@ -2014,6 +2116,7 @@ pub static NINJAMAS: CartDef = CartDef {
     sizes: RegionSizes { p: 0x300000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x600000, vb: 0x0, c: 0x2000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static OVERTOP_PARTS: &[RomPart] = &[
@@ -2034,6 +2137,7 @@ pub static OVERTOP: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x400000, vb: 0x0, c: 0x1400000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static PANICBOM_PARTS: &[RomPart] = &[
@@ -2050,6 +2154,7 @@ pub static PANICBOM: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x300000, vb: 0x0, c: 0x200000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static PBOBBL2N_PARTS: &[RomPart] = &[
@@ -2068,6 +2173,7 @@ pub static PBOBBL2N: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x800000, vb: 0x0, c: 0xA00000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static PBOBBLEN_PARTS: &[RomPart] = &[
@@ -2090,6 +2196,7 @@ pub static PBOBBLEN: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x380000, vb: 0x0, c: 0x500000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static PGOAL_PARTS: &[RomPart] = &[
@@ -2108,6 +2215,7 @@ pub static PGOAL: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x400000, vb: 0x0, c: 0xC00000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static POPBOUNC_PARTS: &[RomPart] = &[
@@ -2123,6 +2231,7 @@ pub static POPBOUNC: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x400000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static PSPIKES2_PARTS: &[RomPart] = &[
@@ -2144,6 +2253,7 @@ pub static PSPIKES2: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x300000, vb: 0x0, c: 0x600000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static PULSTAR_PARTS: &[RomPart] = &[
@@ -2167,6 +2277,7 @@ pub static PULSTAR: CartDef = CartDef {
     sizes: RegionSizes { p: 0x300000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x800000, vb: 0x0, c: 0x1C00000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static PUZZLDPR_PARTS: &[RomPart] = &[
@@ -2182,6 +2293,7 @@ pub static PUZZLDPR: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x80000, vb: 0x0, c: 0x200000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static PUZZLEDP_PARTS: &[RomPart] = &[
@@ -2197,6 +2309,7 @@ pub static PUZZLEDP: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x80000, vb: 0x0, c: 0x200000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static QUIZDAI2_PARTS: &[RomPart] = &[
@@ -2215,6 +2328,7 @@ pub static QUIZDAI2: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x300000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static QUIZDAIS_PARTS: &[RomPart] = &[
@@ -2230,6 +2344,7 @@ pub static QUIZDAIS: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x100000, vb: 0x0, c: 0x200000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static QUIZKOF_PARTS: &[RomPart] = &[
@@ -2249,6 +2364,7 @@ pub static QUIZKOF: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x600000, vb: 0x0, c: 0x800000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static RAGNAGRD_PARTS: &[RomPart] = &[
@@ -2272,6 +2388,7 @@ pub static RAGNAGRD: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x800000, vb: 0x0, c: 0x2000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static RBFF1_PARTS: &[RomPart] = &[
@@ -2296,6 +2413,7 @@ pub static RBFF1: CartDef = CartDef {
     sizes: RegionSizes { p: 0x300000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0xC00000, vb: 0x0, c: 0x1C00000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static RBFF2_PARTS: &[RomPart] = &[
@@ -2319,6 +2437,7 @@ pub static RBFF2: CartDef = CartDef {
     sizes: RegionSizes { p: 0x500000, s: 0x20000, m: 0x50000, m_crypt: 0x0, v: 0xE00000, vb: 0x0, c: 0x3000000 },
     m1_reload: Some((0x10000, 0x40000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static RBFFSPEC_PARTS: &[RomPart] = &[
@@ -2343,6 +2462,7 @@ pub static RBFFSPEC: CartDef = CartDef {
     sizes: RegionSizes { p: 0x500000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0xC00000, vb: 0x0, c: 0x2000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static RIDHERO_PARTS: &[RomPart] = &[
@@ -2365,6 +2485,7 @@ pub static RIDHERO: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x50000, m_crypt: 0x0, v: 0x100000, vb: 0x200000, c: 0x200000 },
     m1_reload: Some((0x10000, 0x40000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static ROBOARMY_PARTS: &[RomPart] = &[
@@ -2383,6 +2504,7 @@ pub static ROBOARMY: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x300000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static SAMSHO_PARTS: &[RomPart] = &[
@@ -2404,6 +2526,7 @@ pub static SAMSHO: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x400000, vb: 0x0, c: 0xA00000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static SAMSHO2_PARTS: &[RomPart] = &[
@@ -2429,6 +2552,7 @@ pub static SAMSHO2: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x700000, vb: 0x0, c: 0x1000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static SAMSHO3_PARTS: &[RomPart] = &[
@@ -2455,6 +2579,7 @@ pub static SAMSHO3: CartDef = CartDef {
     sizes: RegionSizes { p: 0x300000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x600000, vb: 0x0, c: 0x1A00000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static SAMSHO4_PARTS: &[RomPart] = &[
@@ -2479,6 +2604,7 @@ pub static SAMSHO4: CartDef = CartDef {
     sizes: RegionSizes { p: 0x500000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0xA00000, vb: 0x0, c: 0x2000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static SAVAGERE_PARTS: &[RomPart] = &[
@@ -2503,6 +2629,7 @@ pub static SAVAGERE: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x600000, vb: 0x0, c: 0x1000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static SDODGEB_PARTS: &[RomPart] = &[
@@ -2521,6 +2648,7 @@ pub static SDODGEB: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x400000, vb: 0x0, c: 0xC00000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static SENGOKU_PARTS: &[RomPart] = &[
@@ -2540,6 +2668,7 @@ pub static SENGOKU: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x400000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static SENGOKU2_PARTS: &[RomPart] = &[
@@ -2560,6 +2689,7 @@ pub static SENGOKU2: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x300000, vb: 0x0, c: 0x600000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static SHOCKTR2_PARTS: &[RomPart] = &[
@@ -2582,6 +2712,7 @@ pub static SHOCKTR2: CartDef = CartDef {
     sizes: RegionSizes { p: 0x500000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x1000000, vb: 0x0, c: 0x3000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static SHOCKTRO_PARTS: &[RomPart] = &[
@@ -2605,6 +2736,7 @@ pub static SHOCKTRO: CartDef = CartDef {
     sizes: RegionSizes { p: 0x500000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x600000, vb: 0x0, c: 0x2000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static SOCBRAWL_PARTS: &[RomPart] = &[
@@ -2623,6 +2755,7 @@ pub static SOCBRAWL: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x300000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static SONICWI2_PARTS: &[RomPart] = &[
@@ -2642,6 +2775,7 @@ pub static SONICWI2: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x300000, vb: 0x0, c: 0x800000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static SONICWI3_PARTS: &[RomPart] = &[
@@ -2661,6 +2795,7 @@ pub static SONICWI3: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x600000, vb: 0x0, c: 0xC00000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static SPINMAST_PARTS: &[RomPart] = &[
@@ -2683,6 +2818,7 @@ pub static SPINMAST: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x100000, vb: 0x0, c: 0x800000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static SSIDEKI2_PARTS: &[RomPart] = &[
@@ -2701,6 +2837,7 @@ pub static SSIDEKI2: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x400000, vb: 0x0, c: 0x800000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static SSIDEKI3_PARTS: &[RomPart] = &[
@@ -2723,6 +2860,7 @@ pub static SSIDEKI3: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x600000, vb: 0x0, c: 0xC00000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static SSIDEKI4_PARTS: &[RomPart] = &[
@@ -2744,6 +2882,7 @@ pub static SSIDEKI4: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x600000, vb: 0x0, c: 0x1400000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static STAKWIN_PARTS: &[RomPart] = &[
@@ -2762,6 +2901,7 @@ pub static STAKWIN: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x800000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static STAKWIN2_PARTS: &[RomPart] = &[
@@ -2781,6 +2921,7 @@ pub static STAKWIN2: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x800000, vb: 0x0, c: 0xC00000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static STRHOOP_PARTS: &[RomPart] = &[
@@ -2799,6 +2940,7 @@ pub static STRHOOP: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x300000, vb: 0x0, c: 0x800000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static SUPERSPY_PARTS: &[RomPart] = &[
@@ -2819,6 +2961,7 @@ pub static SUPERSPY: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x50000, m_crypt: 0x0, v: 0x180000, vb: 0x80000, c: 0x400000 },
     m1_reload: Some((0x10000, 0x40000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static TOPHUNTR_PARTS: &[RomPart] = &[
@@ -2844,6 +2987,7 @@ pub static TOPHUNTR: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x400000, vb: 0x0, c: 0x800000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static TPGOLF_PARTS: &[RomPart] = &[
@@ -2870,6 +3014,7 @@ pub static TPGOLF: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x80000, vb: 0x200000, c: 0x400000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static TRALLY_PARTS: &[RomPart] = &[
@@ -2889,6 +3034,7 @@ pub static TRALLY: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x180000, vb: 0x0, c: 0x300000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static TURFMAST_PARTS: &[RomPart] = &[
@@ -2908,6 +3054,7 @@ pub static TURFMAST: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x800000, vb: 0x0, c: 0x800000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static TWINSPRI_PARTS: &[RomPart] = &[
@@ -2927,6 +3074,7 @@ pub static TWINSPRI: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x600000, vb: 0x0, c: 0xA00000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static TWSOC96_PARTS: &[RomPart] = &[
@@ -2945,6 +3093,7 @@ pub static TWSOC96: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x400000, vb: 0x0, c: 0xA00000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static VIEWPOIN_PARTS: &[RomPart] = &[
@@ -2963,6 +3112,7 @@ pub static VIEWPOIN: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x400000, vb: 0x0, c: 0x600000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static WAKUWAK7_PARTS: &[RomPart] = &[
@@ -2984,6 +3134,7 @@ pub static WAKUWAK7: CartDef = CartDef {
     sizes: RegionSizes { p: 0x300000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x800000, vb: 0x0, c: 0x1800000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static WH1_PARTS: &[RomPart] = &[
@@ -3005,6 +3156,7 @@ pub static WH1: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x300000, vb: 0x0, c: 0x600000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static WH2_PARTS: &[RomPart] = &[
@@ -3026,6 +3178,7 @@ pub static WH2: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x400000, vb: 0x0, c: 0xC00000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static WH2J_PARTS: &[RomPart] = &[
@@ -3049,6 +3202,7 @@ pub static WH2J: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x400000, vb: 0x0, c: 0x1000000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static WHP_PARTS: &[RomPart] = &[
@@ -3073,6 +3227,7 @@ pub static WHP: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x600000, vb: 0x0, c: 0x1C00000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static WJAMMERS_PARTS: &[RomPart] = &[
@@ -3093,6 +3248,7 @@ pub static WJAMMERS: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x400000, vb: 0x0, c: 0x400000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static ZEDBLADE_PARTS: &[RomPart] = &[
@@ -3112,6 +3268,7 @@ pub static ZEDBLADE: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x500000, vb: 0x0, c: 0x800000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static ZINTRCKB_PARTS: &[RomPart] = &[
@@ -3127,6 +3284,7 @@ pub static ZINTRCKB: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x400000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
+    controller: Controller::Joystick,
 };
 
 pub static ALL_CARTS: &[&CartDef] = &[&MSLUG, &MSLUG2, &MSLUGX, &MSLUG3, &MSLUG4, &MSLUG5, &ZUPAPA, &GANRYU, &S1945P, &PREISLE2, &BANGBEAD, &NITD, &SENGOKU3, &KOF2001, &JOCKEYGP, &KOF99, &GAROU, &KOF2000, &ROTD, &PNYAA, &KOF2002, &SAMSHO5, &SAMSH5SP, &KOF2003, &SVC, &KOF98, &FATFURY2, &SSIDEKI, &SBP, &VLINER, &N_2020BB, &N_3COUNTB, &ALPHAM2, &ANDRODUN, &AODK, &AOF, &AOF2, &AOF3, &B2B, &BAKATONO, &BJOURNEY, &BLAZSTAR, &BREAKERS, &BREAKREV, &BSTARS, &BSTARS2, &BURNINGF, &CRSWD2BL, &CRSWORD, &CTOMADAY, &CYBERLIP, &DIGGERMA, &DOUBLEDR, &EIGHTMAN, &FATFURSP, &FATFURY1, &FATFURY3, &FBFRENZY, &FIGHTFEV, &FLIPSHOT, &FROMAN2B, &GALAXYFG, &GHOSTLOP, &GOALX3, &GOWCAIZR, &GPILOTS, &GURURIN, &IRONCLAD, &IRRMAZE, &JANSHIN, &JOYJOY, &KABUKIKL, &KARNOVR, &KIZUNA, &KOF94, &KOF95, &KOF96, &KOF97, &KOTM, &KOTM2, &LASTBLAD, &LASTBLD2, &LASTHOPE, &LBOWLING, &LEGENDOS, &LRESORT, &MAGDROP2, &MAGDROP3, &MAGLORD, &MAHRETSU, &MARUKODQ, &MIEXCHNG, &MINASAN, &MOSHOUGI, &MUTNAT, &NAM1975, &NCOMBAT, &NCOMMAND, &NEOBOMBE, &NEOCUP98, &NEODRIFT, &NEOMRDO, &NINJAMAS, &OVERTOP, &PANICBOM, &PBOBBL2N, &PBOBBLEN, &PGOAL, &POPBOUNC, &PSPIKES2, &PULSTAR, &PUZZLDPR, &PUZZLEDP, &QUIZDAI2, &QUIZDAIS, &QUIZKOF, &RAGNAGRD, &RBFF1, &RBFF2, &RBFFSPEC, &RIDHERO, &ROBOARMY, &SAMSHO, &SAMSHO2, &SAMSHO3, &SAMSHO4, &SAVAGERE, &SDODGEB, &SENGOKU, &SENGOKU2, &SHOCKTR2, &SHOCKTRO, &SOCBRAWL, &SONICWI2, &SONICWI3, &SPINMAST, &SSIDEKI2, &SSIDEKI3, &SSIDEKI4, &STAKWIN, &STAKWIN2, &STRHOOP, &SUPERSPY, &TOPHUNTR, &TPGOLF, &TRALLY, &TURFMAST, &TWINSPRI, &TWSOC96, &VIEWPOIN, &WAKUWAK7, &WH1, &WH2, &WH2J, &WHP, &WJAMMERS, &ZEDBLADE, &ZINTRCKB];

@@ -290,6 +290,7 @@ mod tests {
             sizes,
             m1_reload,
             prot: PROT_NONE,
+            controller: Controller::Joystick,
         });
         Box::leak(def)
     }

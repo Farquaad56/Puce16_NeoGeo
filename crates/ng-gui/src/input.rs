@@ -57,13 +57,38 @@ pub enum Action {
     Coin2,
     Service,
     Test,
+    // Panneau mahjong (jeux `Controller::Mahjong`) : rangée MJ.0 (A-G), MJ.1 (H-N), MJ.2.
+    MjA,
+    MjB,
+    MjC,
+    MjD,
+    MjE,
+    MjF,
+    MjG,
+    MjH,
+    MjI,
+    MjJ,
+    MjK,
+    MjL,
+    MjM,
+    MjN,
+    MjPon,
+    MjChi,
+    MjKan,
+    MjRon,
+    MjReach,
 }
+
+/// Nombre total d'actions (joueurs, système, panneau mahjong).
+pub const N_ACTIONS: usize = 43;
 
 /// Où va une action : bits d'une manette ou bits système.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum Target {
     Pad(usize, u8),
     Sys(u8),
+    /// Rangée (0-2) et bit du panneau mahjong.
+    Mj(usize, u8),
 }
 
 /// (action, nom dans gui.toml, libellé, cible, touche par défaut, bouton par défaut).
@@ -77,9 +102,9 @@ type Row = (
 );
 
 #[rustfmt::skip]
-const TABLE: [Row; 24] = {
+const TABLE: [Row; N_ACTIONS] = {
     use Action::*;
-    use Target::{Pad, Sys};
+    use Target::{Mj, Pad, Sys};
     [
         (P1Up, "P1Up", "J1 Haut", Pad(0, UP), Some(Key::ArrowUp), Some(Button::DPadUp)),
         (P1Down, "P1Down", "J1 Bas", Pad(0, DOWN), Some(Key::ArrowDown), Some(Button::DPadDown)),
@@ -105,6 +130,25 @@ const TABLE: [Row; 24] = {
         (Coin2, "Coin2", "Pièce 2", Sys(COIN2), Some(Key::Num6), None),
         (Service, "Service", "Service", Sys(SERVICE), Some(Key::Num9), None),
         (Test, "Test", "Test", Sys(TEST), Some(Key::F2), None),
+        (MjA, "MjA", "Mahjong A", Mj(0, 1), Some(Key::A), None),
+        (MjB, "MjB", "Mahjong B", Mj(0, 1 << 1), Some(Key::B), None),
+        (MjC, "MjC", "Mahjong C", Mj(0, 1 << 2), Some(Key::C), None),
+        (MjD, "MjD", "Mahjong D", Mj(0, 1 << 3), Some(Key::D), None),
+        (MjE, "MjE", "Mahjong E", Mj(0, 1 << 4), Some(Key::E), None),
+        (MjF, "MjF", "Mahjong F", Mj(0, 1 << 5), Some(Key::F), None),
+        (MjG, "MjG", "Mahjong G", Mj(0, 1 << 6), Some(Key::G), None),
+        (MjH, "MjH", "Mahjong H", Mj(1, 1), Some(Key::H), None),
+        (MjI, "MjI", "Mahjong I", Mj(1, 1 << 1), Some(Key::I), None),
+        (MjJ, "MjJ", "Mahjong J", Mj(1, 1 << 2), Some(Key::J), None),
+        (MjK, "MjK", "Mahjong K", Mj(1, 1 << 3), Some(Key::K), None),
+        (MjL, "MjL", "Mahjong L", Mj(1, 1 << 4), Some(Key::L), None),
+        (MjM, "MjM", "Mahjong M", Mj(1, 1 << 5), Some(Key::M), None),
+        (MjN, "MjN", "Mahjong N", Mj(1, 1 << 6), Some(Key::N), None),
+        (MjPon, "MjPon", "Pon", Mj(2, 1), Some(Key::P), None),
+        (MjChi, "MjChi", "Chi", Mj(2, 1 << 1), Some(Key::C), None),
+        (MjKan, "MjKan", "Kan", Mj(2, 1 << 2), Some(Key::K), None),
+        (MjRon, "MjRon", "Ron", Mj(2, 1 << 3), Some(Key::R), None),
+        (MjReach, "MjReach", "Ri-chi", Mj(2, 1 << 4), Some(Key::I), None),
     ]
 };
 
@@ -135,10 +179,10 @@ const BUTTONS: [(Button, &str); 19] = [
 const NONE: &str = "none";
 
 impl Action {
-    pub const ALL: [Action; 24] = {
-        let mut all = [Action::P1Up; 24];
+    pub const ALL: [Action; N_ACTIONS] = {
+        let mut all = [Action::P1Up; N_ACTIONS];
         let mut i = 0;
-        while i < 24 {
+        while i < N_ACTIONS {
             all[i] = TABLE[i].0;
             i += 1;
         }
@@ -175,6 +219,7 @@ impl Action {
     pub fn gamepad(self) -> usize {
         match self.row().3 {
             Target::Pad(n, _) => n,
+            Target::Mj(..) => 0,
             Target::Sys(_) => usize::from(matches!(
                 self,
                 Action::Start2 | Action::Select2 | Action::Coin2
@@ -182,8 +227,17 @@ impl Action {
         }
     }
 
-    /// 0 = joueur 1, 1 = joueur 2, 2 = système (pièces, service, test).
+    /// Action du panneau mahjong (modes de jeu distincts : les doublons de touches n'y sont pas
+    /// échangés avec les actions joystick).
+    pub fn is_mahjong(self) -> bool {
+        matches!(self.row().3, Target::Mj(..))
+    }
+
+    /// 0 = joueur 1, 1 = joueur 2, 2 = système (pièces, service, test), 3 = panneau mahjong.
     pub fn group(self) -> usize {
+        if self.is_mahjong() {
+            return 3;
+        }
         match self {
             Action::Coin1 | Action::Coin2 | Action::Service | Action::Test => 2,
             _ => self.gamepad(),
@@ -241,9 +295,9 @@ impl Bindings {
     /// Assigne `key` à `a`. Si une autre action l'utilisait, elle reçoit l'ancienne touche de `a`.
     pub fn set_key(&mut self, a: Action, key: Key) {
         let old = self.keys.get(&a).copied();
-        let other = Action::ALL
-            .into_iter()
-            .find(|o| *o != a && self.keys.get(o) == Some(&key));
+        let other = Action::ALL.into_iter().find(|o| {
+            *o != a && o.is_mahjong() == a.is_mahjong() && self.keys.get(o) == Some(&key)
+        });
         if let Some(o) = other {
             match old {
                 Some(k) => self.keys.insert(o, k),
@@ -348,6 +402,8 @@ pub struct InputState {
     /// Bits pressés venant des manettes (index 0 = P1).
     pad_pressed: [u8; 2],
     sys_pressed: u8,
+    /// Touches du panneau mahjong pressées par les manettes (3 rangées).
+    mj_pressed: [u8; 3],
     /// Dernier bouton de manette pressé (capture de la fenêtre Contrôles).
     last_button: Option<(usize, Button)>,
     gilrs: Option<gilrs::Gilrs>,
@@ -392,6 +448,7 @@ impl InputState {
         }
         self.pad_pressed = [0; 2];
         self.sys_pressed = 0;
+        self.mj_pressed = [0; 3];
         for (n, (_, pad)) in g.gamepads().take(2).enumerate() {
             self.pad_pressed[n] |= stick_bits(
                 pad.value(gilrs::Axis::LeftStickX),
@@ -405,6 +462,7 @@ impl InputState {
                     match a.row().3 {
                         Target::Pad(p, bit) => self.pad_pressed[p] |= bit,
                         Target::Sys(bit) => self.sys_pressed |= bit,
+                        Target::Mj(r, bit) => self.mj_pressed[r] |= bit,
                     }
                 }
             }
@@ -431,6 +489,20 @@ impl InputState {
             PadState { bits: !pressed[0] },
             PadState { bits: !pressed[1] },
         )
+    }
+
+    /// Panneau mahjong (3 rangées, bit à 0 = pressée). Les touches du panneau ne comptent que si
+    /// `active` (jeu mahjong) : sinon elles se confondent avec celles du joystick.
+    pub fn mahjong(&self, active: bool) -> [u8; 3] {
+        let mut pressed = if active { self.mj_pressed } else { [0; 3] };
+        if active {
+            for a in Action::ALL {
+                if let (Target::Mj(r, bit), true) = (a.row().3, self.key_down(a)) {
+                    pressed[r] |= bit;
+                }
+            }
+        }
+        [!pressed[0], !pressed[1], !pressed[2]]
     }
 
     pub fn system(&self) -> SystemButtons {
@@ -494,7 +566,7 @@ mod tests {
         i.set_key(Key::Y, true);
         assert_eq!(i.pads().1.bits, !BTN_D);
         assert_eq!(i.pads().0, PadState::default());
-        assert_eq!(Action::ALL.len(), 24);
+        assert_eq!(Action::ALL.len(), N_ACTIONS);
         for (n, a) in Action::ALL.into_iter().enumerate() {
             assert_eq!(a as usize, n, "ordre de TABLE");
             assert_eq!(Action::from_name(a.name()), Some(a));
@@ -581,5 +653,33 @@ mod tests {
         i.set_key(Key::F2, true);
         assert_eq!(i.system().bits, !(COIN1 | TEST));
         assert!(i.test());
+    }
+
+    #[test]
+    fn mahjong_defaults_and_rows() {
+        let mut i = InputState::default();
+        // hors jeu mahjong : aucune touche du panneau
+        i.set_key(Key::A, true);
+        assert_eq!(i.mahjong(false), [0xFF; 3]);
+        // jeu mahjong : A = rangée 0 bit 0
+        assert_eq!(i.mahjong(true), [0xFE, 0xFF, 0xFF]);
+        i.set_key(Key::J, true); // rangée 1 bit 2
+        i.set_key(Key::R, true); // Ron : rangée 2 bit 3
+        assert_eq!(i.mahjong(true), [0xFE, 0xFB, 0xF7]);
+    }
+
+    #[test]
+    fn mahjong_prefs_roundtrip_and_swap_stays_in_mode() {
+        let mut b = Bindings::default();
+        // « A » est aussi la touche par défaut de J1 C : pas d'échange entre les deux modes.
+        assert_eq!(b.key(Action::P1C), Some(Key::A));
+        assert_eq!(b.key(Action::MjA), Some(Key::A));
+        b.set_key(Action::MjA, Key::B); // B appartient à MjB : échange dans le mode mahjong
+        assert_eq!(b.key(Action::MjA), Some(Key::B));
+        assert_eq!(b.key(Action::MjB), Some(Key::A));
+        assert_eq!(b.key(Action::P1C), Some(Key::A));
+        assert_eq!(Bindings::from_prefs(&b.to_prefs()), b);
+        assert_eq!(Action::MjPon.group(), 3);
+        assert_eq!(Action::MjPon.label(), "Pon");
     }
 }

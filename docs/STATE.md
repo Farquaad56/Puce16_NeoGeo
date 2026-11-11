@@ -583,3 +583,11 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 - `vliner` ajouté au catalogue (`ALL_CARTS` = 158) ; `jockeygp` passe en `RuntimeProt::CartRam` (la table CMC50 du test est adaptée).
 - Banc réel (sp-s2) : vliner `ok`, 0,00 % aux trames 120 et 600. jockeygp : trame 120 à 0,00 %, mais à 600 notre machine est sur l'écran de mise (jeu lancé) alors que MAME est sur l'écran-titre : divergence de déroulement non résolue (voir QUESTIONS.md). jockeygp n'est plus noir (127 couleurs).
 - Suite : T1015 (mahjong).
+
+## T1015 - panneau mahjong (bakatono, janshin, minasan)
+- `Controller { Joystick, Mahjong }` dans `CartDef` (généré ; `MAHJONG` dans `tools/catalogue.py`). `ng-common` (interfaces gelées) n'est PAS modifié : l'état du panneau vit dans `ng-bus::Io` (`mahjong`, `mj: [u8;3]`, `mj_sel`) et `Machine::set_mahjong`.
+- Protocole : le source du contrôleur mahjong (`bus/neogeo_ctrl/mahjong.cpp`) n'est pas dans `ref/`; il a été lu dans MAME (GitHub) : `write_ctrlsel` mémorise l'octet écrit en `$380001` (REG_POUTPUT) ; `read_ctrl` = 0xFF ET des rangées dont le bit de sélection (0, 1, 2) est à 1 ; MJ.0 = A-G (bits 0-6), MJ.1 = H-N, MJ.2 = Pon, Chi, Kan, Ron, Reach (bits 0-4), actif bas ; START/SELECT : SELECT masqué quand le bit 2 de la sélection est à 1. `$300000` renvoie `read_ctrl` en octet haut ; octet bas = DIP avec le bit 0x04 (« Controller ») à 0 = panneau (défaut de `neogeo_mj`).
+- Savestate : version 3 (sélection des rangées).
+- GUI : 19 actions `Mj*` (A-N, Pon = P, Chi = C, Kan = K, Ron = R, Ri-chi = I ; Start/Select = Entrée/Maj de J1), table à 43 actions, groupe 3 affiché dans « Contrôles » seulement pour un jeu mahjong, échanges de touches limités au même mode (A est aussi J1-C). Sauvegarde via `[input]` de gui.toml comme les autres. Le thread d'émulation choisit automatiquement le BIOS Japon (vs-bios.rom, japan-j3.bin, sp1.jipan.1024) pour ces jeux, sinon message dans la barre d'état. Limite : Start2 (P) reste actif en jeu mahjong et se confond avec Pon.
+- Banc réel (sp-s2, forcé) : les 3 jeux `ok`, 0,00 % (trame 120) et 0,04 % (trame 600) de différence avec MAME.
+- Suite : T1016 (trackball / dial).

@@ -31,6 +31,10 @@ PROTECTED = {
 TO_EXTRACT = "kof98 fatfury2 ssideki sbp vliner kof99 garou kof2000 kof2001 jockeygp kof2002 kof2003 svc samsho5 samsh5sp rotd pnyaa zupapa ganryu s1945p preisle2 bangbead nitd sengoku3".split()
 # Titres conservés tels quels (compatibilité avec les tests existants).
 TITLES = {"mslug":"Metal Slug - Super Vehicle-001","mslug2":"Metal Slug 2 - Super Vehicle-001/II","mslugx":"Metal Slug X - Super Vehicle-001","mslug3":"Metal Slug 3","mslug4":"Metal Slug 4","mslug5":"Metal Slug 5"}
+# T1015 : jeux de mahjong (panneau mahjong sur le port 1, BIOS « japan »)
+MAHJONG = {"bakatono", "janshin", "minasan"}
+def controller(game):
+    return "Mahjong" if game in MAHJONG else "Joystick"
 def catalogue():
     """[(nom, clé de protection)] dans l'ordre : Metal Slug puis PLAIN."""
     return list(PROTECTED.items()) + [(n, "NONE") for n in PLAIN]
