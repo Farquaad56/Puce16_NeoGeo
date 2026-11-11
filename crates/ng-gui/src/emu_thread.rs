@@ -144,6 +144,9 @@ fn run(
     let mut step = false;
     let mut dips = 0xFFu8;
     let mut gain = 1.0f32;
+    // remplissage moyen du tampon audio (entre le creux avant dépôt et le pic après) et sa version lissée
+    let mut audio_mid = 1.0f32;
+    let mut audio_shown = 0.0f32;
     let mut inputs = (
         PadState::default(),
         PadState::default(),
@@ -241,7 +244,7 @@ fn run(
         if let (Some(a), Some(r)) = (audio.as_ref(), resampler.as_mut()) {
             // régule la cadence du son : la carte son et l'horloge de la machine dérivent l'une
             // de l'autre ; on garde le tampon autour de sa latence visée
-            r.set_src_hz(55_555.56 * (1.0 + crate::audio::drc_adjust(a.fill())));
+            r.set_src_hz(55_555.56 * (1.0 + crate::audio::drc_adjust(audio_mid)));
             for s in samples {
                 r.push(s);
             }
@@ -253,7 +256,15 @@ fn run(
                 }
             }
             a.set_active(true);
+            let before = a.fill();
             a.push(&pcm);
+            // la cible vise la moyenne : un dépôt par trame fait osciller le remplissage de ±14 %
+            audio_mid = (before + a.fill()) / 2.0;
+            audio_shown = if audio_shown == 0.0 {
+                audio_mid
+            } else {
+                audio_shown * 0.9 + audio_mid * 0.1
+            };
         }
         let frame = m.frame_count();
         // une trame sur deux suffit à l'affichage ; toujours après un pas à pas
@@ -271,7 +282,7 @@ fn run(
             frame,
             fps,
             ms,
-            audio_fill: audio.as_ref().map_or(0.0, AudioOut::fill),
+            audio_fill: audio_shown,
             underruns: audio.as_ref().map_or(0, AudioOut::underruns),
         });
         if stepping {
