@@ -6,6 +6,7 @@
 
 use std::path::{Path, PathBuf};
 
+use ng_bus::prot_fatfury2::FatFury2;
 use ng_bus::prot_kof98::Kof98;
 use ng_bus::prot_mslugx::MslugX;
 use ng_bus::prot_pvc::Pvc;
@@ -51,6 +52,7 @@ pub fn make_port(cart: &Cart) -> Option<Box<dyn CartPort>> {
         RuntimeProt::Sma3 => Some(Box::new(Sma3::new())),
         RuntimeProt::Pvc => Some(Box::new(Pvc::new())),
         RuntimeProt::Kof98 => Some(Box::new(Kof98::new())),
+        RuntimeProt::FatFury2 => Some(Box::new(FatFury2::new())),
         RuntimeProt::Sma99 => Some(Box::new(SmaChip::new(SmaKind::Kof99))),
         RuntimeProt::SmaGarou => Some(Box::new(SmaChip::new(SmaKind::Garou))),
         RuntimeProt::Sma2000 => Some(Box::new(SmaChip::new(SmaKind::Kof2000))),
@@ -130,7 +132,7 @@ mod tests {
         for g in ["kof99", "garou", "kof2000"] {
             assert!(make_port(&cart_named(g)).is_some(), "{g}");
         }
-        for g in ["kof2003", "svc", "kof98"] {
+        for g in ["kof2003", "svc", "kof98", "fatfury2", "ssideki"] {
             assert!(make_port(&cart_named(g)).is_some(), "{g}");
         }
         assert!(make_port(&cart_named("kof94")).is_none());

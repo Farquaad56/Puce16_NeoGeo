@@ -9,6 +9,7 @@ pub mod latch;
 pub mod map68k;
 pub mod memcard;
 pub mod pbank;
+pub mod prot_fatfury2;
 pub mod prot_kof98;
 pub mod prot_mslugx;
 pub mod prot_pvc;

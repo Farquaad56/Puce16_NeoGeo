@@ -561,3 +561,10 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 - Tests : permutation (premiers 0x800 octets intacts, memmove, premier bloc recalculé à la main), automate du port, lecture au niveau du bus, table.
 - Banc réel (sp-s2) : kof98 à 0,00 % (trame 120) et 0,47 % (trame 600) de différence avec MAME.
 - Suite : T1012 (fatfury2, ssideki).
+
+## T1012 - fatfury2, ssideki (PRO-CT0)
+- `ng-bus/src/prot_fatfury2.rs` : port exact de MAME `alpha_8921` (registre à décalage 32 bits, LOAD/EVEN/H, sorties GAD/GBD ; le cache `update_output` de MAME équivaut à une fonction pure de (sr, even, h)) + `prot_fatfury2` (`protection_r/w`, permutation `bitswap<16>` des broches). Le port répond sur toute la fenêtre `$200000-$2FFFFF` et ignore le reste (premier essai : réponse aussi en $100 -> BIOS bloqué ; corrigé + test). L'état n'est pas remis à zéro au reset (comme MAME).
+- `RuntimeProt::FatFury2`, `PROT_FATFURY2` (aucun chiffrement), `make_port` branché. `ALL_CARTS` = 156. Note : la région P de ssideki est de 0x100000 (chargement de 0x80000), comme MAME.
+- Tests : permutation de bits, état après reset (lectures = 0), chargement + lectures calculés à la main, séquence de décalages, plage d'adresses, lectures <= 0xFF, `make_port` pour les deux jeux, table de protection.
+- Banc réel (sp-s2) : trame 120 à 0,00 % ; trame 600 : même écran que MAME (fond gris + texte), mais niveau de fondu différent (~95 % de pixels de fond) — même classe que l'écart « timeline/fondu » de kof2000/kof2001 (voir QUESTIONS.md).
+- Suite : T1013 (sbp).

@@ -14,7 +14,7 @@ pub struct RegionSizes { pub p: u32, pub s: u32, pub m: u32, pub m_crypt: u32, p
 #[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum PDecrypt { None, Sma3, Pvc5, Kof99, Garou, Kof2000, Kof2002, Samsho5, Samsh5sp, Kof2003, Svc, Kof98 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum Cmc { None, C42, C50 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum Pcm2 { None, Decrypt(u8), Swap(u8) }
-#[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum RuntimeProt { None, Msx, Sma3, Pvc, Sma99, SmaGarou, Sma2000, Kof98 }
+#[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum RuntimeProt { None, Msx, Sma3, Pvc, Sma99, SmaGarou, Sma2000, Kof98, FatFury2 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum FixBank { Std, Garou, Kof2000 }
 #[derive(Clone, Copy, Debug)]
 pub struct Protection { pub p_decrypt: PDecrypt, pub cmc: Cmc, pub gfx_key: u8, pub sfix_decrypt: bool, pub m1_decrypt: bool, pub pcm2: Pcm2, pub runtime: RuntimeProt, pub fix_bank: FixBank }
@@ -57,3 +57,5 @@ pub const PROT_PVC_KOF2003: Protection = Protection { p_decrypt: PDecrypt::Kof20
 pub const PROT_PVC_SVC: Protection = Protection { p_decrypt: PDecrypt::Svc, cmc: Cmc::C50, gfx_key: 0x57, sfix_decrypt: true, m1_decrypt: true, pcm2: Pcm2::Swap(3), runtime: RuntimeProt::Pvc, fix_bank: FixBank::Kof2000 };
 // T1011 : kof98 (prot_kof98.cpp) : P chiffrée + recouvrement de ROM ($100, écriture $20AAAA) ; pas de CMC
 pub const PROT_KOF98: Protection = Protection { p_decrypt: PDecrypt::Kof98, runtime: RuntimeProt::Kof98, ..N };
+// T1012 : fatfury2 / ssideki : puce PRO-CT0 (fenêtre $200000-$2FFFFF), aucun chiffrement
+pub const PROT_FATFURY2: Protection = Protection { runtime: RuntimeProt::FatFury2, ..N };

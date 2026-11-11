@@ -537,6 +537,45 @@ pub static KOF98: CartDef = CartDef {
     prot: PROT_KOF98,
 };
 
+pub static FATFURY2_PARTS: &[RomPart] = &[
+    RomPart { file: "047-p1.p1", region: Region::P, dest: 0x0, size: 0x100000, src_off: 0x0, crc: 0xECFDBB69, load: Load::WordSwap },
+    RomPart { file: "047-s1.s1", region: Region::S, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0xD7DBBF39, load: Load::Plain },
+    RomPart { file: "047-m1.m1", region: Region::M, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0x820B0BA7, load: Load::Plain },
+    RomPart { file: "047-v1.v1", region: Region::V, dest: 0x0, size: 0x200000, src_off: 0x0, crc: 0xD9D00784, load: Load::Plain },
+    RomPart { file: "047-v2.v2", region: Region::V, dest: 0x200000, size: 0x200000, src_off: 0x0, crc: 0x2C9A4B33, load: Load::Plain },
+    RomPart { file: "047-c1.c1", region: Region::C, dest: 0x0, size: 0x100000, src_off: 0x0, crc: 0xF72A939E, load: Load::Byte },
+    RomPart { file: "047-c1.c1", region: Region::C, dest: 0x400000, size: 0x100000, src_off: 0x100000, crc: 0xF72A939E, load: Load::Byte },
+    RomPart { file: "047-c2.c2", region: Region::C, dest: 0x1, size: 0x100000, src_off: 0x0, crc: 0x05119A0D, load: Load::Byte },
+    RomPart { file: "047-c2.c2", region: Region::C, dest: 0x400001, size: 0x100000, src_off: 0x100000, crc: 0x05119A0D, load: Load::Byte },
+    RomPart { file: "047-c3.c3", region: Region::C, dest: 0x200000, size: 0x100000, src_off: 0x0, crc: 0x01E00738, load: Load::Byte },
+    RomPart { file: "047-c3.c3", region: Region::C, dest: 0x600000, size: 0x100000, src_off: 0x100000, crc: 0x01E00738, load: Load::Byte },
+    RomPart { file: "047-c4.c4", region: Region::C, dest: 0x200001, size: 0x100000, src_off: 0x0, crc: 0x9FE27432, load: Load::Byte },
+    RomPart { file: "047-c4.c4", region: Region::C, dest: 0x600001, size: 0x100000, src_off: 0x100000, crc: 0x9FE27432, load: Load::Byte },
+];
+pub static FATFURY2: CartDef = CartDef {
+    name: "fatfury2", title: "Fatal Fury 2 / Garou Densetsu 2 - Arata-naru Tatakai (NGM-047 ~ NGH-047)", parts: FATFURY2_PARTS,
+    sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x400000, vb: 0x0, c: 0x800000 },
+    m1_reload: Some((0x10000, 0x20000)),
+    prot: PROT_FATFURY2,
+};
+
+pub static SSIDEKI_PARTS: &[RomPart] = &[
+    RomPart { file: "052-p1.p1", region: Region::P, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0x9CD97256, load: Load::WordSwap },
+    RomPart { file: "052-s1.s1", region: Region::S, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0x97689804, load: Load::Plain },
+    RomPart { file: "052-m1.m1", region: Region::M, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0x49F17D2D, load: Load::Plain },
+    RomPart { file: "052-v1.v1", region: Region::V, dest: 0x0, size: 0x200000, src_off: 0x0, crc: 0x22C097A5, load: Load::Plain },
+    RomPart { file: "052-c1.c1", region: Region::C, dest: 0x0, size: 0x100000, src_off: 0x0, crc: 0x53E1C002, load: Load::Byte },
+    RomPart { file: "052-c1.c1", region: Region::C, dest: 0x400000, size: 0x100000, src_off: 0x100000, crc: 0x53E1C002, load: Load::Byte },
+    RomPart { file: "052-c2.c2", region: Region::C, dest: 0x1, size: 0x100000, src_off: 0x0, crc: 0x776A2D1F, load: Load::Byte },
+    RomPart { file: "052-c2.c2", region: Region::C, dest: 0x400001, size: 0x100000, src_off: 0x100000, crc: 0x776A2D1F, load: Load::Byte },
+];
+pub static SSIDEKI: CartDef = CartDef {
+    name: "ssideki", title: "Super Sidekicks / Tokuten Ou", parts: SSIDEKI_PARTS,
+    sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x600000 },
+    m1_reload: Some((0x10000, 0x20000)),
+    prot: PROT_FATFURY2,
+};
+
 pub static N_2020BB_PARTS: &[RomPart] = &[
     RomPart { file: "030-p1.p1", region: Region::P, dest: 0x0, size: 0x80000, src_off: 0x0, crc: 0xD396C9CB, load: Load::WordSwap },
     RomPart { file: "030-s1.s1", region: Region::S, dest: 0x0, size: 0x20000, src_off: 0x0, crc: 0x7015B8FC, load: Load::Plain },
@@ -3060,4 +3099,4 @@ pub static ZINTRCKB: CartDef = CartDef {
     prot: PROT_NONE,
 };
 
-pub static ALL_CARTS: &[&CartDef] = &[&MSLUG, &MSLUG2, &MSLUGX, &MSLUG3, &MSLUG4, &MSLUG5, &ZUPAPA, &GANRYU, &S1945P, &PREISLE2, &BANGBEAD, &NITD, &SENGOKU3, &KOF2001, &JOCKEYGP, &KOF99, &GAROU, &KOF2000, &ROTD, &PNYAA, &KOF2002, &SAMSHO5, &SAMSH5SP, &KOF2003, &SVC, &KOF98, &N_2020BB, &N_3COUNTB, &ALPHAM2, &ANDRODUN, &AODK, &AOF, &AOF2, &AOF3, &B2B, &BAKATONO, &BJOURNEY, &BLAZSTAR, &BREAKERS, &BREAKREV, &BSTARS, &BSTARS2, &BURNINGF, &CRSWD2BL, &CRSWORD, &CTOMADAY, &CYBERLIP, &DIGGERMA, &DOUBLEDR, &EIGHTMAN, &FATFURSP, &FATFURY1, &FATFURY3, &FBFRENZY, &FIGHTFEV, &FLIPSHOT, &FROMAN2B, &GALAXYFG, &GHOSTLOP, &GOALX3, &GOWCAIZR, &GPILOTS, &GURURIN, &IRONCLAD, &IRRMAZE, &JANSHIN, &JOYJOY, &KABUKIKL, &KARNOVR, &KIZUNA, &KOF94, &KOF95, &KOF96, &KOF97, &KOTM, &KOTM2, &LASTBLAD, &LASTBLD2, &LASTHOPE, &LBOWLING, &LEGENDOS, &LRESORT, &MAGDROP2, &MAGDROP3, &MAGLORD, &MAHRETSU, &MARUKODQ, &MIEXCHNG, &MINASAN, &MOSHOUGI, &MUTNAT, &NAM1975, &NCOMBAT, &NCOMMAND, &NEOBOMBE, &NEOCUP98, &NEODRIFT, &NEOMRDO, &NINJAMAS, &OVERTOP, &PANICBOM, &PBOBBL2N, &PBOBBLEN, &PGOAL, &POPBOUNC, &PSPIKES2, &PULSTAR, &PUZZLDPR, &PUZZLEDP, &QUIZDAI2, &QUIZDAIS, &QUIZKOF, &RAGNAGRD, &RBFF1, &RBFF2, &RBFFSPEC, &RIDHERO, &ROBOARMY, &SAMSHO, &SAMSHO2, &SAMSHO3, &SAMSHO4, &SAVAGERE, &SDODGEB, &SENGOKU, &SENGOKU2, &SHOCKTR2, &SHOCKTRO, &SOCBRAWL, &SONICWI2, &SONICWI3, &SPINMAST, &SSIDEKI2, &SSIDEKI3, &SSIDEKI4, &STAKWIN, &STAKWIN2, &STRHOOP, &SUPERSPY, &TOPHUNTR, &TPGOLF, &TRALLY, &TURFMAST, &TWINSPRI, &TWSOC96, &VIEWPOIN, &WAKUWAK7, &WH1, &WH2, &WH2J, &WHP, &WJAMMERS, &ZEDBLADE, &ZINTRCKB];
+pub static ALL_CARTS: &[&CartDef] = &[&MSLUG, &MSLUG2, &MSLUGX, &MSLUG3, &MSLUG4, &MSLUG5, &ZUPAPA, &GANRYU, &S1945P, &PREISLE2, &BANGBEAD, &NITD, &SENGOKU3, &KOF2001, &JOCKEYGP, &KOF99, &GAROU, &KOF2000, &ROTD, &PNYAA, &KOF2002, &SAMSHO5, &SAMSH5SP, &KOF2003, &SVC, &KOF98, &FATFURY2, &SSIDEKI, &N_2020BB, &N_3COUNTB, &ALPHAM2, &ANDRODUN, &AODK, &AOF, &AOF2, &AOF3, &B2B, &BAKATONO, &BJOURNEY, &BLAZSTAR, &BREAKERS, &BREAKREV, &BSTARS, &BSTARS2, &BURNINGF, &CRSWD2BL, &CRSWORD, &CTOMADAY, &CYBERLIP, &DIGGERMA, &DOUBLEDR, &EIGHTMAN, &FATFURSP, &FATFURY1, &FATFURY3, &FBFRENZY, &FIGHTFEV, &FLIPSHOT, &FROMAN2B, &GALAXYFG, &GHOSTLOP, &GOALX3, &GOWCAIZR, &GPILOTS, &GURURIN, &IRONCLAD, &IRRMAZE, &JANSHIN, &JOYJOY, &KABUKIKL, &KARNOVR, &KIZUNA, &KOF94, &KOF95, &KOF96, &KOF97, &KOTM, &KOTM2, &LASTBLAD, &LASTBLD2, &LASTHOPE, &LBOWLING, &LEGENDOS, &LRESORT, &MAGDROP2, &MAGDROP3, &MAGLORD, &MAHRETSU, &MARUKODQ, &MIEXCHNG, &MINASAN, &MOSHOUGI, &MUTNAT, &NAM1975, &NCOMBAT, &NCOMMAND, &NEOBOMBE, &NEOCUP98, &NEODRIFT, &NEOMRDO, &NINJAMAS, &OVERTOP, &PANICBOM, &PBOBBL2N, &PBOBBLEN, &PGOAL, &POPBOUNC, &PSPIKES2, &PULSTAR, &PUZZLDPR, &PUZZLEDP, &QUIZDAI2, &QUIZDAIS, &QUIZKOF, &RAGNAGRD, &RBFF1, &RBFF2, &RBFFSPEC, &RIDHERO, &ROBOARMY, &SAMSHO, &SAMSHO2, &SAMSHO3, &SAMSHO4, &SAVAGERE, &SDODGEB, &SENGOKU, &SENGOKU2, &SHOCKTR2, &SHOCKTRO, &SOCBRAWL, &SONICWI2, &SONICWI3, &SPINMAST, &SSIDEKI2, &SSIDEKI3, &SSIDEKI4, &STAKWIN, &STAKWIN2, &STRHOOP, &SUPERSPY, &TOPHUNTR, &TPGOLF, &TRALLY, &TURFMAST, &TWINSPRI, &TWSOC96, &VIEWPOIN, &WAKUWAK7, &WH1, &WH2, &WH2J, &WHP, &WJAMMERS, &ZEDBLADE, &ZINTRCKB];
