@@ -3,6 +3,7 @@
 //! `neogeo.toml` garde les chemins, le modèle et le BIOS ; `gui.toml` garde l'affichage, les
 //! touches et l'état du débogueur. Un fichier absent ou invalide donne les valeurs par défaut.
 
+use crate::postfx::{Fx, Mask, ScanMode};
 use std::path::{Path, PathBuf};
 
 /// Mode d'échelle de l'image.
@@ -70,6 +71,7 @@ pub struct Prefs {
     pub display: DisplayPrefs,
     pub input: InputPrefs,
     pub debug: DebugPrefs,
+    pub fx: Fx,
 }
 
 /// Chemin de `gui.toml` : même dossier que le fichier de configuration.
@@ -119,6 +121,22 @@ fn is_plain(s: &str) -> bool {
             .all(|c| c.is_ascii_alphanumeric() || "_-:. ".contains(c))
 }
 
+fn scan_mode_str(m: ScanMode) -> &'static str {
+    match m {
+        ScanMode::Off => "off",
+        ScanMode::Standard => "standard",
+        ScanMode::Adaptive => "adaptive",
+    }
+}
+
+fn mask_str(m: Mask) -> &'static str {
+    match m {
+        Mask::None => "none",
+        Mask::Trinitron => "trinitron",
+        Mask::FadedYellow => "faded",
+    }
+}
+
 impl Prefs {
     pub fn to_toml(&self) -> String {
         let d = &self.display;
@@ -149,6 +167,18 @@ impl Prefs {
                 }
             }
         }
+        let f = &self.fx;
+        s.push_str(&format!(
+            "\n[fx]\ninterp = {}\nscanlines = \"{}\"\nscan = {}\nscan_dark = {}\nscan_bright = {}\ngamma = {}\nmask = \"{}\"\nmask_pct = {}\n",
+            f.interp,
+            scan_mode_str(f.scan_mode),
+            f.scan,
+            f.scan_dk,
+            f.scan_br,
+            f.gamma,
+            mask_str(f.mask),
+            f.mask_pct
+        ));
         let g = &self.debug;
         s.push_str(&format!(
             "\n[debug]\nopen = {}\ntab = \"{}\"\nregion = \"{}\"\nshow_status_bar = {}\n",
@@ -211,6 +241,48 @@ impl Prefs {
                 ("input.pad", _) if is_plain(k) && is_plain(v) => {
                     p.input.pad.push((k.to_string(), v.to_string()));
                 }
+                ("fx", "interp") => {
+                    if let Ok(n) = v.parse::<u8>() {
+                        p.fx.interp = n.min(100);
+                    }
+                }
+                ("fx", "scanlines") => match v {
+                    "off" => p.fx.scan_mode = ScanMode::Off,
+                    "standard" => p.fx.scan_mode = ScanMode::Standard,
+                    "adaptive" => p.fx.scan_mode = ScanMode::Adaptive,
+                    _ => {}
+                },
+                ("fx", "scan") => {
+                    if let Ok(n) = v.parse::<u8>() {
+                        p.fx.scan = n.min(95);
+                    }
+                }
+                ("fx", "scan_dark") => {
+                    if let Ok(n) = v.parse::<u8>() {
+                        p.fx.scan_dk = n.min(95);
+                    }
+                }
+                ("fx", "scan_bright") => {
+                    if let Ok(n) = v.parse::<u8>() {
+                        p.fx.scan_br = n.min(95);
+                    }
+                }
+                ("fx", "gamma") => {
+                    if let Ok(n) = v.parse::<u8>() {
+                        p.fx.gamma = n.clamp(100, 200);
+                    }
+                }
+                ("fx", "mask") => match v {
+                    "none" => p.fx.mask = Mask::None,
+                    "trinitron" => p.fx.mask = Mask::Trinitron,
+                    "faded" => p.fx.mask = Mask::FadedYellow,
+                    _ => {}
+                },
+                ("fx", "mask_pct") => {
+                    if let Ok(n) = v.parse::<u8>() {
+                        p.fx.mask_pct = n.min(100);
+                    }
+                }
                 ("debug", "open") => {
                     if let Some(b) = parse_bool(v) {
                         p.debug.open = b;
@@ -268,6 +340,7 @@ mod tests {
                 region: "vram".into(),
                 show_status_bar: false,
             },
+            fx: Fx::preset(crate::postfx::Preset::SonyTrinitron),
         }
     }
 

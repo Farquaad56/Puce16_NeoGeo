@@ -12,12 +12,22 @@ use crate::debugger::{DebugAction, Debugger, Region, Tab};
 use crate::dips_menu::DipsWindow;
 use crate::display::{self, DisplayRect};
 use crate::emu_thread::{self, Cmd, EmuHandle, FrameMsg};
+use crate::fx_menu::FxWindow;
 use crate::input::{self, Bindings, InputState};
 use crate::menu::{self, MenuAction, MenuState};
+use crate::postfx::{self, Fx};
 use crate::prefs::{self, Prefs};
 use crate::settings::ConfigForm;
 use crate::statusbar::{format_status, StatusInfo};
 use ng_core::DebugLevel;
+
+/// Ce qui détermine l'image filtrée en cache.
+#[derive(Clone, Copy, PartialEq)]
+struct FxKey {
+    frame: u64,
+    px: (u32, u32),
+    fx: Fx,
+}
 
 pub const FB_W: usize = display::FB_W as usize;
 pub const FB_H: usize = display::FB_H as usize;
@@ -85,6 +95,8 @@ pub struct App {
     mouse_acc: egui::Vec2,
     controls: ControlsWindow,
     dips: DipsWindow,
+    fx_win: FxWindow,
+    fx_tex: Option<(FxKey, egui::TextureHandle)>,
     debugger: Debugger,
     /// Dernier niveau de débogage envoyé au thread d'émulation.
     debug_level: DebugLevel,
@@ -131,6 +143,8 @@ impl App {
             mouse_acc: egui::Vec2::ZERO,
             controls: ControlsWindow::default(),
             dips: DipsWindow::default(),
+            fx_win: FxWindow::default(),
+            fx_tex: None,
             debugger,
             debug_level: DebugLevel::Off,
             fullscreen_applied: None,
@@ -301,6 +315,7 @@ impl App {
             MenuAction::SetModel(m) => self.change_system(|c| c.model = m),
             MenuAction::Controls => self.controls.open = true,
             MenuAction::Dips => self.dips.open = true,
+            MenuAction::Filters => self.fx_win.open = true,
             MenuAction::Debugger => self.debugger.open = !self.debugger.open,
             MenuAction::DebugTab(t) => {
                 self.debugger.open = true;
@@ -371,8 +386,41 @@ impl App {
         let d = &self.prefs.display;
         let l = display::layout(avail, ui.pixels_per_point(), d.scale, d.aspect);
         let uv = egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0));
+        let fx = self.prefs.fx;
+        let mut tex_id = t.id();
+        if let (true, Some(f)) = (fx.is_active(), &self.last) {
+            // image filtrée à la taille finale ; recalculée seulement si trame, taille ou réglage changent
+            let key = FxKey {
+                frame: f.frame,
+                px: l.px,
+                fx,
+            };
+            if self.fx_tex.as_ref().map(|(k, _)| *k) != Some(key) {
+                let (w, h) = (l.px.0 as usize, l.px.1 as usize);
+                let img = egui::ColorImage {
+                    size: [w, h],
+                    source_size: egui::vec2(w as f32, h as f32),
+                    pixels: postfx::render(&f.pixels, &fx, w, h),
+                };
+                match &mut self.fx_tex {
+                    Some((k, t)) => {
+                        t.set(img, egui::TextureOptions::NEAREST);
+                        *k = key;
+                    }
+                    None => {
+                        let t = ui
+                            .ctx()
+                            .load_texture("fb_fx", img, egui::TextureOptions::NEAREST);
+                        self.fx_tex = Some((key, t));
+                    }
+                }
+            }
+            if let Some((_, t)) = &self.fx_tex {
+                tex_id = t.id();
+            }
+        }
         ui.painter_at(avail)
-            .image(t.id(), l.rect, uv, egui::Color32::WHITE);
+            .image(tex_id, l.rect, uv, egui::Color32::WHITE);
         self.shown = Some(l);
     }
 
@@ -433,6 +481,10 @@ impl eframe::App for App {
             self.prefs.input.dipsw = Some(dipsw);
         }
         self.send(Cmd::Dips(dipsw));
+        let mut fx = self.prefs.fx;
+        if self.fx_win.show(&ctx, &mut fx) {
+            self.prefs.fx = fx;
+        }
         if pointer && !self.controls.capturing() {
             let k = sens as f32 / 100.0;
             // souris : seulement hors des menus et fenêtres egui

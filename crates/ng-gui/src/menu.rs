@@ -24,6 +24,7 @@ pub enum MenuAction {
     SetModel(Model),
     Controls,
     Dips,
+    Filters,
     Fullscreen(bool),
     Aspect(Aspect),
     Smooth(bool),
@@ -178,6 +179,10 @@ pub fn show(ui: &mut egui::Ui, st: &MenuState) -> Option<MenuAction> {
             let mut smooth = d.smooth;
             if ui.checkbox(&mut smooth, "Lissage").changed() {
                 action = Some(MenuAction::Smooth(smooth));
+                ui.close();
+            }
+            if ui.button("Filtres vidéo…").clicked() {
+                action = Some(MenuAction::Filters);
                 ui.close();
             }
             ui.separator();
