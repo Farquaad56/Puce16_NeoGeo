@@ -148,7 +148,7 @@ Les coefficients proviennent des fichiers de filtres et de masques de la communa
 
 ### Overlay de performance
 
-`F10` (ou **Vidéo → Overlay de performance**) affiche une barre en surimpression, désactivée par défaut. En mode compact : FPS et temps d'émulation par trame. En mode détaillé : courbe des 120 dernières trames (ligne grise = budget de 16,9 ms, rouge au-dessus), min et max, vitesse par rapport au temps réel, durée d'une image de l'interface, coût des filtres vidéo, remplissage du tampon audio et nombre de sous-alimentations, échelle d'affichage. Le coin d'affichage et le niveau de détail se règlent dans **Vidéo → Overlay**. La barre d'état affiche aussi le temps moyen par trame.
+`F10` (ou **Vidéo → Overlay de performance**) affiche une barre en surimpression, désactivée par défaut. En mode compact : FPS et temps d'émulation par trame. En mode détaillé : courbe des 120 dernières trames (ligne grise = budget de 16,9 ms, rouge au-dessus), min et max, vitesse par rapport au temps réel, durée d'une image de l'interface, coût des filtres vidéo, remplissage du tampon audio, échelle d'affichage. Les valeurs sont colorées selon leur état : vert (bon), orange (limite), rouge (problème). Pour l'audio, le rouge signale un craquement dans les 3 dernières secondes. Le coin d'affichage et le niveau de détail se règlent dans **Vidéo → Overlay**. La barre d'état affiche aussi le temps moyen par trame.
 
 ### DIP switches MVS
 

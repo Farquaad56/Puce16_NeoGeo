@@ -267,8 +267,7 @@ impl App {
             }
             self.perf.push_emu(f.ms);
             self.perf.fps = f.fps;
-            self.perf.audio_fill = f.audio_fill;
-            self.perf.underruns = f.underruns;
+            self.perf.set_audio(f.audio_fill, f.underruns);
             self.last = Some(f);
             fresh = true;
         }

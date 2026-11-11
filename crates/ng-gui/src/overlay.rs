@@ -2,6 +2,7 @@
 //! trame avec courbe, vitesse, coût des filtres, tampon audio). Désactivable, deux niveaux de détail.
 
 use std::collections::VecDeque;
+use std::time::{Duration, Instant};
 
 use eframe::egui::{self, Align2, Color32, RichText};
 
@@ -87,6 +88,49 @@ impl Default for OverlayPrefs {
     }
 }
 
+/// État de santé d'une mesure, affiché par une couleur.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Health {
+    Good,
+    Warn,
+    Bad,
+}
+
+impl Health {
+    fn color(self) -> Color32 {
+        match self {
+            Health::Good => GREEN,
+            Health::Warn => Color32::from_rgb(255, 170, 40),
+            Health::Bad => Color32::from_rgb(255, 70, 70),
+        }
+    }
+}
+
+/// Temps d'émulation d'une trame : vert sous 60 % du budget, orange jusqu'au budget, rouge au-delà.
+pub fn ms_health(ms: f32) -> Health {
+    if ms < BUDGET_MS * 0.6 {
+        Health::Good
+    } else if ms < BUDGET_MS {
+        Health::Warn
+    } else {
+        Health::Bad
+    }
+}
+
+/// Vitesse par rapport au temps réel : vert à 98 % et plus, orange à 90 % et plus, rouge en dessous.
+pub fn speed_health(pct: f32) -> Health {
+    if pct >= 98.0 {
+        Health::Good
+    } else if pct >= 90.0 {
+        Health::Warn
+    } else {
+        Health::Bad
+    }
+}
+
+/// Un craquement audio de moins de ce délai garde l'indicateur audio en rouge.
+const UNDERRUN_HOLD: Duration = Duration::from_secs(3);
+
 /// Mesures affichées.
 #[derive(Default)]
 pub struct Perf {
@@ -102,6 +146,8 @@ pub struct Perf {
     pub audio_fill: f32,
     /// Nombre de sous-alimentations audio depuis le démarrage.
     pub underruns: u64,
+    /// Instant de la dernière sous-alimentation constatée.
+    pub underrun_at: Option<Instant>,
 }
 
 impl Perf {
@@ -130,11 +176,35 @@ impl Perf {
         self.fps / REAL_FPS * 100.0
     }
 
+    /// Enregistre l'état audio ; une hausse du compteur date une sous-alimentation.
+    pub fn set_audio(&mut self, fill: f32, underruns: u64) {
+        if underruns > self.underruns {
+            self.underrun_at = Some(Instant::now());
+        }
+        self.audio_fill = fill;
+        self.underruns = underruns;
+    }
+
+    /// Rouge pendant 3 s après un craquement, orange si le tampon est presque vide, sinon vert.
+    pub fn audio_health(&self) -> Health {
+        if self
+            .underrun_at
+            .is_some_and(|t| t.elapsed() < UNDERRUN_HOLD)
+        {
+            Health::Bad
+        } else if self.audio_fill < 0.15 {
+            Health::Warn
+        } else {
+            Health::Good
+        }
+    }
+
     /// Efface les mesures (changement de jeu, arrêt).
     pub fn reset(&mut self) {
         self.emu_ms.clear();
         self.fps = 0.0;
         self.audio_fill = 0.0;
+        self.underrun_at = None;
     }
 
     /// Lisse une durée d'image de l'interface.
@@ -170,6 +240,12 @@ fn num(v: f32, width: usize, decimals: usize) -> String {
 fn seg(ui: &mut egui::Ui, label: &str, color: Color32, value: String) {
     ui.label(RichText::new(label).monospace().strong().color(color));
     ui.label(RichText::new(value).monospace().color(Color32::WHITE));
+}
+
+/// Comme `seg`, avec une valeur colorée selon la santé de la mesure.
+fn seg_h(ui: &mut egui::Ui, label: &str, color: Color32, value: String, h: Health) {
+    ui.label(RichText::new(label).monospace().strong().color(color));
+    ui.label(RichText::new(value).monospace().strong().color(h.color()));
 }
 
 fn sep(ui: &mut egui::Ui) {
@@ -236,15 +312,19 @@ pub fn show(
                                 return;
                             }
                             RunState::Paused => seg(ui, "PAUSE", PINK, " ".repeat(5)),
-                            RunState::Running => {
-                                seg(ui, "FPS  ", Color32::WHITE, num(perf.fps, 5, 1))
-                            }
+                            RunState::Running => seg_h(
+                                ui,
+                                "FPS  ",
+                                Color32::WHITE,
+                                num(perf.fps, 5, 1),
+                                speed_health(perf.speed_pct()),
+                            ),
                         }
-                        let emu = perf
-                            .avg(30)
-                            .map_or_else(|| " ".repeat(8), |v| format!("{} ms", num(v, 5, 2)));
+                        let avg = perf.avg(30);
+                        let emu =
+                            avg.map_or_else(|| " ".repeat(8), |v| format!("{} ms", num(v, 5, 2)));
                         sep(ui);
-                        seg(ui, "EMU", YELLOW, emu);
+                        seg_h(ui, "EMU", YELLOW, emu, avg.map_or(Health::Good, ms_health));
                         if !prefs.full {
                             return;
                         }
@@ -256,7 +336,13 @@ pub fn show(
                         );
                         graph(ui, perf);
                         sep(ui);
-                        seg(ui, "VIT", PINK, format!("{}%", num(perf.speed_pct(), 4, 0)));
+                        seg_h(
+                            ui,
+                            "VIT",
+                            PINK,
+                            format!("{}%", num(perf.speed_pct(), 4, 0)),
+                            speed_health(perf.speed_pct()),
+                        );
                         sep(ui);
                         seg(ui, "UI", GREEN, format!("{} ms", num(perf.ui_ms, 5, 1)));
                         // toujours présent (tiret sans filtre) : la largeur ne change pas
@@ -266,15 +352,12 @@ pub fn show(
                         );
                         seg(ui, "FILTRE", GREEN, fx);
                         sep(ui);
-                        seg(
+                        seg_h(
                             ui,
                             "AUDIO",
                             PURPLE,
-                            format!(
-                                "{}% sous-flux {:>4}",
-                                num((perf.audio_fill * 100.0).min(100.0), 4, 0),
-                                perf.underruns.min(9999)
-                            ),
+                            format!("{}%", num((perf.audio_fill * 100.0).min(100.0), 4, 0)),
+                            perf.audio_health(),
                         );
                         if let Some(s) = scale {
                             sep(ui);
@@ -326,6 +409,34 @@ mod tests {
         assert!((p.ui_ms - 11.0).abs() < 1e-4);
         p.smooth_fx(5.0);
         assert_eq!(p.fx_ms, Some(5.0));
+    }
+
+    #[test]
+    fn health_thresholds() {
+        assert_eq!(ms_health(4.0), Health::Good);
+        assert_eq!(ms_health(12.0), Health::Warn);
+        assert_eq!(ms_health(20.0), Health::Bad);
+        assert_eq!(speed_health(100.0), Health::Good);
+        assert_eq!(speed_health(93.0), Health::Warn);
+        assert_eq!(speed_health(50.0), Health::Bad);
+    }
+
+    #[test]
+    fn audio_turns_red_after_an_underrun() {
+        let mut p = Perf::default();
+        p.set_audio(0.8, 0);
+        assert_eq!(p.audio_health(), Health::Good);
+        p.set_audio(0.05, 0);
+        assert_eq!(p.audio_health(), Health::Warn);
+        p.set_audio(0.5, 1);
+        assert_eq!(p.audio_health(), Health::Bad);
+        // le compteur ne bouge plus : toujours rouge pendant le délai, pas de nouveau déclencheur
+        p.set_audio(0.5, 1);
+        assert_eq!(p.audio_health(), Health::Bad);
+        p.underrun_at = Some(Instant::now() - Duration::from_secs(10));
+        assert_eq!(p.audio_health(), Health::Good);
+        p.reset();
+        assert_eq!(p.underrun_at, None);
     }
 
     #[test]
