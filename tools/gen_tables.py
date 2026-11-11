@@ -133,10 +133,10 @@ pub enum Load { Plain, WordSwap, Byte, Word32Swap }
 pub struct RomPart { pub file: &'static str, pub region: Region, pub dest: u32, pub size: u32, pub src_off: u32, pub crc: u32, pub load: Load }
 #[derive(Clone, Copy, Debug)]
 pub struct RegionSizes { pub p: u32, pub s: u32, pub m: u32, pub m_crypt: u32, pub v: u32, pub vb: u32, pub c: u32 }
-#[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum PDecrypt { None, Sma3, Pvc5, Kof99, Garou, Kof2000, Kof2002, Samsho5, Samsh5sp, Kof2003, Svc, Kof98 }
+#[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum PDecrypt { None, Sma3, Pvc5, Kof99, Garou, Kof2000, Kof2002, Samsho5, Samsh5sp, Kof2003, Svc, Kof98, Sbp }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum Cmc { None, C42, C50 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum Pcm2 { None, Decrypt(u8), Swap(u8) }
-#[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum RuntimeProt { None, Msx, Sma3, Pvc, Sma99, SmaGarou, Sma2000, Kof98, FatFury2 }
+#[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum RuntimeProt { None, Msx, Sma3, Pvc, Sma99, SmaGarou, Sma2000, Kof98, FatFury2, Sbp }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum FixBank { Std, Garou, Kof2000 }
 #[derive(Clone, Copy, Debug)]
 pub struct Protection { pub p_decrypt: PDecrypt, pub cmc: Cmc, pub gfx_key: u8, pub sfix_decrypt: bool, pub m1_decrypt: bool, pub pcm2: Pcm2, pub runtime: RuntimeProt, pub fix_bank: FixBank }
@@ -181,5 +181,7 @@ pub const PROT_PVC_SVC: Protection = Protection { p_decrypt: PDecrypt::Svc, cmc:
 pub const PROT_KOF98: Protection = Protection { p_decrypt: PDecrypt::Kof98, runtime: RuntimeProt::Kof98, ..N };
 // T1012 : fatfury2 / ssideki : puce PRO-CT0 (fenêtre $200000-$2FFFFF), aucun chiffrement
 pub const PROT_FATFURY2: Protection = Protection { runtime: RuntimeProt::FatFury2, ..N };
+// T1013 : sbp (bootleg) : patch de P + ROM basse brouillée ($200-$1FFF)
+pub const PROT_SBP: Protection = Protection { p_decrypt: PDecrypt::Sbp, runtime: RuntimeProt::Sbp, ..N };
 '''
 w("crates/ng-cart/src/types.rs", types)

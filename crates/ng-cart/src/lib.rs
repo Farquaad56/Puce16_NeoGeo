@@ -4,6 +4,7 @@ pub mod cmc;
 pub mod install;
 pub mod kof2k2;
 pub mod kof98;
+pub mod sbp;
 #[rustfmt::skip]
 pub mod cmc_tables;
 pub mod pcm2;

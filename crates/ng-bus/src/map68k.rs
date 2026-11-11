@@ -70,8 +70,8 @@ impl Bus68k {
                         read_word_be(&self.bios, a)
                     }
                 } else {
-                    // Puce de protection sur l'en-tête ($100-$103, kof98).
-                    if (0x100..0x104).contains(&a) {
+                    // Puce de protection sur la ROM basse ($100-$1FFF : kof98, sbp).
+                    if a < 0x2000 {
                         if let Some(ref mut port) = self.port {
                             if let Some(v) = port.read(a, &self.cart_p, &self.work_ram[..]) {
                                 return v;

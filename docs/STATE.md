@@ -568,3 +568,10 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 - Tests : permutation de bits, état après reset (lectures = 0), chargement + lectures calculés à la main, séquence de décalages, plage d'adresses, lectures <= 0xFF, `make_port` pour les deux jeux, table de protection.
 - Banc réel (sp-s2) : trame 120 à 0,00 % ; trame 600 : même écran que MAME (fond gris + texte), mais niveau de fondu différent (~95 % de pixels de fond) — même classe que l'écart « timeline/fondu » de kof2000/kof2001 (voir QUESTIONS.md).
 - Suite : T1013 (sbp).
+
+## T1013 - sbp (Super Bubble Pop)
+- `ng-cart/src/sbp.rs` : `sbp_patch` (3 NOP en 0x2A6F8-0x2A6FC, `7001` en 0x3FF2C : `rom[0x3ff2d/2]` est un indice entier => adresse 0x3FF2C). `PDecrypt::Sbp` dans `install.rs`.
+- `ng-bus/src/prot_sbp.rs` : port `Sbp`. Écart avec la carte : MAME installe la puce sur `$000200-$001FFF` (pas sur la fenêtre `$2xxxxx`), lecture = mot de P à la même adresse, quartets permutés, `$D5E` brut ; écritures ignorées. `Bus68k::read16` consulte donc le port pour toute la ROM basse `< $2000` (kof98 inchangé : `None` hors de ses adresses). Les écritures en région 0 restent ignorées par le bus (sans effet dans MAME).
+- `RuntimeProt::Sbp`, `PROT_SBP`, `make_port`. `ALL_CARTS` = 157.
+- Banc réel (sp-s2) : sbp `ok`, 0,00 % de différence aux trames 120 et 600.
+- Suite : T1014 (RAM cartouche).

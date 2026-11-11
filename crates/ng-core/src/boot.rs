@@ -10,6 +10,7 @@ use ng_bus::prot_fatfury2::FatFury2;
 use ng_bus::prot_kof98::Kof98;
 use ng_bus::prot_mslugx::MslugX;
 use ng_bus::prot_pvc::Pvc;
+use ng_bus::prot_sbp::Sbp;
 use ng_bus::prot_sma::{Sma3, SmaChip, SmaKind};
 use ng_bus::CartPort;
 use ng_cart::types::RuntimeProt;
@@ -52,6 +53,7 @@ pub fn make_port(cart: &Cart) -> Option<Box<dyn CartPort>> {
         RuntimeProt::Sma3 => Some(Box::new(Sma3::new())),
         RuntimeProt::Pvc => Some(Box::new(Pvc::new())),
         RuntimeProt::Kof98 => Some(Box::new(Kof98::new())),
+        RuntimeProt::Sbp => Some(Box::new(Sbp::new())),
         RuntimeProt::FatFury2 => Some(Box::new(FatFury2::new())),
         RuntimeProt::Sma99 => Some(Box::new(SmaChip::new(SmaKind::Kof99))),
         RuntimeProt::SmaGarou => Some(Box::new(SmaChip::new(SmaKind::Garou))),
@@ -132,7 +134,7 @@ mod tests {
         for g in ["kof99", "garou", "kof2000"] {
             assert!(make_port(&cart_named(g)).is_some(), "{g}");
         }
-        for g in ["kof2003", "svc", "kof98", "fatfury2", "ssideki"] {
+        for g in ["kof2003", "svc", "kof98", "fatfury2", "ssideki", "sbp"] {
             assert!(make_port(&cart_named(g)).is_some(), "{g}");
         }
         assert!(make_port(&cart_named("kof94")).is_none());

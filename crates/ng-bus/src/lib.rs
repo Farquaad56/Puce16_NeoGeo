@@ -13,6 +13,7 @@ pub mod prot_fatfury2;
 pub mod prot_kof98;
 pub mod prot_mslugx;
 pub mod prot_pvc;
+pub mod prot_sbp;
 pub mod prot_sma;
 pub mod rtc;
 pub mod sound;
