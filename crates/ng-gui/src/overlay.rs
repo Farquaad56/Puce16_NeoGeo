@@ -160,6 +160,13 @@ pub enum RunState {
     Stopped,
 }
 
+/// Valeur à largeur fixe (alignée à droite) : la barre ne change jamais de taille quand les
+/// chiffres passent de 9,9 à 10,2 ms ou de 5 à 100 %.
+fn num(v: f32, width: usize, decimals: usize) -> String {
+    let max = 10f32.powi(width as i32 - decimals as i32 - 1) - 1.0;
+    format!("{:>width$.decimals$}", v.clamp(0.0, max))
+}
+
 fn seg(ui: &mut egui::Ui, label: &str, color: Color32, value: String) {
     ui.label(RichText::new(label).monospace().strong().color(color));
     ui.label(RichText::new(value).monospace().color(Color32::WHITE));
@@ -228,43 +235,45 @@ pub fn show(
                                 seg(ui, "ARRÊT", PINK, String::new());
                                 return;
                             }
-                            RunState::Paused => seg(ui, "PAUSE", PINK, String::new()),
+                            RunState::Paused => seg(ui, "PAUSE", PINK, " ".repeat(5)),
                             RunState::Running => {
-                                seg(ui, "FPS", Color32::WHITE, format!("{:.1}", perf.fps))
+                                seg(ui, "FPS  ", Color32::WHITE, num(perf.fps, 5, 1))
                             }
                         }
                         let emu = perf
                             .avg(30)
-                            .map_or("–".to_string(), |v| format!("{v:.2} ms"));
+                            .map_or_else(|| " ".repeat(8), |v| format!("{} ms", num(v, 5, 2)));
                         sep(ui);
                         seg(ui, "EMU", YELLOW, emu);
                         if !prefs.full {
                             return;
                         }
-                        if let Some((lo, hi)) = perf.min_max() {
-                            ui.label(
-                                RichText::new(format!("min {lo:.1} max {hi:.1}"))
-                                    .monospace()
-                                    .color(GREY),
-                            );
-                        }
+                        let (lo, hi) = perf.min_max().unwrap_or((0.0, 0.0));
+                        ui.label(
+                            RichText::new(format!("min {} max {}", num(lo, 5, 1), num(hi, 5, 1)))
+                                .monospace()
+                                .color(GREY),
+                        );
                         graph(ui, perf);
                         sep(ui);
-                        seg(ui, "VIT", PINK, format!("{:.0}%", perf.speed_pct()));
+                        seg(ui, "VIT", PINK, format!("{}%", num(perf.speed_pct(), 4, 0)));
                         sep(ui);
-                        seg(ui, "UI", GREEN, format!("{:.1} ms", perf.ui_ms));
-                        if let Some(fx) = perf.fx_ms {
-                            seg(ui, "FILTRE", GREEN, format!("{fx:.1} ms"));
-                        }
+                        seg(ui, "UI", GREEN, format!("{} ms", num(perf.ui_ms, 5, 1)));
+                        // toujours présent (tiret sans filtre) : la largeur ne change pas
+                        let fx = perf.fx_ms.map_or_else(
+                            || format!("{:>5} ms", "-"),
+                            |v| format!("{} ms", num(v, 5, 1)),
+                        );
+                        seg(ui, "FILTRE", GREEN, fx);
                         sep(ui);
                         seg(
                             ui,
                             "AUDIO",
                             PURPLE,
                             format!(
-                                "{:.0}% sous-flux {}",
-                                perf.audio_fill * 100.0,
-                                perf.underruns
+                                "{}% sous-flux {:>4}",
+                                num((perf.audio_fill * 100.0).min(100.0), 4, 0),
+                                perf.underruns.min(9999)
                             ),
                         );
                         if let Some(s) = scale {
@@ -317,6 +326,19 @@ mod tests {
         assert!((p.ui_ms - 11.0).abs() < 1e-4);
         p.smooth_fx(5.0);
         assert_eq!(p.fx_ms, Some(5.0));
+    }
+
+    #[test]
+    fn numbers_keep_a_fixed_width() {
+        for v in [0.0, 0.4, 9.9, 10.2, 99.94, 150.0, 1e9, -3.0] {
+            assert_eq!(num(v, 5, 1).len(), 5, "{v}");
+            assert_eq!(num(v, 5, 2).len(), 5, "{v}");
+        }
+        for v in [0.0, 5.0, 100.0, 12345.0] {
+            assert_eq!(num(v, 4, 0).len(), 4, "{v}");
+        }
+        assert_eq!(num(9.9, 5, 1), "  9.9");
+        assert_eq!(num(10.2, 5, 1), " 10.2");
     }
 
     #[test]
