@@ -9,6 +9,7 @@ mod emu_thread;
 mod fx_menu;
 mod input;
 mod menu;
+mod overlay;
 mod postfx;
 mod prefs;
 mod settings;

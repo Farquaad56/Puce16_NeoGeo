@@ -3,6 +3,7 @@
 //! `neogeo.toml` garde les chemins, le modèle et le BIOS ; `gui.toml` garde l'affichage, les
 //! touches et l'état du débogueur. Un fichier absent ou invalide donne les valeurs par défaut.
 
+use crate::overlay::{Corner, OverlayPrefs};
 use crate::postfx::{Fx, Mask, ScanMode};
 use std::path::{Path, PathBuf};
 
@@ -66,8 +67,27 @@ impl Default for DebugPrefs {
     }
 }
 
+/// Volume sonore.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct AudioPrefs {
+    /// 0 à 100 %.
+    pub volume: u8,
+    pub mute: bool,
+}
+
+impl Default for AudioPrefs {
+    fn default() -> Self {
+        AudioPrefs {
+            volume: 100,
+            mute: false,
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct Prefs {
+    pub audio: AudioPrefs,
+    pub overlay: OverlayPrefs,
     pub display: DisplayPrefs,
     pub input: InputPrefs,
     pub debug: DebugPrefs,
@@ -167,6 +187,17 @@ impl Prefs {
                 }
             }
         }
+        s.push_str(&format!(
+            "\n[audio]\nvolume = {}\nmute = {}\n",
+            self.audio.volume, self.audio.mute
+        ));
+        let o = &self.overlay;
+        s.push_str(&format!(
+            "\n[overlay]\nenabled = {}\ndetail = \"{}\"\ncorner = \"{}\"\n",
+            o.enabled,
+            if o.full { "full" } else { "compact" },
+            o.corner.name()
+        ));
         let f = &self.fx;
         s.push_str(&format!(
             "\n[fx]\ninterp = {}\nscanlines = \"{}\"\nscan = {}\nscan_dark = {}\nscan_bright = {}\ngamma = {}\nmask = \"{}\"\nmask_pct = {}\n",
@@ -240,6 +271,31 @@ impl Prefs {
                 }
                 ("input.pad", _) if is_plain(k) && is_plain(v) => {
                     p.input.pad.push((k.to_string(), v.to_string()));
+                }
+                ("audio", "volume") => {
+                    if let Ok(n) = v.parse::<u8>() {
+                        p.audio.volume = n.min(100);
+                    }
+                }
+                ("audio", "mute") => {
+                    if let Some(b) = parse_bool(v) {
+                        p.audio.mute = b;
+                    }
+                }
+                ("overlay", "enabled") => {
+                    if let Some(b) = parse_bool(v) {
+                        p.overlay.enabled = b;
+                    }
+                }
+                ("overlay", "detail") => match v {
+                    "full" => p.overlay.full = true,
+                    "compact" => p.overlay.full = false,
+                    _ => {}
+                },
+                ("overlay", "corner") => {
+                    if let Some(c) = Corner::from_name(v) {
+                        p.overlay.corner = c;
+                    }
                 }
                 ("fx", "interp") => {
                     if let Ok(n) = v.parse::<u8>() {
@@ -341,6 +397,15 @@ mod tests {
                 show_status_bar: false,
             },
             fx: Fx::preset(crate::postfx::Preset::SonyTrinitron),
+            audio: AudioPrefs {
+                volume: 35,
+                mute: true,
+            },
+            overlay: OverlayPrefs {
+                enabled: true,
+                full: false,
+                corner: Corner::BottomRight,
+            },
         }
     }
 

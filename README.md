@@ -101,9 +101,10 @@ Le modèle et le BIOS se changent aussi depuis le menu **Système**. Les préfé
 | Menu | Contenu |
 |---|---|
 | **Fichier** | Ouvrir (liste des jeux trouvés dans `roms_dir`, triés par titre), capture d'écran, quitter. |
-| **Émulation** | Pause, reset, configuration des contrôles. |
+| **Émulation** | Pause, reset, arrêter / démarrer l'émulation, configuration des contrôles. |
+| **Audio** | Volume (0 à 100 %) et muet. |
 | **Système** | DIP switches MVS, choix du BIOS, modèle MVS ou AES. |
-| **Vidéo** | Échelle (auto ou x1 à x8), plein écran, ratio, lissage, filtres vidéo. |
+| **Vidéo** | Échelle (auto ou x1 à x8), plein écran, ratio, lissage, overlay de performance, filtres vidéo. |
 | **Débogage** | Débogueur, onglets, avance d'une trame, barre d'état. |
 
 ### Raccourcis et contrôles par défaut
@@ -117,8 +118,11 @@ Le modèle et le BIOS se changent aussi depuis le menu **Système**. Les préfé
 | `5` · `6` | Pièces 1 et 2 |
 | `9` · `F2` | Service · Test (menu de service du BIOS) |
 | `F1` | Fenêtre des contrôles (réassignation clavier et manette) |
+| `F3` · `F4` · `F7` | Volume − · volume + · muet |
 | `F5` · `F6` | Pause · avance d'une trame |
+| `F8` | Arrêter / démarrer l'émulation (redémarrage à froid du dernier jeu) |
 | `F9` | Capture d'écran (`saves/shots/`) |
+| `F10` | Overlay de performance |
 | `F11` · `Échap` | Plein écran · quitter le plein écran |
 | `F12` | Débogueur |
 
@@ -141,6 +145,10 @@ L'interface détecte le type de contrôleur du jeu : le panneau mahjong s'active
 | Masque | Aucun, Sony Trinitron, Tube fané (jaune), avec une force réglable |
 
 Les coefficients proviennent des fichiers de filtres et de masques de la communauté MiSTer, regroupés dans `crates/ng-gui/data/fx.bin` par `tools/gen_fx_data.py`. Les scanlines se voient à partir d'une échelle x2 et les masques à partir d'une hauteur d'image suffisante.
+
+### Overlay de performance
+
+`F10` (ou **Vidéo → Overlay de performance**) affiche une barre en surimpression, désactivée par défaut. En mode compact : FPS et temps d'émulation par trame. En mode détaillé : courbe des 120 dernières trames (ligne grise = budget de 16,9 ms, rouge au-dessus), min et max, vitesse par rapport au temps réel, durée d'une image de l'interface, coût des filtres vidéo, remplissage du tampon audio et nombre de sous-alimentations, échelle d'affichage. Le coin d'affichage et le niveau de détail se règlent dans **Vidéo → Overlay**. La barre d'état affiche aussi le temps moyen par trame.
 
 ### DIP switches MVS
 

@@ -7,6 +7,7 @@ use ng_cart::{Config, Model};
 use crate::bios_menu::{bios_label, BiosEntry};
 
 use crate::debugger::Tab;
+use crate::overlay::{Corner, OverlayPrefs};
 pub use crate::prefs::ScaleMode as Scale;
 use crate::prefs::{Aspect, DisplayPrefs};
 
@@ -25,6 +26,13 @@ pub enum MenuAction {
     Controls,
     Dips,
     Filters,
+    Stop,
+    Start,
+    Volume(u8),
+    Mute(bool),
+    Overlay(bool),
+    OverlayFull(bool),
+    OverlayCorner(Corner),
     Fullscreen(bool),
     Aspect(Aspect),
     Smooth(bool),
@@ -58,6 +66,13 @@ pub struct MenuState<'a> {
     pub debug_open: bool,
     pub debug_tab: Tab,
     pub status_bar: bool,
+    pub volume: u8,
+    pub mute: bool,
+    /// L'émulation est arrêtée (machine déchargée).
+    pub stopped: bool,
+    /// Un jeu est connu (de quoi démarrer).
+    pub has_game: bool,
+    pub overlay: OverlayPrefs,
 }
 
 /// Dessine la barre de menus et renvoie l'action choisie.
@@ -99,8 +114,26 @@ pub fn show(ui: &mut egui::Ui, st: &MenuState) -> Option<MenuAction> {
                 action = Some(MenuAction::Pause(paused));
                 ui.close();
             }
-            if ui.button("Reset").clicked() {
+            if ui
+                .add_enabled(!st.stopped, egui::Button::new("Reset"))
+                .clicked()
+            {
                 action = Some(MenuAction::Reset);
+                ui.close();
+            }
+            if st.stopped {
+                if ui
+                    .add_enabled(st.has_game, egui::Button::new("Démarrer (F8)"))
+                    .clicked()
+                {
+                    action = Some(MenuAction::Start);
+                    ui.close();
+                }
+            } else if ui
+                .add_enabled(st.has_game, egui::Button::new("Arrêter (F8)"))
+                .clicked()
+            {
+                action = Some(MenuAction::Stop);
                 ui.close();
             }
             ui.separator();
@@ -108,6 +141,23 @@ pub fn show(ui: &mut egui::Ui, st: &MenuState) -> Option<MenuAction> {
                 action = Some(MenuAction::Controls);
                 ui.close();
             }
+        });
+        ui.menu_button("Audio", |ui| {
+            let mut vol = st.volume;
+            ui.horizontal(|ui| {
+                ui.label("Volume");
+                if ui
+                    .add(egui::Slider::new(&mut vol, 0..=100).suffix(" %"))
+                    .changed()
+                {
+                    action = Some(MenuAction::Volume(vol));
+                }
+            });
+            let mut mute = st.mute;
+            if ui.checkbox(&mut mute, "Muet (F7)").changed() {
+                action = Some(MenuAction::Mute(mute));
+            }
+            ui.weak("F3 / F4 : volume - / +");
         });
         ui.menu_button("Système", |ui| {
             if ui.button("DIP switches MVS…").clicked() {
@@ -181,6 +231,29 @@ pub fn show(ui: &mut egui::Ui, st: &MenuState) -> Option<MenuAction> {
                 action = Some(MenuAction::Smooth(smooth));
                 ui.close();
             }
+            let mut ov = st.overlay.enabled;
+            if ui
+                .checkbox(&mut ov, "Overlay de performance (F10)")
+                .changed()
+            {
+                action = Some(MenuAction::Overlay(ov));
+                ui.close();
+            }
+            ui.menu_button("Overlay", |ui| {
+                for (label, full) in [("Compact (FPS et ms)", false), ("Détaillé", true)] {
+                    if ui.radio(st.overlay.full == full, label).clicked() {
+                        action = Some(MenuAction::OverlayFull(full));
+                        ui.close();
+                    }
+                }
+                ui.separator();
+                for c in Corner::ALL {
+                    if ui.radio(st.overlay.corner == c, c.label()).clicked() {
+                        action = Some(MenuAction::OverlayCorner(c));
+                        ui.close();
+                    }
+                }
+            });
             if ui.button("Filtres vidéo…").clicked() {
                 action = Some(MenuAction::Filters);
                 ui.close();

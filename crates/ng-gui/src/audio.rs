@@ -1,6 +1,7 @@
 //! Sortie audio (cpal) : tampon circulaire stéréo entrelacé alimenté par le thread d'émulation.
 
 use std::collections::VecDeque;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
@@ -22,10 +23,24 @@ pub fn push_capped(deque: &mut VecDeque<f32>, samples: &[f32], cap: usize) {
     }
 }
 
+/// Gain linéaire appliqué au signal pour un volume de 0 à 100 % (courbe quadratique, plus proche
+/// de la perception) ; 0 si le son est coupé.
+pub fn volume_gain(volume: u8, mute: bool) -> f32 {
+    if mute {
+        return 0.0;
+    }
+    let v = f32::from(volume.min(100)) / 100.0;
+    v * v
+}
+
 pub struct AudioOut {
     _stream: cpal::Stream,
     shared: SharedBuf,
     pub rate: u32,
+    /// Sous-alimentations du périphérique tant que l'émulation tourne.
+    underruns: Arc<AtomicU64>,
+    /// Faux à l'arrêt et en pause : le silence n'est alors pas une sous-alimentation.
+    active: Arc<AtomicBool>,
 }
 
 impl AudioOut {
@@ -51,11 +66,17 @@ impl AudioOut {
         let rate = config.sample_rate();
         let shared: SharedBuf = Arc::new(Mutex::new(VecDeque::new()));
         let cb_buf = Arc::clone(&shared);
+        let underruns = Arc::new(AtomicU64::new(0));
+        let active = Arc::new(AtomicBool::new(false));
+        let (cb_under, cb_active) = (Arc::clone(&underruns), Arc::clone(&active));
         let stream = device
             .build_output_stream(
                 config.into(),
                 move |data: &mut [f32], _| {
                     let mut q = cb_buf.lock().unwrap_or_else(|e| e.into_inner());
+                    if q.len() < data.len() / channels * 2 && cb_active.load(Ordering::Relaxed) {
+                        cb_under.fetch_add(1, Ordering::Relaxed);
+                    }
                     if channels == 2 {
                         fill_buffer(&mut q, data);
                     } else {
@@ -79,7 +100,24 @@ impl AudioOut {
             _stream: stream,
             shared,
             rate,
+            underruns,
+            active,
         })
+    }
+
+    /// Taux de remplissage du tampon, de 0 à 1.
+    pub fn fill(&self) -> f32 {
+        let q = self.shared.lock().unwrap_or_else(|e| e.into_inner());
+        q.len() as f32 / (self.rate as f32 / 2.0)
+    }
+
+    pub fn underruns(&self) -> u64 {
+        self.underruns.load(Ordering::Relaxed)
+    }
+
+    /// Indique si l'émulation produit du son (sinon le silence n'est pas compté).
+    pub fn set_active(&self, on: bool) {
+        self.active.store(on, Ordering::Relaxed);
     }
 
     /// Ajoute des échantillons stéréo entrelacés (plafond : 0,25 s).
@@ -93,6 +131,15 @@ impl AudioOut {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn volume_curve() {
+        assert_eq!(volume_gain(100, false), 1.0);
+        assert_eq!(volume_gain(0, false), 0.0);
+        assert_eq!(volume_gain(100, true), 0.0);
+        assert!((volume_gain(50, false) - 0.25).abs() < 1e-6);
+        assert_eq!(volume_gain(200, false), 1.0);
+    }
 
     #[test]
     fn underrun_is_filled_with_silence() {

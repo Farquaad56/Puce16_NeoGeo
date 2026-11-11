@@ -42,6 +42,10 @@ pub enum Cmd {
         dx: i32,
         dy: i32,
     },
+    /// Gain audio linéaire (volume et muet déjà appliqués).
+    Volume(f32),
+    /// Arrête l'émulation : la machine est déchargée (un `Load` la relance à froid).
+    Stop,
     Quit,
 }
 
@@ -51,6 +55,11 @@ pub struct FrameMsg {
     pub pixels: Vec<u32>,
     pub frame: u64,
     pub fps: f32,
+    /// Temps de calcul de cette trame (émulation + audio), en ms.
+    pub ms: f32,
+    /// Remplissage du tampon audio (0 à 1) et sous-alimentations depuis le démarrage.
+    pub audio_fill: f32,
+    pub underruns: u64,
 }
 
 /// Poignées côté interface.
@@ -134,6 +143,7 @@ fn run(
     let mut dbg_dirty = false;
     let mut step = false;
     let mut dips = 0xFFu8;
+    let mut gain = 1.0f32;
     let mut inputs = (
         PadState::default(),
         PadState::default(),
@@ -186,6 +196,12 @@ fn run(
                     dbg_dirty = true;
                 }
                 Ok(Cmd::StepFrame) => step = true,
+                Ok(Cmd::Volume(g)) => gain = g,
+                Ok(Cmd::Stop) => {
+                    machine = None;
+                    paused = false;
+                    step = false;
+                }
                 Ok(Cmd::Dips(d)) => {
                     dips = d;
                     if let Some(m) = machine.as_mut() {
@@ -210,11 +226,15 @@ fn run(
             }
             dbg_dirty = false;
             step = false;
+            if let Some(a) = audio.as_ref() {
+                a.set_active(false);
+            }
             thread::sleep(Duration::from_millis(8));
             continue;
         };
         m.set_inputs(inputs.0, inputs.1, inputs.2);
         m.set_mahjong(inputs.3);
+        let t_frame = Instant::now();
         m.run_frame();
         frames_since_t0 += 1;
         let samples = m.take_audio();
@@ -224,6 +244,12 @@ fn run(
             }
             pcm.clear();
             r.pop_into(&mut pcm);
+            if gain != 1.0 {
+                for s in pcm.iter_mut() {
+                    *s *= gain;
+                }
+            }
+            a.set_active(true);
             a.push(&pcm);
         }
         let frame = m.frame_count();
@@ -236,10 +262,14 @@ fn run(
             fps = (frame - fps_mark.1) as f32 / fps_mark.0.elapsed().as_secs_f32();
             fps_mark = (Instant::now(), frame);
         }
+        let ms = t_frame.elapsed().as_secs_f32() * 1000.0;
         let _ = frame_tx.try_send(FrameMsg {
             pixels: m.framebuffer().pixels.clone(),
             frame,
             fps,
+            ms,
+            audio_fill: audio.as_ref().map_or(0.0, AudioOut::fill),
+            underruns: audio.as_ref().map_or(0, AudioOut::underruns),
         });
         if stepping {
             // pas à pas : pas de cadencement, l'horloge repart à la reprise

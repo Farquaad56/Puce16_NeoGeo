@@ -6,6 +6,7 @@ use std::path::PathBuf;
 
 use ng_cart::Config;
 
+use crate::audio;
 use crate::bios_menu::{self, BiosEntry};
 use crate::controls_menu::ControlsWindow;
 use crate::debugger::{DebugAction, Debugger, Region, Tab};
@@ -15,6 +16,7 @@ use crate::emu_thread::{self, Cmd, EmuHandle, FrameMsg};
 use crate::fx_menu::FxWindow;
 use crate::input::{self, Bindings, InputState};
 use crate::menu::{self, MenuAction, MenuState};
+use crate::overlay::{self, Perf, RunState};
 use crate::postfx::{self, Fx};
 use crate::prefs::{self, Prefs};
 use crate::settings::ConfigForm;
@@ -96,6 +98,9 @@ pub struct App {
     controls: ControlsWindow,
     dips: DipsWindow,
     fx_win: FxWindow,
+    perf: Perf,
+    /// L'émulation est arrêtée (machine déchargée) ; `game` reste connu pour redémarrer.
+    stopped: bool,
     fx_tex: Option<(FxKey, egui::TextureHandle)>,
     debugger: Debugger,
     /// Dernier niveau de débogage envoyé au thread d'émulation.
@@ -144,6 +149,8 @@ impl App {
             controls: ControlsWindow::default(),
             dips: DipsWindow::default(),
             fx_win: FxWindow::default(),
+            perf: Perf::default(),
+            stopped: false,
             fx_tex: None,
             debugger,
             debug_level: DebugLevel::Off,
@@ -183,9 +190,45 @@ impl App {
     pub fn load_game(&mut self, name: &str) {
         self.game = Some(name.to_string());
         self.error = None;
+        self.stopped = false;
+        self.perf.reset();
         self.send(Cmd::Load {
             game: name.to_string(),
         });
+    }
+
+    /// Arrête l'émulation : la machine est déchargée et l'image effacée.
+    fn stop_emulation(&mut self) {
+        if self.stopped || self.emu.is_none() {
+            return;
+        }
+        self.stopped = true;
+        self.paused = false;
+        self.send(Cmd::Stop);
+        if let Some(emu) = &self.emu {
+            while emu.rx.try_recv().is_ok() {}
+        }
+        self.last = None;
+        self.texture = None;
+        self.fx_tex = None;
+        self.shown = None;
+        self.perf.reset();
+    }
+
+    /// Redémarre à froid le dernier jeu chargé.
+    fn start_emulation(&mut self) {
+        if let Some(game) = self.game.clone() {
+            self.paused = false;
+            self.send(Cmd::Pause(false));
+            self.load_game(&game);
+        }
+    }
+
+    /// Volume : ajuste de `delta` points (0 à 100) et coupe le muet.
+    fn change_volume(&mut self, delta: i32) {
+        let v = i32::from(self.prefs.audio.volume) + delta;
+        self.prefs.audio.volume = v.clamp(0, 100) as u8;
+        self.prefs.audio.mute = false;
     }
 
     /// Modifie BIOS ou modèle : écrit `neogeo.toml`, informe le thread d'émulation et relance le
@@ -201,7 +244,7 @@ impl App {
             .map(|e| format!("configuration non sauvegardée : {e}"));
         self.bios = bios_menu::available_bios(&cfg);
         self.send(Cmd::Config(cfg));
-        if let Some(game) = self.game.clone() {
+        if let Some(game) = self.game.clone().filter(|_| !self.stopped) {
             self.send(Cmd::Load { game });
         }
     }
@@ -218,6 +261,14 @@ impl App {
         let Some(emu) = &self.emu else { return };
         let mut fresh = false;
         while let Ok(f) = emu.rx.try_recv() {
+            // une trame déjà en route après l'arrêt est ignorée
+            if self.stopped {
+                continue;
+            }
+            self.perf.push_emu(f.ms);
+            self.perf.fps = f.fps;
+            self.perf.audio_fill = f.audio_fill;
+            self.perf.underruns = f.underruns;
             self.last = Some(f);
             fresh = true;
         }
@@ -288,11 +339,15 @@ impl App {
                 ng_cart::Model::Mvs => "MVS",
                 ng_cart::Model::Aes => "AES",
             }),
-            frame: self.last.as_ref().map(|f| f.frame),
+            ms: self
+                .perf
+                .avg(60)
+                .filter(|_| !self.paused && !self.stopped && self.last.is_some()),
             // en pause la dernière mesure n'a plus de sens
             fps: self.last.as_ref().filter(|_| !self.paused).map(|f| f.fps),
             scale: self.shown.is_some().then_some(scale.as_str()),
             paused: self.paused,
+            stopped: self.stopped,
         })
     }
 
@@ -316,6 +371,16 @@ impl App {
             MenuAction::Controls => self.controls.open = true,
             MenuAction::Dips => self.dips.open = true,
             MenuAction::Filters => self.fx_win.open = true,
+            MenuAction::Stop => self.stop_emulation(),
+            MenuAction::Start => self.start_emulation(),
+            MenuAction::Volume(v) => {
+                self.prefs.audio.volume = v;
+                self.prefs.audio.mute = false;
+            }
+            MenuAction::Mute(m) => self.prefs.audio.mute = m,
+            MenuAction::Overlay(b) => self.prefs.overlay.enabled = b,
+            MenuAction::OverlayFull(f) => self.prefs.overlay.full = f,
+            MenuAction::OverlayCorner(c) => self.prefs.overlay.corner = c,
             MenuAction::Debugger => self.debugger.open = !self.debugger.open,
             MenuAction::DebugTab(t) => {
                 self.debugger.open = true;
@@ -353,6 +418,25 @@ impl App {
         if pressed(Key::F12) {
             self.debugger.open = !self.debugger.open;
         }
+        if pressed(Key::F10) {
+            self.prefs.overlay.enabled = !self.prefs.overlay.enabled;
+        }
+        if pressed(Key::F8) {
+            if self.stopped {
+                self.start_emulation();
+            } else {
+                self.stop_emulation();
+            }
+        }
+        if pressed(Key::F7) {
+            self.prefs.audio.mute = !self.prefs.audio.mute;
+        }
+        if pressed(Key::F3) {
+            self.change_volume(-5);
+        }
+        if pressed(Key::F4) {
+            self.change_volume(5);
+        }
     }
 
     /// Applique le plein écran à la fenêtre quand le réglage change (et au démarrage).
@@ -379,7 +463,11 @@ impl App {
         let Some(t) = &self.texture else {
             self.shown = None;
             ui.centered_and_justified(|ui| {
-                ui.label("Fichier > Ouvrir pour lancer un jeu");
+                ui.label(if self.stopped {
+                    "Émulation arrêtée : Émulation > Démarrer (F8)"
+                } else {
+                    "Fichier > Ouvrir pour lancer un jeu"
+                });
             });
             return;
         };
@@ -397,11 +485,13 @@ impl App {
             };
             if self.fx_tex.as_ref().map(|(k, _)| *k) != Some(key) {
                 let (w, h) = (l.px.0 as usize, l.px.1 as usize);
+                let t0 = std::time::Instant::now();
                 let img = egui::ColorImage {
                     size: [w, h],
                     source_size: egui::vec2(w as f32, h as f32),
                     pixels: postfx::render(&f.pixels, &fx, w, h),
                 };
+                self.perf.smooth_fx(t0.elapsed().as_secs_f32() * 1000.0);
                 match &mut self.fx_tex {
                     Some((k, t)) => {
                         t.set(img, egui::TextureOptions::NEAREST);
@@ -418,6 +508,9 @@ impl App {
             if let Some((_, t)) = &self.fx_tex {
                 tex_id = t.id();
             }
+        }
+        if !fx.is_active() {
+            self.perf.fx_ms = None;
         }
         ui.painter_at(avail)
             .image(tex_id, l.rect, uv, egui::Color32::WHITE);
@@ -481,6 +574,9 @@ impl eframe::App for App {
             self.prefs.input.dipsw = Some(dipsw);
         }
         self.send(Cmd::Dips(dipsw));
+        let a = &self.prefs.audio;
+        self.send(Cmd::Volume(audio::volume_gain(a.volume, a.mute)));
+        self.perf.smooth_ui(ctx.input(|i| i.unstable_dt) * 1000.0);
         let mut fx = self.prefs.fx;
         if self.fx_win.show(&ctx, &mut fx) {
             self.prefs.fx = fx;
@@ -539,6 +635,11 @@ impl eframe::App for App {
                             debug_open: self.debugger.open,
                             debug_tab: self.debugger.tab,
                             status_bar: self.prefs.debug.show_status_bar,
+                            volume: self.prefs.audio.volume,
+                            mute: self.prefs.audio.mute,
+                            stopped: self.stopped,
+                            has_game: self.game.is_some(),
+                            overlay: self.prefs.overlay,
                         },
                     )
                 })
@@ -579,6 +680,32 @@ impl eframe::App for App {
         egui::CentralPanel::default()
             .frame(egui::Frame::NONE.fill(egui::Color32::BLACK))
             .show(ui, |ui| self.draw_frame(ui));
+
+        let state = if self.stopped {
+            RunState::Stopped
+        } else if self.paused {
+            RunState::Paused
+        } else {
+            RunState::Running
+        };
+        let scale = self
+            .shown
+            .as_ref()
+            .map(|d| format!("x{} {}x{}", d.factor, d.px.0, d.px.1));
+        let top = if self.menu_shown { 30.0 } else { 8.0 };
+        let bottom = if !fullscreen && self.prefs.debug.show_status_bar {
+            34.0
+        } else {
+            8.0
+        };
+        overlay::show(
+            &ctx,
+            &self.prefs.overlay,
+            &self.perf,
+            state,
+            scale.as_deref(),
+            (top, bottom),
+        );
 
         self.sync_debug_level();
         self.prefs.debug.open = self.debugger.open;

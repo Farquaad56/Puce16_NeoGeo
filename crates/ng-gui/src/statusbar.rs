@@ -1,4 +1,4 @@
-//! Barre d'état : jeu, BIOS, modèle, trame, fps, échelle, marche/pause.
+//! Barre d'état : jeu, BIOS, modèle, temps par trame, fps, échelle, marche/pause/arrêt.
 
 /// Ce qu'affiche la barre d'état ; `None` = information indisponible.
 #[derive(Default)]
@@ -6,10 +6,12 @@ pub struct StatusInfo<'a> {
     pub game: Option<&'a str>,
     pub bios: Option<&'a str>,
     pub model: Option<&'a str>,
-    pub frame: Option<u64>,
+    /// Temps d'émulation moyen par trame, en ms.
+    pub ms: Option<f32>,
     pub fps: Option<f32>,
     pub scale: Option<&'a str>,
     pub paused: bool,
+    pub stopped: bool,
 }
 
 /// Valeur affichée quand une information manque.
@@ -21,12 +23,16 @@ pub fn format_status(s: &StatusInfo) -> String {
         or(s.game),
         or(s.bios),
         or(s.model),
-        s.frame
-            .map_or_else(|| MISSING.into(), |f| format!("trame {f}")),
+        s.ms.map_or_else(|| MISSING.into(), |m| format!("{m:.2} ms/trame")),
         s.fps
             .map_or_else(|| MISSING.into(), |f| format!("{f:.1} fps")),
         or(s.scale),
-        if s.paused { "PAUSE" } else { "MARCHE" }.to_string(),
+        match (s.stopped, s.paused) {
+            (true, _) => "ARRÊT",
+            (false, true) => "PAUSE",
+            (false, false) => "MARCHE",
+        }
+        .to_string(),
     ]
     .join(" · ")
 }
@@ -41,15 +47,26 @@ mod tests {
             game: Some("mslug"),
             bios: Some("euro"),
             model: Some("MVS"),
-            frame: Some(120),
+            ms: Some(4.103),
             fps: Some(59.19),
             scale: Some("x3 (960x672)"),
             paused: false,
+            stopped: false,
         };
         assert_eq!(
             format_status(&s),
-            "mslug · euro · MVS · trame 120 · 59.2 fps · x3 (960x672) · MARCHE"
+            "mslug · euro · MVS · 4.10 ms/trame · 59.2 fps · x3 (960x672) · MARCHE"
         );
+    }
+
+    #[test]
+    fn stopped_state() {
+        let s = StatusInfo {
+            stopped: true,
+            paused: true,
+            ..StatusInfo::default()
+        };
+        assert_eq!(format_status(&s), "– · – · – · – · – · – · ARRÊT");
     }
 
     #[test]
