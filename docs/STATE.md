@@ -575,3 +575,11 @@ T000 (workspace) -> T001 -> T004 -> T005 (dépendances CPU) -> T006, puis phases
 - `RuntimeProt::Sbp`, `PROT_SBP`, `make_port`. `ALL_CARTS` = 157.
 - Banc réel (sp-s2) : sbp `ok`, 0,00 % de différence aux trames 120 et 600.
 - Suite : T1014 (RAM cartouche).
+
+## T1014 - RAM de cartouche (vliner, jockeygp)
+- `ng-bus/src/prot_cartram.rs` : port `CartRam` (8 Kio non volatiles en `$200000-$201FFF`, écritures par octet respectant uds/lds). Variante V-Liner : `$280000` (IN5) lit `0xFFFF`, `$2C0000` (IN6) lit `0x0003` (valeurs de repos de `INPUT_PORTS_START( vliner )`). `CartPort` gagne `nv_ram()` / `nv_ram_mut()`.
+- Écarts de carte : pas de champ `Protection.cart_ram` ni de `Vec` dans `Machine` ; la RAM vit dans le port (`RuntimeProt::CartRam` pour jockeygp, `RuntimeProt::Vliner` pour vliner). `$300000` de vliner : `Io` renvoie déjà `pad[0] << 8 | dipsw`, qui correspond au port DSW modifié de MAME (haut/bas/gauche/droite + 4 boutons) : aucune nouvelle `Action` GUI. Les entrées coin/opérateur de IN5 ne sont pas mappées (constantes de repos).
+- Persistance : `Machine::load_cart_ram` / `save_cart_ram`, fichier `saves_dir/<jeu>.cartram` (8192 octets), appelés par `load_machine` / `save_machine`. Savestate : `VERSION` passe à 2, bloc final `cart_ram` (vide si pas de RAM ; refus si incohérent).
+- `vliner` ajouté au catalogue (`ALL_CARTS` = 158) ; `jockeygp` passe en `RuntimeProt::CartRam` (la table CMC50 du test est adaptée).
+- Banc réel (sp-s2) : vliner `ok`, 0,00 % aux trames 120 et 600. jockeygp : trame 120 à 0,00 %, mais à 600 notre machine est sur l'écran de mise (jeu lancé) alors que MAME est sur l'écran-titre : divergence de déroulement non résolue (voir QUESTIONS.md). jockeygp n'est plus noir (127 couleurs).
+- Suite : T1015 (mahjong).

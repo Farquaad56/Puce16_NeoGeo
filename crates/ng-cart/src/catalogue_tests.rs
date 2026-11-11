@@ -12,7 +12,7 @@ const ADPCM_B: [&str; 13] = [
 
 #[test]
 fn catalogue_has_expected_size_and_unique_names() {
-    assert_eq!(ALL_CARTS.len(), 157);
+    assert_eq!(ALL_CARTS.len(), 158);
     let names: HashSet<_> = ALL_CARTS.iter().map(|d| d.name).collect();
     assert_eq!(names.len(), ALL_CARTS.len());
 }
@@ -190,7 +190,13 @@ mod cmc50_tests {
             assert_eq!(p.fix_bank, FixBank::Garou, "{name}");
             assert_eq!(p.pcm2, Pcm2::None, "{name}");
             assert_eq!(p.p_decrypt, PDecrypt::None, "{name}");
-            assert_eq!(p.runtime, RuntimeProt::None, "{name}");
+            // T1014 : jockeygp a en plus la RAM de cartouche.
+            let want = if name == "jockeygp" {
+                RuntimeProt::CartRam
+            } else {
+                RuntimeProt::None
+            };
+            assert_eq!(p.runtime, want, "{name}");
         }
     }
 
@@ -484,5 +490,24 @@ mod sbp_game_tests {
         assert_eq!(p.pcm2, Pcm2::None);
         assert_eq!(p.fix_bank, FixBank::Std);
         assert_eq!(d.sizes.p, 0x100000);
+    }
+}
+
+// ---- T1014 : RAM de cartouche ----
+#[cfg(test)]
+mod cartram_game_tests {
+    use crate::romset::find_def;
+    use crate::types::{Cmc, RuntimeProt};
+
+    #[test]
+    fn vliner_jockeygp_have_cart_ram() {
+        assert_eq!(
+            find_def("vliner").unwrap().prot.runtime,
+            RuntimeProt::Vliner
+        );
+        let j = find_def("jockeygp").unwrap().prot;
+        assert_eq!(j.runtime, RuntimeProt::CartRam);
+        assert_eq!(j.cmc, Cmc::C50);
+        assert_eq!(find_def("kof94").unwrap().prot.runtime, RuntimeProt::None);
     }
 }

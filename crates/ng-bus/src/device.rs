@@ -23,6 +23,14 @@ pub trait CartPort {
     }
     /// Reset the protection chip state.
     fn reset(&mut self) {}
+    /// RAM non volatile de la cartouche (V-Liner, Jockey GP), s'il y en a une.
+    fn nv_ram(&self) -> Option<&[u8]> {
+        None
+    }
+    /// Accès en écriture à la RAM non volatile (chargement d'une sauvegarde / savestate).
+    fn nv_ram_mut(&mut self) -> Option<&mut [u8]> {
+        None
+    }
     /// Nombre d'accès traités par la puce depuis sa création (tests de validation).
     fn access_count(&self) -> u64 {
         0

@@ -3,6 +3,7 @@
 //! Format : magic `NGST`, version u32 (little-endian), puis une suite de blocs bincode.
 //! Les ROM (cartouche, BIOS) ne sont pas sauvegardées : le CRC32 de la ROM P est stocké et
 //! vérifié au chargement. Les deux CPU sont sauvés à une frontière d'instruction.
+//! La RAM de cartouche (V-Liner, Jockey GP) est sauvée depuis la version 2.
 //! Limites connues : l'état STOP/arrêt du 68000 (Q-M68KSTATE) et l'état d'un port de
 //! protection de cartouche ne sont pas sauvegardés.
 
@@ -14,7 +15,7 @@ use serde::Serialize;
 use crate::machine::Machine;
 
 const MAGIC: &[u8; 4] = b"NGST";
-const VERSION: u32 = 1;
+const VERSION: u32 = 2;
 
 /// Registres du 68000 : d, a, usp, ssp, sr, pc, prefetch.
 type M68 = ([u32; 8], [u32; 7], u32, u32, u16, u32, [u16; 2]);
@@ -136,6 +137,15 @@ impl Machine {
         );
         put(&mut buf, &self.fb.pixels);
         put(&mut buf, &self.audio);
+        // v2 : RAM de cartouche (vide si la cartouche n'en a pas).
+        let cart_ram: Vec<u8> = self
+            .bus
+            .port
+            .as_ref()
+            .and_then(|p| p.nv_ram())
+            .map(|r| r.to_vec())
+            .unwrap_or_default();
+        put(&mut buf, &cart_ram);
         buf
     }
 
@@ -230,6 +240,12 @@ impl Machine {
         ) = get(&mut rd)?;
         fill(&mut self.fb.pixels[..], get(&mut rd)?)?;
         self.audio = get(&mut rd)?;
+        let cart_ram: Vec<u8> = get(&mut rd)?;
+        match self.bus.port.as_mut().and_then(|p| p.nv_ram_mut()) {
+            Some(ram) => fill(ram, cart_ram)?,
+            None if cart_ram.is_empty() => {}
+            None => return Err("savestate : RAM de cartouche inattendue".to_string()),
+        }
         Ok(())
     }
 }
@@ -250,6 +266,22 @@ mod tests {
     fn fb_crc(m: &Machine) -> u32 {
         let bytes: Vec<u8> = m.fb.pixels.iter().flat_map(|p| p.to_le_bytes()).collect();
         crc32_bytes(&bytes)
+    }
+
+    #[test]
+    fn cart_ram_survives_save_state() {
+        let mut m = running();
+        m.bus.port = Some(Box::new(ng_bus::prot_cartram::CartRam::new(false)));
+        m.bus.write16(0x200020, 0xCAFE, true, true);
+        let st = m.save_state();
+        m.bus.write16(0x200020, 0x0000, true, true);
+        m.load_state(&st).unwrap();
+        assert_eq!(m.bus.read16(0x200020), 0xCAFE);
+        let again = m.save_state();
+        assert_eq!(again.len(), st.len());
+        // Un état avec RAM de cartouche est refusé par une machine sans RAM.
+        let mut plain = running();
+        assert!(plain.load_state(&st).is_err());
     }
 
     #[test]

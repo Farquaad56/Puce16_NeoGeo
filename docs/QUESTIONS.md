@@ -30,3 +30,6 @@
 - [OUVERT T901] Ordre des événements à égalité de tick et table de wait states : aucun écart MAME constaté, rien changé.
 
 - (T1006) kof2001/kof96/lastblad/samsho4 : la chronologie de démarrage du jeu est en retard sur MAME (BIOS identique jusqu'à ~580 trames). Cause à étudier : rythme du handshake son Z80, chien de garde, ou durée d'un écran d'attente.
+
+## T1014 - jockeygp : déroulement différent de MAME à 600 trames
+Notre émulation affiche l'écran de mise (programme en cours) alors que MAME montre l'écran-titre (attract). La RAM de cartouche étant mappée, le jeu tourne ; reste à comparer l'état initial de la NVRAM (MAME) et les bits d'entrée SYSTEM (0x0100 / 0x0400 « freeze »). Non bloquant.

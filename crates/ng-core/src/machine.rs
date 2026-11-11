@@ -216,6 +216,28 @@ impl Machine {
         self.memcard.borrow().save(path)
     }
 
+    /// Charge la RAM de cartouche depuis `path` (8192 octets exactement) ; vrai si chargée.
+    pub fn load_cart_ram(&mut self, path: &std::path::Path) -> bool {
+        let Some(ram) = self.bus.port.as_mut().and_then(|p| p.nv_ram_mut()) else {
+            return false;
+        };
+        match std::fs::read(path) {
+            Ok(d) if d.len() == ram.len() => {
+                ram.copy_from_slice(&d);
+                true
+            }
+            _ => false,
+        }
+    }
+
+    /// Écrit la RAM de cartouche dans `path` (rien si la cartouche n'en a pas).
+    pub fn save_cart_ram(&self, path: &std::path::Path) -> std::io::Result<()> {
+        match self.bus.port.as_ref().and_then(|p| p.nv_ram()) {
+            Some(ram) => std::fs::write(path, ram),
+            None => Ok(()),
+        }
+    }
+
     pub fn load_backup(&mut self, path: &std::path::Path) {
         let mut backup = self.backup.borrow_mut();
         backup.load(path);

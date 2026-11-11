@@ -6,6 +6,7 @@
 
 use std::path::{Path, PathBuf};
 
+use ng_bus::prot_cartram::CartRam;
 use ng_bus::prot_fatfury2::FatFury2;
 use ng_bus::prot_kof98::Kof98;
 use ng_bus::prot_mslugx::MslugX;
@@ -21,6 +22,11 @@ use crate::machine::Machine;
 /// Fichier de sauvegarde de la backup RAM d'un jeu.
 fn backup_path(cfg: &Config, game: &str) -> PathBuf {
     cfg.saves_dir.join(format!("{game}.sram"))
+}
+
+/// Fichier de la RAM de cartouche (8192 octets) de `game` (V-Liner, Jockey GP).
+pub fn cartram_path(cfg: &Config, game: &str) -> PathBuf {
+    cfg.saves_dir.join(format!("{game}.cartram"))
 }
 
 /// Fichier de la carte mémoire du profil (nom du BIOS choisi), partagée par tous les jeux.
@@ -53,6 +59,8 @@ pub fn make_port(cart: &Cart) -> Option<Box<dyn CartPort>> {
         RuntimeProt::Sma3 => Some(Box::new(Sma3::new())),
         RuntimeProt::Pvc => Some(Box::new(Pvc::new())),
         RuntimeProt::Kof98 => Some(Box::new(Kof98::new())),
+        RuntimeProt::CartRam => Some(Box::new(CartRam::new(false))),
+        RuntimeProt::Vliner => Some(Box::new(CartRam::new(true))),
         RuntimeProt::Sbp => Some(Box::new(Sbp::new())),
         RuntimeProt::FatFury2 => Some(Box::new(FatFury2::new())),
         RuntimeProt::Sma99 => Some(Box::new(SmaChip::new(SmaKind::Kof99))),
@@ -85,6 +93,7 @@ pub fn load_machine(cfg: &Config, game: &str) -> Result<Machine, String> {
         machine.load_backup(&sram);
     }
     machine.load_memcard(&memcard_path(cfg));
+    machine.load_cart_ram(&cartram_path(cfg, game));
     Ok(machine)
 }
 
@@ -95,6 +104,9 @@ pub fn save_machine(machine: &Machine, cfg: &Config, game: &str) -> Result<(), S
     machine.save_backup(path);
     machine
         .save_memcard(&memcard_path(cfg))
+        .map_err(|e| e.to_string())?;
+    machine
+        .save_cart_ram(&cartram_path(cfg, game))
         .map_err(|e| e.to_string())?;
     Ok(())
 }
@@ -134,7 +146,9 @@ mod tests {
         for g in ["kof99", "garou", "kof2000"] {
             assert!(make_port(&cart_named(g)).is_some(), "{g}");
         }
-        for g in ["kof2003", "svc", "kof98", "fatfury2", "ssideki", "sbp"] {
+        for g in [
+            "kof2003", "svc", "kof98", "fatfury2", "ssideki", "sbp", "vliner", "jockeygp",
+        ] {
             assert!(make_port(&cart_named(g)).is_some(), "{g}");
         }
         assert!(make_port(&cart_named("kof94")).is_none());
@@ -213,6 +227,36 @@ mod tests {
         assert_eq!(m.bus.read16(0x800006), 0xFFA5);
         m.save_memcard(&path).unwrap();
         assert_eq!(std::fs::read(&path).unwrap()[3], 0xA5);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn cart_ram_is_mapped_saved_and_reloaded() {
+        let dir = std::env::temp_dir().join(format!("ng_core_cram_{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let c = cfg(&dir);
+        let path = cartram_path(&c, "vliner");
+        assert!(path.ends_with("vliner.cartram"));
+        let mut m = running();
+        m.bus.port = Some(Box::new(CartRam::new(true)));
+        assert!(!m.load_cart_ram(&path), "pas de fichier");
+        m.bus.write16(0x200000, 0xBEEF, true, true);
+        m.bus.write16(0x200010, 0x1234, true, true);
+        assert_eq!(m.bus.read16(0x200010), 0x1234);
+        m.save_cart_ram(&path).unwrap();
+        assert_eq!(std::fs::metadata(&path).unwrap().len(), 8192);
+
+        let mut m2 = running();
+        m2.bus.port = Some(Box::new(CartRam::new(true)));
+        assert!(m2.load_cart_ram(&path));
+        assert_eq!(m2.bus.read16(0x200000), 0xBEEF);
+        // Sans RAM de cartouche : rien n'est écrit ni chargé.
+        let mut m3 = running();
+        assert!(!m3.load_cart_ram(&path));
+        let other = dir.join("none.cartram");
+        m3.save_cart_ram(&other).unwrap();
+        assert!(!other.exists());
         let _ = std::fs::remove_dir_all(&dir);
     }
 
