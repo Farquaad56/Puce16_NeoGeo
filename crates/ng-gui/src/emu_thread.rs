@@ -35,6 +35,8 @@ pub enum Cmd {
         /// Panneau mahjong (3 rangées, bit à 0 = pressée).
         mj: [u8; 3],
     },
+    /// DIP switches MVS.
+    Dips(u8),
     /// Déplacement du trackball / de la molette (impulsions).
     Motion {
         dx: i32,
@@ -131,6 +133,7 @@ fn run(
     // un instantané est dû (niveau changé, pause, jeu chargé) même sans nouvelle trame
     let mut dbg_dirty = false;
     let mut step = false;
+    let mut dips = 0xFFu8;
     let mut inputs = (
         PadState::default(),
         PadState::default(),
@@ -153,6 +156,8 @@ fn run(
                     }
                     match load_machine(&game_cfg, &game) {
                         Ok(m) => {
+                            let mut m = m;
+                            m.set_dipsw(dips);
                             machine = Some(m);
                             t0 = Instant::now();
                             frames_since_t0 = 0;
@@ -181,6 +186,12 @@ fn run(
                     dbg_dirty = true;
                 }
                 Ok(Cmd::StepFrame) => step = true,
+                Ok(Cmd::Dips(d)) => {
+                    dips = d;
+                    if let Some(m) = machine.as_mut() {
+                        m.set_dipsw(d);
+                    }
+                }
                 Ok(Cmd::Motion { dx, dy }) => {
                     if let Some(m) = machine.as_mut() {
                         m.add_motion(dx, dy);

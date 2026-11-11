@@ -9,6 +9,7 @@ use ng_cart::Config;
 use crate::bios_menu::{self, BiosEntry};
 use crate::controls_menu::ControlsWindow;
 use crate::debugger::{DebugAction, Debugger, Region, Tab};
+use crate::dips_menu::DipsWindow;
 use crate::display::{self, DisplayRect};
 use crate::emu_thread::{self, Cmd, EmuHandle, FrameMsg};
 use crate::input::{self, Bindings, InputState};
@@ -83,6 +84,7 @@ pub struct App {
     /// Reste fractionnaire du déplacement de souris (trackball / molette).
     mouse_acc: egui::Vec2,
     controls: ControlsWindow,
+    dips: DipsWindow,
     debugger: Debugger,
     /// Dernier niveau de débogage envoyé au thread d'émulation.
     debug_level: DebugLevel,
@@ -128,6 +130,7 @@ impl App {
             input: InputState::with_bindings(bindings),
             mouse_acc: egui::Vec2::ZERO,
             controls: ControlsWindow::default(),
+            dips: DipsWindow::default(),
             debugger,
             debug_level: DebugLevel::Off,
             fullscreen_applied: None,
@@ -297,6 +300,7 @@ impl App {
             MenuAction::SetBios(file) => self.change_system(|c| c.bios = file),
             MenuAction::SetModel(m) => self.change_system(|c| c.model = m),
             MenuAction::Controls => self.controls.open = true,
+            MenuAction::Dips => self.dips.open = true,
             MenuAction::Debugger => self.debugger.open = !self.debugger.open,
             MenuAction::DebugTab(t) => {
                 self.debugger.open = true;
@@ -415,13 +419,20 @@ impl eframe::App for App {
         let mahjong = self.is_mahjong();
         let pointer = self.is_pointer_game();
         let mut sens = self.prefs.input.mouse_sens.unwrap_or(100);
+        let dip = self.prefs.input.dipsw;
         if self
             .controls
             .show(&ctx, &mut self.input, mahjong, pointer, &mut sens)
         {
             self.prefs.input = self.input.bindings.to_prefs();
             self.prefs.input.mouse_sens = Some(sens);
+            self.prefs.input.dipsw = dip;
         }
+        let mut dipsw = self.prefs.input.dipsw.unwrap_or(0xFF);
+        if self.dips.show(&ctx, &mut dipsw) {
+            self.prefs.input.dipsw = Some(dipsw);
+        }
+        self.send(Cmd::Dips(dipsw));
         if pointer && !self.controls.capturing() {
             let k = sens as f32 / 100.0;
             // souris : seulement hors des menus et fenêtres egui

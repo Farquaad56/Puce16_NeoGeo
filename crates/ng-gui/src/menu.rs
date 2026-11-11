@@ -23,6 +23,7 @@ pub enum MenuAction {
     SetBios(String),
     SetModel(Model),
     Controls,
+    Dips,
     Fullscreen(bool),
     Aspect(Aspect),
     Smooth(bool),
@@ -108,6 +109,11 @@ pub fn show(ui: &mut egui::Ui, st: &MenuState) -> Option<MenuAction> {
             }
         });
         ui.menu_button("Système", |ui| {
+            if ui.button("DIP switches MVS…").clicked() {
+                action = Some(MenuAction::Dips);
+                ui.close();
+            }
+            ui.separator();
             ui.menu_button(format!("BIOS : {}", bios_label(&st.cfg.bios)), |ui| {
                 for b in st.bios {
                     let text = format!("{}  ({})", b.label, b.file);

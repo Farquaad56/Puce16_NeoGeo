@@ -40,6 +40,8 @@ pub struct InputPrefs {
     pub pad: Vec<(String, String)>,
     /// Sensibilité de la souris pour trackball / molette, en % (`None` = 100).
     pub mouse_sens: Option<u32>,
+    /// DIP switches MVS (`None` = 0xFF, tous « off »).
+    pub dipsw: Option<u8>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -130,8 +132,14 @@ impl Prefs {
             },
             d.smooth
         );
-        if let Some(n) = self.input.mouse_sens {
-            s.push_str(&format!("\n[input]\nmouse_sensitivity = {n}\n"));
+        if self.input.mouse_sens.is_some() || self.input.dipsw.is_some() {
+            s.push_str("\n[input]\n");
+            if let Some(n) = self.input.mouse_sens {
+                s.push_str(&format!("mouse_sensitivity = {n}\n"));
+            }
+            if let Some(n) = self.input.dipsw {
+                s.push_str(&format!("dipsw = {n}\n"));
+            }
         }
         for (name, list) in [("keys", &self.input.keys), ("pad", &self.input.pad)] {
             s.push_str(&format!("\n[input.{name}]\n"));
@@ -192,6 +200,11 @@ impl Prefs {
                         p.input.mouse_sens = Some(n.clamp(10, 500));
                     }
                 }
+                ("input", "dipsw") => {
+                    if let Ok(n) = v.parse::<u8>() {
+                        p.input.dipsw = Some(n);
+                    }
+                }
                 ("input.keys", _) if is_plain(k) && is_plain(v) => {
                     p.input.keys.push((k.to_string(), v.to_string()));
                 }
@@ -247,6 +260,7 @@ mod tests {
                 ],
                 pad: vec![("P1B".into(), "North".into())],
                 mouse_sens: Some(150),
+                dipsw: Some(0xBF),
             },
             debug: DebugPrefs {
                 open: true,

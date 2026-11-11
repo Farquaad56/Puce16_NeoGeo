@@ -185,6 +185,11 @@ impl Machine {
         io.system = sys;
     }
 
+    /// DIP switches MVS (octet de `$300001`, 1 = interrupteur « off »).
+    pub fn set_dipsw(&mut self, v: u8) {
+        self.io.borrow_mut().dipsw = v;
+    }
+
     /// État du panneau mahjong (3 rangées, bit à 0 = pressée) ; sans effet hors jeux mahjong.
     pub fn set_mahjong(&mut self, rows: [u8; 3]) {
         self.io.borrow_mut().mj = rows;

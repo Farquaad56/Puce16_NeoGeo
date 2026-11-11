@@ -373,6 +373,7 @@ impl Bindings {
             keys: list(&|a| self.key(a).map(key_name)),
             pad: list(&|a| self.button(a).map(|b| button_name(b).to_string())),
             mouse_sens: None,
+            dipsw: None,
         }
     }
 }
@@ -633,6 +634,7 @@ mod tests {
             ],
             pad: vec![("P1A".into(), "Bidule".into())],
             mouse_sens: None,
+            dipsw: None,
         };
         let b = Bindings::from_prefs(&p);
         assert_eq!(b.key(Action::P1A), Some(Key::Z));
