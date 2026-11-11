@@ -142,7 +142,7 @@ pub struct Perf {
     pub ui_ms: f32,
     /// Coût lissé des filtres vidéo (ms), `None` si aucun filtre n'est actif.
     pub fx_ms: Option<f32>,
-    /// Remplissage du tampon audio, de 0 à 1.
+    /// Remplissage du tampon audio en fraction de la latence visée (1 = cible).
     pub audio_fill: f32,
     /// Nombre de sous-alimentations audio depuis le démarrage.
     pub underruns: u64,
@@ -185,14 +185,15 @@ impl Perf {
         self.underruns = underruns;
     }
 
-    /// Rouge pendant 3 s après un craquement, orange si le tampon est presque vide, sinon vert.
+    /// Rouge pendant 3 s après un craquement, orange si le tampon est presque vide ou très au-dessus
+    /// de sa cible (latence), sinon vert.
     pub fn audio_health(&self) -> Health {
         if self
             .underrun_at
             .is_some_and(|t| t.elapsed() < UNDERRUN_HOLD)
         {
             Health::Bad
-        } else if self.audio_fill < 0.15 {
+        } else if self.audio_fill < 0.3 || self.audio_fill > 2.5 {
             Health::Warn
         } else {
             Health::Good
@@ -356,7 +357,7 @@ pub fn show(
                             ui,
                             "AUDIO",
                             PURPLE,
-                            format!("{}%", num((perf.audio_fill * 100.0).min(100.0), 4, 0)),
+                            format!("{}%", num(perf.audio_fill * 100.0, 4, 0)),
                             perf.audio_health(),
                         );
                         if let Some(s) = scale {

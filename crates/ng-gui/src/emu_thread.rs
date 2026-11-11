@@ -239,6 +239,9 @@ fn run(
         frames_since_t0 += 1;
         let samples = m.take_audio();
         if let (Some(a), Some(r)) = (audio.as_ref(), resampler.as_mut()) {
+            // régule la cadence du son : la carte son et l'horloge de la machine dérivent l'une
+            // de l'autre ; on garde le tampon autour de sa latence visée
+            r.set_src_hz(55_555.56 * (1.0 + crate::audio::drc_adjust(a.fill())));
             for s in samples {
                 r.push(s);
             }

@@ -41,6 +41,11 @@ impl AudioResampler {
         }
     }
 
+    /// Change la fréquence source (régulation du débit audio) sans toucher à la phase.
+    pub fn set_src_hz(&mut self, hz: f64) {
+        self.src_hz = hz;
+    }
+
     /// Pousse un échantillon stéréo source vers le rééchantillonneur.
     pub fn push(&mut self, s: [f32; 2]) {
         if !self.has_prev {
@@ -78,6 +83,30 @@ impl AudioResampler {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn src_rate_change_scales_the_output_count() {
+        let run = |hz: f64| {
+            let mut r = AudioResampler::new(hz, 48000);
+            for _ in 0..55_556 {
+                r.push([0.5, 0.5]);
+            }
+            let mut v = Vec::new();
+            r.pop_into(&mut v);
+            v.len() / 2
+        };
+        let base = run(55_555.56);
+        assert!((47_990..=48_010).contains(&base), "{base}");
+        // une source déclarée plus lente produit plus d'échantillons de sortie
+        let mut r = AudioResampler::new(55_555.56, 48000);
+        r.set_src_hz(55_555.56 * 0.995);
+        for _ in 0..55_556 {
+            r.push([0.5, 0.5]);
+        }
+        let mut v = Vec::new();
+        r.pop_into(&mut v);
+        assert!(v.len() / 2 > base + 200);
+    }
 
     #[test]
     fn mix_ym_fm_left_only() {
