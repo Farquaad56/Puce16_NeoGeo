@@ -530,3 +530,20 @@ mod mahjong_game_tests {
         );
     }
 }
+
+// ---- T1016 : trackball / molette ----
+#[cfg(test)]
+mod pointer_game_tests {
+    use crate::romset::find_def;
+    use crate::types::Controller;
+
+    #[test]
+    fn trackball_and_dial_table() {
+        assert_eq!(
+            find_def("irrmaze").unwrap().controller,
+            Controller::Trackball
+        );
+        assert_eq!(find_def("popbounc").unwrap().controller, Controller::Dial);
+        assert_eq!(find_def("kof94").unwrap().controller, Controller::Joystick);
+    }
+}

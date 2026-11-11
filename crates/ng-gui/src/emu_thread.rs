@@ -35,6 +35,11 @@ pub enum Cmd {
         /// Panneau mahjong (3 rangées, bit à 0 = pressée).
         mj: [u8; 3],
     },
+    /// Déplacement du trackball / de la molette (impulsions).
+    Motion {
+        dx: i32,
+        dy: i32,
+    },
     Quit,
 }
 
@@ -176,6 +181,11 @@ fn run(
                     dbg_dirty = true;
                 }
                 Ok(Cmd::StepFrame) => step = true,
+                Ok(Cmd::Motion { dx, dy }) => {
+                    if let Some(m) = machine.as_mut() {
+                        m.add_motion(dx, dy);
+                    }
+                }
                 Ok(Cmd::Inputs { p1, p2, sys, mj }) => inputs = (p1, p2, sys, mj),
                 Err(TryRecvError::Empty) => break,
             }

@@ -4,7 +4,7 @@
 //! Les ROM (cartouche, BIOS) ne sont pas sauvegardées : le CRC32 de la ROM P est stocké et
 //! vérifié au chargement. Les deux CPU sont sauvés à une frontière d'instruction.
 //! La RAM de cartouche (V-Liner, Jockey GP) est sauvée depuis la version 2, la sélection du panneau
-//! mahjong depuis la version 3.
+//! mahjong depuis la version 3, les compteurs trackball / molette depuis la version 4.
 //! Limites connues : l'état STOP/arrêt du 68000 (Q-M68KSTATE) et l'état d'un port de
 //! protection de cartouche ne sont pas sauvegardés.
 
@@ -16,7 +16,7 @@ use serde::Serialize;
 use crate::machine::Machine;
 
 const MAGIC: &[u8; 4] = b"NGST";
-const VERSION: u32 = 3;
+const VERSION: u32 = 4;
 
 /// Registres du 68000 : d, a, usp, ssp, sr, pc, prefetch.
 type M68 = ([u32; 8], [u32; 7], u32, u32, u16, u32, [u16; 2]);
@@ -149,6 +149,11 @@ impl Machine {
         put(&mut buf, &cart_ram);
         // v3 : sélection des rangées du panneau mahjong.
         put(&mut buf, &self.io.borrow().mj_sel);
+        // v4 : compteurs trackball / molette.
+        {
+            let io = self.io.borrow();
+            put(&mut buf, &(io.track, io.dial_pos));
+        }
         buf
     }
 
@@ -250,6 +255,10 @@ impl Machine {
             None => return Err("savestate : RAM de cartouche inattendue".to_string()),
         }
         self.io.borrow_mut().mj_sel = get(&mut rd)?;
+        {
+            let mut io = self.io.borrow_mut();
+            (io.track, io.dial_pos) = get(&mut rd)?;
+        }
         Ok(())
     }
 }

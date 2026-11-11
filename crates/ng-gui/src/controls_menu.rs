@@ -61,7 +61,14 @@ impl ControlsWindow {
     }
 
     /// Affiche la fenêtre ; renvoie vrai si les assignations ont changé.
-    pub fn show(&mut self, ctx: &egui::Context, input: &mut InputState, mahjong: bool) -> bool {
+    pub fn show(
+        &mut self,
+        ctx: &egui::Context,
+        input: &mut InputState,
+        mahjong: bool,
+        pointer: bool,
+        sens: &mut u32,
+    ) -> bool {
         if !self.open {
             self.capture = None;
             return false;
@@ -111,6 +118,19 @@ impl ControlsWindow {
                         }
                     }
                 });
+                if pointer {
+                    ui.separator();
+                    ui.horizontal(|ui| {
+                        ui.label("Sensibilité souris (trackball / molette)");
+                        if ui
+                            .add(egui::Slider::new(sens, 10..=500).suffix(" %"))
+                            .changed()
+                        {
+                            changed = true;
+                        }
+                    });
+                    ui.weak("Sans souris, les flèches de J1 simulent un mouvement constant.");
+                }
                 if mahjong {
                     ui.separator();
                     ui.strong("Panneau mahjong (jeu courant)");

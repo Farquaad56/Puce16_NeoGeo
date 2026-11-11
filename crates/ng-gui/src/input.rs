@@ -372,8 +372,24 @@ impl Bindings {
         InputPrefs {
             keys: list(&|a| self.key(a).map(key_name)),
             pad: list(&|a| self.button(a).map(|b| button_name(b).to_string())),
+            mouse_sens: None,
         }
     }
+}
+
+/// Conversion d'un déplacement de souris (pixels) en impulsions de compteur, selon la
+/// sensibilité (1.0 = 1 impulsion par pixel).
+pub fn pointer_counts(delta: f32, sens: f32) -> i32 {
+    (delta * sens).round() as i32
+}
+
+/// Mouvement constant simulé par les flèches de J1 (impulsions par trame) : (dx, dy).
+pub fn arrows_motion(pads: PadState) -> (i32, i32) {
+    const STEP: i32 = 2;
+    let b = pads.bits;
+    let dx = if b & RIGHT == 0 { STEP } else { 0 } - if b & LEFT == 0 { STEP } else { 0 };
+    let dy = if b & DOWN == 0 { STEP } else { 0 } - if b & UP == 0 { STEP } else { 0 };
+    (dx, dy)
 }
 
 /// Bits (pressés = 1) d'un stick analogique.
@@ -616,6 +632,7 @@ mod tests {
                 ("P1B".into(), "W".into()),
             ],
             pad: vec![("P1A".into(), "Bidule".into())],
+            mouse_sens: None,
         };
         let b = Bindings::from_prefs(&p);
         assert_eq!(b.key(Action::P1A), Some(Key::Z));
@@ -653,6 +670,16 @@ mod tests {
         i.set_key(Key::F2, true);
         assert_eq!(i.system().bits, !(COIN1 | TEST));
         assert!(i.test());
+    }
+
+    #[test]
+    fn pointer_conversion() {
+        assert_eq!(pointer_counts(10.0, 1.0), 10);
+        assert_eq!(pointer_counts(10.0, 0.5), 5);
+        assert_eq!(pointer_counts(-10.0, 0.5), -5);
+        assert_eq!(arrows_motion(PadState::default()), (0, 0));
+        assert_eq!(arrows_motion(PadState { bits: !RIGHT }), (2, 0));
+        assert_eq!(arrows_motion(PadState { bits: !(LEFT | UP) }), (-2, -2));
     }
 
     #[test]

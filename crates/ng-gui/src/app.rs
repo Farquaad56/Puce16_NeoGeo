@@ -11,7 +11,7 @@ use crate::controls_menu::ControlsWindow;
 use crate::debugger::{DebugAction, Debugger, Region, Tab};
 use crate::display::{self, DisplayRect};
 use crate::emu_thread::{self, Cmd, EmuHandle, FrameMsg};
-use crate::input::{Bindings, InputState};
+use crate::input::{self, Bindings, InputState};
 use crate::menu::{self, MenuAction, MenuState};
 use crate::prefs::{self, Prefs};
 use crate::settings::ConfigForm;
@@ -80,6 +80,8 @@ pub struct App {
     bios: Vec<BiosEntry>,
     game: Option<String>,
     input: InputState,
+    /// Reste fractionnaire du déplacement de souris (trackball / molette).
+    mouse_acc: egui::Vec2,
     controls: ControlsWindow,
     debugger: Debugger,
     /// Dernier niveau de débogage envoyé au thread d'émulation.
@@ -124,6 +126,7 @@ impl App {
             prefs_path,
             game: None,
             input: InputState::with_bindings(bindings),
+            mouse_acc: egui::Vec2::ZERO,
             controls: ControlsWindow::default(),
             debugger,
             debug_level: DebugLevel::Off,
@@ -149,6 +152,15 @@ impl App {
             .as_deref()
             .and_then(ng_cart::find_def)
             .is_some_and(|d| d.controller == ng_cart::types::Controller::Mahjong)
+    }
+
+    /// Le jeu courant utilise un trackball ou une molette.
+    fn is_pointer_game(&self) -> bool {
+        use ng_cart::types::Controller::{Dial, Trackball};
+        self.game
+            .as_deref()
+            .and_then(ng_cart::find_def)
+            .is_some_and(|d| matches!(d.controller, Trackball | Dial))
     }
 
     pub fn load_game(&mut self, name: &str) {
@@ -401,8 +413,35 @@ impl eframe::App for App {
         self.input.update_keys(&ctx);
         self.input.poll_gamepads();
         let mahjong = self.is_mahjong();
-        if self.controls.show(&ctx, &mut self.input, mahjong) {
+        let pointer = self.is_pointer_game();
+        let mut sens = self.prefs.input.mouse_sens.unwrap_or(100);
+        if self
+            .controls
+            .show(&ctx, &mut self.input, mahjong, pointer, &mut sens)
+        {
             self.prefs.input = self.input.bindings.to_prefs();
+            self.prefs.input.mouse_sens = Some(sens);
+        }
+        if pointer && !self.controls.capturing() {
+            let k = sens as f32 / 100.0;
+            // souris : seulement hors des menus et fenêtres egui
+            let d = if ctx.egui_wants_pointer_input() {
+                egui::Vec2::ZERO
+            } else {
+                ctx.input(|i| i.pointer.delta())
+            };
+            // `mouse_acc` garde les pixels pas encore convertis en impulsions.
+            self.mouse_acc += d;
+            let (dx, dy) = (
+                input::pointer_counts(self.mouse_acc.x, k),
+                input::pointer_counts(self.mouse_acc.y, k),
+            );
+            self.mouse_acc -= egui::vec2(dx as f32 / k, dy as f32 / k);
+            let (ax, ay) = input::arrows_motion(self.input.pads().0);
+            let (mx, my) = (dx + ax, dy + ay);
+            if mx != 0 || my != 0 {
+                self.send(Cmd::Motion { dx: mx, dy: my });
+            }
         }
         // pendant une capture de touche, rien n'est envoyé au jeu
         if !self.controls.capturing() {

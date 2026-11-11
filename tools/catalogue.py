@@ -33,8 +33,11 @@ TO_EXTRACT = "kof98 fatfury2 ssideki sbp vliner kof99 garou kof2000 kof2001 jock
 TITLES = {"mslug":"Metal Slug - Super Vehicle-001","mslug2":"Metal Slug 2 - Super Vehicle-001/II","mslugx":"Metal Slug X - Super Vehicle-001","mslug3":"Metal Slug 3","mslug4":"Metal Slug 4","mslug5":"Metal Slug 5"}
 # T1015 : jeux de mahjong (panneau mahjong sur le port 1, BIOS « japan »)
 MAHJONG = {"bakatono", "janshin", "minasan"}
+# T1016 : trackball (irrmaze, BIOS spécial 236-bios.sp1) et molette (popbounc)
 def controller(game):
-    return "Mahjong" if game in MAHJONG else "Joystick"
+    if game in MAHJONG:
+        return "Mahjong"
+    return {"irrmaze": "Trackball", "popbounc": "Dial"}.get(game, "Joystick")
 def catalogue():
     """[(nom, clé de protection)] dans l'ordre : Metal Slug puis PLAIN."""
     return list(PROTECTED.items()) + [(n, "NONE") for n in PLAIN]

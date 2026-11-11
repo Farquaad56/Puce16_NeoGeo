@@ -1422,7 +1422,7 @@ pub static IRRMAZE: CartDef = CartDef {
     sizes: RegionSizes { p: 0x200000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x300000, vb: 0x0, c: 0x800000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
-    controller: Controller::Joystick,
+    controller: Controller::Trackball,
 };
 
 pub static JANSHIN_PARTS: &[RomPart] = &[
@@ -2231,7 +2231,7 @@ pub static POPBOUNC: CartDef = CartDef {
     sizes: RegionSizes { p: 0x100000, s: 0x20000, m: 0x30000, m_crypt: 0x0, v: 0x200000, vb: 0x0, c: 0x400000 },
     m1_reload: Some((0x10000, 0x20000)),
     prot: PROT_NONE,
-    controller: Controller::Joystick,
+    controller: Controller::Dial,
 };
 
 pub static PSPIKES2_PARTS: &[RomPart] = &[

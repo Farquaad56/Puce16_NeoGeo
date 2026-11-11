@@ -15,7 +15,7 @@ use ng_bus::prot_sbp::Sbp;
 use ng_bus::prot_sma::{Sma3, SmaChip, SmaKind};
 use ng_bus::CartPort;
 use ng_cart::types::RuntimeProt;
-use ng_cart::{find_def, load_bios, load_cart, Cart, Config};
+use ng_cart::{find_def, game_bios_main, load_bios, load_bios_with_main, load_cart, Cart, Config};
 
 use crate::machine::Machine;
 
@@ -82,7 +82,12 @@ pub fn load_machine(cfg: &Config, game: &str) -> Result<Machine, String> {
         ));
     }
     let mut cart = load_cart(&zip, def, true).map_err(|e| format!("{game}.zip : {e:?}"))?;
-    let bios = load_bios(&cfg.bios_dir, &cfg.bios).map_err(|e| format!("BIOS : {e:?}"))?;
+    // irrmaze : BIOS spécial à trackball fourni dans le zip du jeu (sinon BIOS configuré).
+    let bios = match game_bios_main(&zip, def) {
+        Some(main) => load_bios_with_main(&cfg.bios_dir, &main),
+        None => load_bios(&cfg.bios_dir, &cfg.bios),
+    }
+    .map_err(|e| format!("BIOS : {e:?}"))?;
     // Protections de cartouche : déchiffrement (MAME decrypt_all) puis port runtime.
     cart.decrypt_all();
     let port = make_port(&cart);

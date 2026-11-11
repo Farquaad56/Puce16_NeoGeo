@@ -38,6 +38,8 @@ pub struct DisplayPrefs {
 pub struct InputPrefs {
     pub keys: Vec<(String, String)>,
     pub pad: Vec<(String, String)>,
+    /// Sensibilité de la souris pour trackball / molette, en % (`None` = 100).
+    pub mouse_sens: Option<u32>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -128,6 +130,9 @@ impl Prefs {
             },
             d.smooth
         );
+        if let Some(n) = self.input.mouse_sens {
+            s.push_str(&format!("\n[input]\nmouse_sensitivity = {n}\n"));
+        }
         for (name, list) in [("keys", &self.input.keys), ("pad", &self.input.pad)] {
             s.push_str(&format!("\n[input.{name}]\n"));
             for (action, value) in list {
@@ -180,6 +185,11 @@ impl Prefs {
                 ("display", "smooth") => {
                     if let Some(b) = parse_bool(v) {
                         p.display.smooth = b;
+                    }
+                }
+                ("input", "mouse_sensitivity") => {
+                    if let Ok(n) = v.parse::<u32>() {
+                        p.input.mouse_sens = Some(n.clamp(10, 500));
                     }
                 }
                 ("input.keys", _) if is_plain(k) && is_plain(v) => {
@@ -236,6 +246,7 @@ mod tests {
                     ("Start1".into(), "Space".into()),
                 ],
                 pad: vec![("P1B".into(), "North".into())],
+                mouse_sens: Some(150),
             },
             debug: DebugPrefs {
                 open: true,

@@ -38,6 +38,12 @@ pub struct Io {
     /// Touches du panneau mahjong, 3 rangées (MJ.0 : A-G, MJ.1 : H-N, MJ.2 : Pon, Chi, Kan, Ron,
     /// Reach en bits 0-4), bit à 0 = pressée.
     pub mj: [u8; 3],
+    /// Trackball (irrmaze) ou molette (popbounc) branchée sur le connecteur d'entrée.
+    pub trackball: bool,
+    pub dial: bool,
+    /// Compteurs 8 bits du trackball (X, Y) ; molette des joueurs 1 et 2 (`dial_pos`).
+    pub track: [u8; 2],
+    pub dial_pos: [u8; 2],
     /// Dernier octet écrit en `REG_POUTPUT` ($380001) : sélection des rangées du panneau.
     pub mj_sel: u8,
 }
@@ -59,12 +65,32 @@ impl Default for Io {
             card_present: false,
             mahjong: false,
             mj: [0xFF; 3],
+            trackball: false,
+            dial: false,
+            track: [0; 2],
+            dial_pos: [0; 2],
             mj_sel: 0,
         }
     }
 }
 
 impl Io {
+    /// Octet joystick de la molette (`JOY1`/`JOY2` de MAME `dial.cpp`, actif bas) : haut, bas, gauche,
+    /// droite en bits 0-3 ; BUTTON1 sur les bits 0x10 et 0x80 ; BUTTON2 = 0x20 ; BUTTON3 = 0x40.
+    fn dial_joy(bits: u8) -> u8 {
+        (bits & 0x6F) | if bits & 0x10 != 0 { 0x90 } else { 0 }
+    }
+
+    /// Ajoute un déplacement au trackball (X, Y) ou à la molette du joueur 1 (X seul), modulo 256.
+    pub fn add_motion(&mut self, dx: i32, dy: i32) {
+        if self.trackball {
+            self.track[0] = self.track[0].wrapping_add(dx as u8);
+            self.track[1] = self.track[1].wrapping_add(dy as u8);
+        } else if self.dial {
+            self.dial_pos[0] = self.dial_pos[0].wrapping_add(dx as u8);
+        }
+    }
+
     /// `neogeo_mjctrl_ctrl_device::read_ctrl` (MAME) : 0xFF puis ET des rangées sélectionnées par
     /// les bits 0, 1 et 2 de `mj_sel` (une touche pressée met son bit à 0).
     pub fn mahjong_read_ctrl(&self) -> u8 {
@@ -99,6 +125,18 @@ impl Device for Io {
                     if self.model == Model::Aes {
                         // AES: no DIP switches, lower byte always 0xFF
                         ((self.pad[0].bits as u16) << 8) | 0xFF
+                    } else if self.trackball {
+                        // in0_r : bit 0 de la sélection -> compteur Y, sinon X.
+                        let v = self.track[(self.mj_sel & 1) as usize];
+                        ((v as u16) << 8) | (self.dipsw as u16)
+                    } else if self.dial {
+                        // in0_r : bit 0 de la sélection -> joystick J1, sinon molette J1.
+                        let v = if self.mj_sel & 1 != 0 {
+                            Self::dial_joy(self.pad[0].bits)
+                        } else {
+                            self.dial_pos[0]
+                        };
+                        ((v as u16) << 8) | (self.dipsw as u16)
                     } else if self.mahjong {
                         // Panneau mahjong : rangées sélectionnées ; DIP « Controller » (0x04) = 0
                         // (« Mahjong Panel », défaut de `INPUT_PORTS_START( neogeo_mj )`).
@@ -155,6 +193,20 @@ impl Device for Io {
                 if self.model == Model::Aes {
                     // AES: no DIP switches, lower byte always 0xFF
                     ((self.pad[1].bits as u16) << 8) | 0xFF
+                } else if self.trackball {
+                    // in1_r : BUTTONS (bits 4-7 : J1 B1, J1 B2, J2 B1, J2 B2 ; bits 0-3 inutilisés = 1).
+                    let b0 = self.pad[0].bits;
+                    let b1 = self.pad[1].bits;
+                    let v = 0x0F | (b0 & 0x30) | ((b1 & 0x30) << 2);
+                    ((v as u16) << 8) | 0xFF
+                } else if self.dial {
+                    // in1_r : molette / joystick J2.
+                    let v = if self.mj_sel & 1 != 0 {
+                        Self::dial_joy(self.pad[1].bits)
+                    } else {
+                        self.dial_pos[1]
+                    };
+                    ((v as u16) << 8) | 0xFF
                 } else {
                     ((self.pad[1].bits as u16) << 8) | 0xFF
                 }
@@ -174,6 +226,12 @@ impl Device for Io {
                     // Panneau mahjong : SELECT masqué (relâché) quand le bit 2 de la sélection est à 1.
                     if self.mahjong && self.mj_sel & 4 != 0 {
                         sys_bits |= 2;
+                    }
+                    // Connecteur trackball : seul START1 existe ; molette : START1 et START2.
+                    if self.trackball {
+                        sys_bits |= 0x0E;
+                    } else if self.dial {
+                        sys_bits |= 0x0A;
                     }
                     0x00FF | (sys_bits << 8) | self.card_bits() | 0x8000
                 }
@@ -265,6 +323,57 @@ mod tests {
         assert_eq!(io.read(0x300000) >> 8, 0xFE & 0xFB);
         // DIP : bit « Controller » (0x04) à 0 = panneau mahjong
         assert_eq!(io.read(0x300000) & 0xFF, 0xFB);
+    }
+
+    #[test]
+    fn trackball_counters_and_buttons() {
+        // MAME irrmaze.cpp : in0_r = TRACK_Y si ctrl_sel & 1, sinon TRACK_X ; in1_r = BUTTONS
+        // (0x10 J1 B1, 0x20 J1 B2, 0x40 J2 B1, 0x80 J2 B2, bits 0-3 inutilisés à 1).
+        let mut io = Io {
+            trackball: true,
+            ..Io::default()
+        };
+        for _ in 0..5 {
+            io.add_motion(1, 0);
+        }
+        assert_eq!(io.track, [5, 0]);
+        io.add_motion(0, -1); // -1 modulo 256
+        assert_eq!(io.track, [5, 255]);
+        io.mj_sel = 0;
+        assert_eq!(io.read(0x300000) >> 8, 5);
+        io.write(0x380001, 0x0100, true, false);
+        assert_eq!(io.read(0x300000) >> 8, 255);
+        // repos : 0xFF ; J1 A pressé -> bit 4 à 0 ; J2 B pressé -> bit 7 à 0
+        assert_eq!(io.read(0x340000) >> 8, 0xFF);
+        io.pad[0].bits = !0x10;
+        io.pad[1].bits = !0x20;
+        assert_eq!(io.read(0x340000) >> 8, 0xFF & !0x10 & !0x80);
+        // wraparound modulo 256
+        io.track[0] = 250;
+        io.add_motion(10, 0);
+        assert_eq!(io.track[0], 4);
+    }
+
+    #[test]
+    fn dial_selects_between_dial_and_joystick() {
+        // MAME dial.cpp : in0_r = JOY1 si ctrl_sel & 1, sinon DIAL1 ; BUTTON1 = bits 0x90.
+        let mut io = Io {
+            dial: true,
+            ..Io::default()
+        };
+        io.add_motion(7, 3); // seule la molette J1 (X) bouge
+        assert_eq!(io.dial_pos, [7, 0]);
+        assert_eq!(io.read(0x300000) >> 8, 7);
+        assert_eq!(io.read(0x340000) >> 8, 0);
+        io.write(0x380001, 0x0100, true, false);
+        assert_eq!(io.read(0x300000) >> 8, 0xFF);
+        io.pad[0].bits = !0x10; // BUTTON1 : bits 0x10 et 0x80 à 0
+        assert_eq!(io.read(0x300000) >> 8, 0x6F);
+        io.pad[0].bits = !0x04; // gauche
+        assert_eq!(io.read(0x300000) >> 8, 0xFB);
+        // D ignoré
+        io.pad[0].bits = !0x80;
+        assert_eq!(io.read(0x300000) >> 8, 0xFF);
     }
 
     #[test]

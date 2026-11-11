@@ -20,7 +20,7 @@ mod bios;
 mod catalogue_tests;
 mod config;
 mod romset;
-pub use bios::{load_bios, Bios, BiosError};
+pub use bios::{game_bios_main, load_bios, load_bios_with_main, Bios, BiosError};
 pub use config::{load_config, parse_config, Config, Model};
 pub use romset::{find_def, load_cart, Cart, CartError, Source};
 
